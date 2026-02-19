@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Back to blog link -->
+    <div class="mb-4">
+        <a href="/blog" class="text-decoration-none">
+            <i class="fas fa-arrow-left me-2"></i>Back to Blog
+        </a>
+    </div>
+    
+    <!-- Blog Post -->
+    <article class="mb-5">
+        <!-- Header -->
+        <header class="mb-4">
+            <h1 class="display-4 fw-bold mb-3">{{ post.title }}</h1>
+            
+            <div class="d-flex flex-wrap align-items-center text-muted mb-3">
+                <span class="me-3">
+                    <i class="far fa-calendar me-1"></i>{{ post.published_at[:10] }}
+                </span>
+                <span class="me-3">
+                    <i class="far fa-clock me-1"></i>{{ post.read_time }} min read
+                </span>
+                <span class="me-3">
+                    <i class="far fa-eye me-1"></i>{{ post.views }} views
+                </span>
+                <span class="badge bg-primary">{{ post.category }}</span>
+            </div>
+            
+            <!-- Author info -->
+            {% if post.author %}
+            <div class="d-flex align-items-center">
+                <img src="{{ post.author.avatar_url or 'https://via.placeholder.com/60' }}" 
+                     class="rounded-circle me-3" width="60" height="60" alt="{{ post.author.full_name }}">
+                <div>
+                    <h6 class="mb-1">{{ post.author.full_name }}</h6>
+                    <p class="text-muted small mb-0">{{ post.author.bio or 'Instructor' }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </header>
+        
+        <!-- Featured Image -->
+        {% if post.featured_image %}
+        <div class="mb-4">
+            <img src="{{ post.featured_image }}" class="img-fluid rounded" alt="{{ post.title }}">
+        </div>
+        {% endif %}
+        
+        <!-- Excerpt -->
+        {% if post.excerpt %}
+        <div class="lead mb-4 fst-italic text-muted">
+            {{ post.excerpt }}
+        </div>
+        {% endif %}
+        
+        <!-- Content -->
+        <div class="blog-content mb-5">
+            {{ post.content|safe }}
+        </div>
+        
+        <!-- Share buttons -->
+        <div class="mb-5">
+            <h6 class="mb-3">Share this post:</h6>
+            <div class="d-flex gap-2">
+                <a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ post.title }}" 
+                   target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="fab fa-twitter me-2"></i>Twitter
+                </a>
+                <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.url }}&title={{ post.title }}" 
+                   target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="fab fa-linkedin-in me-2"></i>LinkedIn
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" 
+                   target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="fab fa-facebook-f me-2"></i>Facebook
+                </a>
+            </div>
+        </div>
+        
+        <!-- Related Posts -->
+        {% if related_posts %}
+        <div class="mb-5">
+            <h3 class="h4 mb-4">Related Posts</h3>
+            <div class="row g-4">
+                {% for related in related_posts %}
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        {% if related.featured_image %}
+                        <img src="{{ related.featured_image }}" class="card-img-top" alt="{{ related.title }}" 
+                             style="height: 120px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title h6">
+                                <a href="/blog/{{ related.slug }}" class="text-decoration-none text-dark">
+                                    {{ related.title }}
+                                </a>
+                            </h5>
+                            <p class="card-text small text-muted">{{ related.excerpt[:80] }}...</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Comments Section -->
+        <div class="comments-section">
+            <h3 class="h4 mb-4">Comments ({{ post.comments|length }})</h3>
+            
+            <!-- Comment Form -->
+            {% if current_user %}
+            <form class="mb-4" id="commentForm">
+                <div class="mb-3">
+                    <textarea class="form-control" rows="3" placeholder="Leave a comment..." id="commentContent" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+            {% else %}
+            <div class="alert alert-info">
+                <a href="/login">Login</a> to leave a comment.
+            </div>
+            {% endif %}
+            
+            <!-- Comments List -->
+            <div class="comments-list">
+                {% for comment in post.comments %}
+                <div class="d-flex mb-3">
+                    <img src="{{ comment.users.avatar_url or 'https://via.placeholder.com/40' }}" 
+                         class="rounded-circle me-2" width="40" height="40" alt="{{ comment.users.full_name }}">
+                    <div class="flex-grow-1">
+                        <div class="bg-light p-3 rounded">
+                            <div class="d-flex justify-content-between mb-2">
+                                <strong>{{ comment.users.full_name }}</strong>
+                                <small class="text-muted">{{ comment.created_at[:10] }}</small>
+                            </div>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted">No comments yet. Be the first to comment!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </article>
+</div>
+
+<script>
+document.getElementById('commentForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const content = document.getElementById('commentContent').value;
+    const postId = '{{ post.id }}';
+    
+    try {
+        const response = await fetch('/api/v1/blog/comments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('access_token')}`
+            },
+            body: JSON.stringify({
+                post_id: postId,
+                content: content
+            })
+        });
+        
+        if (response.ok) {
+            alert('Comment posted successfully! It will appear after approval.');
+            document.getElementById('commentContent').value = '';
+        } else {
+            alert('Failed to post comment. Please try again.');
+        }
+    } catch (error) {
+        alert('An error occurred. Please try again.');
+    }
+});
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+</script>
+
+<style>
+.blog-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.blog-content p {
+    margin-bottom: 1.5rem;
+}
+
+.blog-content h2 {
+    font-size: 1.8rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.blog-content h3 {
+    font-size: 1.4rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.blog-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.blog-content blockquote {
+    border-left: 4px solid var(--bs-primary);
+    padding-left: 1rem;
+    margin-left: 0;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.blog-content pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.blog-content code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Blog Header -->
+<div class="row mb-5">
+    <div class="col-12 text-center">
+        <h1 class="display-4 fw-bold text-primary">ThutoPele Blog</h1>
+        <p class="lead text-muted">Insights, tutorials, and updates from our learning community</p>
+    </div>
+</div>
+
+<!-- Blog Categories -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a href="/blog" class="btn btn-outline-primary {% if not category %}active{% endif %}">All Posts</a>
+            <a href="/blog?category=Programming" class="btn btn-outline-primary">Programming</a>
+            <a href="/blog?category=Robotics" class="btn btn-outline-primary">Robotics</a>
+            <a href="/blog?category=AI" class="btn btn-outline-primary">AI</a>
+            <a href="/blog?category=ML" class="btn btn-outline-primary">Machine Learning</a>
+            <a href="/blog?category=Networking" class="btn btn-outline-primary">Networking</a>
+            <a href="/blog?category=Security" class="btn btn-outline-primary">Cyber Security</a>
+            <a href="/blog?category=Tutorials" class="btn btn-outline-primary">Tutorials</a>
+            <a href="/blog?category=News" class="btn btn-outline-primary">News</a>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Post -->
+{% if featured_post %}
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card border-0 shadow-lg overflow-hidden">
+            <div class="row g-0">
+                <div class="col-lg-6">
+                    <img src="{{ featured_post.image_url or 'https://via.placeholder.com/800x400' }}" 
+                         class="img-fluid h-100 w-100" style="object-fit: cover;" alt="{{ featured_post.title }}">
+                </div>
+                <div class="col-lg-6">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="mb-3">
+                            <span class="badge bg-primary">{{ featured_post.category }}</span>
+                            <span class="text-muted ms-2">
+                                <i class="far fa-calendar me-1"></i>{{ featured_post.created_at[:10] }}
+                            </span>
+                        </div>
+                        <h2 class="card-title fw-bold mb-3">{{ featured_post.title }}</h2>
+                        <p class="card-text text-muted mb-4">{{ featured_post.excerpt }}</p>
+                        <div class="d-flex align-items-center mb-4">
+                            <img src="{{ featured_post.author.avatar or 'https://via.placeholder.com/50' }}" 
+                                 class="rounded-circle me-3" width="50" height="50" alt="{{ featured_post.author.name }}">
+                            <div>
+                                <h6 class="mb-0">{{ featured_post.author.name }}</h6>
+                                <small class="text-muted">{{ featured_post.author.bio }}</small>
+                            </div>
+                        </div>
+                        <a href="/blog/{{ featured_post.slug }}" class="btn btn-primary btn-lg">
+                            Read More <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Blog Posts Grid -->
+<div class="row g-4 mb-5">
+    {% for post in posts %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm hover-lift">
+            {% if post.image_url %}
+            <img src="{{ post.image_url }}" class="card-img-top" alt="{{ post.title }}" 
+                 style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-blog fa-4x text-muted"></i>
+            </div>
+            {% endif %}
+            
+            <div class="card-body">
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ post.category }}</span>
+                    <small class="text-muted ms-2">
+                        <i class="far fa-clock me-1"></i>{{ post.read_time }} min read
+                    </small>
+                </div>
+                
+                <h5 class="card-title fw-bold mb-3">
+                    <a href="/blog/{{ post.slug }}" class="text-dark text-decoration-none">
+                        {{ post.title }}
+                    </a>
+                </h5>
+                
+                <p class="card-text text-muted">{{ post.excerpt }}</p>
+            </div>
+            
+            <div class="card-footer bg-transparent border-0 pt-0">
+                <div class="d-flex align-items-center">
+                    <img src="{{ post.author.avatar or 'https://via.placeholder.com/40' }}" 
+                         class="rounded-circle me-2" width="32" height="32" alt="{{ post.author.name }}">
+                    <div>
+                        <small class="fw-bold d-block">{{ post.author.name }}</small>
+                        <small class="text-muted">
+                            <i class="far fa-calendar me-1"></i>{{ post.created_at[:10] }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
+        <h3>No Blog Posts Yet</h3>
+        <p class="text-muted">Check back soon for new content!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav aria-label="Blog pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page-1 }}{% if category %}&category={{ category }}{% endif %}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}{% if category %}&category={{ category }}{% endif %}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page+1 }}{% if category %}&category={{ category }}{% endif %}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Newsletter Subscription -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-primary text-white border-0">
+            <div class="card-body p-5 text-center">
+                <h3 class="mb-3">Subscribe to Our Newsletter</h3>
+                <p class="mb-4">Get the latest posts, tutorials, and learning resources delivered to your inbox.</p>
+                <form class="row g-3 justify-content-center" id="newsletterForm">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="email" class="form-control form-control-lg" 
+                                   placeholder="Enter your email" required>
+                            <button class="btn btn-light btn-lg" type="submit">
+                                Subscribe <i class="fas fa-paper-plane ms-2"></i>
+                            </button>
+                        </div>
+                        <small class="d-block mt-2 text-white-50">
+                            We respect your privacy. Unsubscribe at any time.
+                        </small>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('newsletterForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Thank you for subscribing! Check your email for confirmation.');
+    e.target.reset();
+});
+</script>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.card-img-top {
+    border-top-left-radius: calc(0.375rem - 1px);
+    border-top-right-radius: calc(0.375rem - 1px);
+}
+
+.pagination .page-link {
+    color: var(--bs-primary);
+}
+
+.pagination .active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+</style>
+{% endblock %}

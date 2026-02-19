@@ -1,29 +1,320 @@
-<!-- Filter Section -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <label for="categoryFilter" class="form-label">Category</label>
-        <select class="form-select" id="categoryFilter" onchange="filterCourses()">
-            <option value="">All Categories</option>
-            <option value="Programming">💻 Programming</option>
-            <option value="Robotics">🤖 Robotics</option>
-            <option value="Artificial Intelligence">🧠 Artificial Intelligence</option>
-            <option value="Machine Learning">📊 Machine Learning</option>
-            <option value="Networking">🌐 Networking</option>
-            <option value="Cyber Security">🛡️ Cyber Security</option>
-        </select>
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row mb-5">
+    <div class="col-12 text-center">
+        <h1 class="display-4 fw-bold text-primary">All Courses</h1>
+        <p class="lead text-muted">Explore our comprehensive catalog of technology courses</p>
     </div>
-    <!-- ... other filters ... -->
 </div>
 
-<script>
-function filterCourses() {
-    const category = document.getElementById('categoryFilter').value;
-    const level = document.getElementById('levelFilter').value;
-    
-    let url = '/courses?';
-    if (category) url += `category=${encodeURIComponent(category)}&`;
-    if (level) url += `level=${level}`;
-    
-    window.location.href = url;
+<!-- Search and Filter Bar -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <form method="GET" action="/courses" id="filterForm">
+                    <div class="row g-3">
+                        <!-- Search -->
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-search text-primary"></i>
+                                </span>
+                                <input type="text" class="form-control" name="search" 
+                                       placeholder="Search courses..." value="{{ search_query or '' }}">
+                            </div>
+                        </div>
+                        
+                        <!-- Category Filter -->
+                        <div class="col-md-2">
+                            <select class="form-select" name="category" onchange="this.form.submit()">
+                                <option value="">All Categories</option>
+                                <option value="Programming" {% if category == 'Programming' %}selected{% endif %}>Programming</option>
+                                <option value="Robotics" {% if category == 'Robotics' %}selected{% endif %}>Robotics</option>
+                                <option value="Artificial Intelligence" {% if category == 'Artificial Intelligence' %}selected{% endif %}>Artificial Intelligence</option>
+                                <option value="Machine Learning" {% if category == 'Machine Learning' %}selected{% endif %}>Machine Learning</option>
+                                <option value="Networking" {% if category == 'Networking' %}selected{% endif %}>Networking</option>
+                                <option value="Cyber Security" {% if category == 'Cyber Security' %}selected{% endif %}>Cyber Security</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Level Filter -->
+                        <div class="col-md-2">
+                            <select class="form-select" name="level" onchange="this.form.submit()">
+                                <option value="">All Levels</option>
+                                <option value="Beginner" {% if level == 'Beginner' %}selected{% endif %}>Beginner</option>
+                                <option value="Intermediate" {% if level == 'Intermediate' %}selected{% endif %}>Intermediate</option>
+                                <option value="Advanced" {% if level == 'Advanced' %}selected{% endif %}>Advanced</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Price Filter -->
+                        <div class="col-md-2">
+                            <select class="form-select" name="price" onchange="this.form.submit()">
+                                <option value="">All Prices</option>
+                                <option value="free" {% if price == 'free' %}selected{% endif %}>Free</option>
+                                <option value="paid" {% if price == 'paid' %}selected{% endif %}>Paid</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Sort By -->
+                        <div class="col-md-2">
+                            <select class="form-select" name="sort" onchange="this.form.submit()">
+                                <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+                                <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                                <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                                <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                                <option value="title" {% if sort == 'title' %}selected{% endif %}>Title A-Z</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Filters -->
+{% if category or level or price or search_query %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="text-muted me-2">Active filters:</span>
+            {% if category %}
+            <span class="badge bg-primary d-inline-flex align-items-center">
+                {{ category }}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if price %}price={{ price }}&{% endif %}sort={{ sort }}" 
+                   class="text-white ms-2 text-decoration-none">
+                    <i class="fas fa-times"></i>
+                </a>
+            </span>
+            {% endif %}
+            {% if level %}
+            <span class="badge bg-primary d-inline-flex align-items-center">
+                {{ level }}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if category %}category={{ category }}&{% endif %}{% if price %}price={{ price }}&{% endif %}sort={{ sort }}" 
+                   class="text-white ms-2 text-decoration-none">
+                    <i class="fas fa-times"></i>
+                </a>
+            </span>
+            {% endif %}
+            {% if price %}
+            <span class="badge bg-primary d-inline-flex align-items-center">
+                {{ price|title }}
+                <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if category %}category={{ category }}&{% endif %}{% if level %}level={{ level }}&{% endif %}sort={{ sort }}" 
+                   class="text-white ms-2 text-decoration-none">
+                    <i class="fas fa-times"></i>
+                </a>
+            </span>
+            {% endif %}
+            {% if search_query %}
+            <span class="badge bg-primary d-inline-flex align-items-center">
+                "{{ search_query }}"
+                <a href="?{% if category %}category={{ category }}&{% endif %}{% if level %}level={{ level }}&{% endif %}{% if price %}price={{ price }}&{% endif %}sort={{ sort }}" 
+                   class="text-white ms-2 text-decoration-none">
+                    <i class="fas fa-times"></i>
+                </a>
+            </span>
+            {% endif %}
+            <a href="/courses" class="btn btn-sm btn-outline-secondary">Clear All</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Results Count -->
+<div class="row mb-3">
+    <div class="col-12">
+        <p class="text-muted">Showing {{ courses|length }} of {{ total_courses }} courses</p>
+    </div>
+</div>
+
+<!-- Courses Grid -->
+<div class="row g-4 mb-5">
+    {% for course in courses %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 border-0 shadow-sm hover-lift">
+            <!-- Course Image -->
+            <div class="position-relative">
+                {% if course.thumbnail_url %}
+                <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}" 
+                     style="height: 180px; object-fit: cover;">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                    <i class="fas fa-graduation-cap fa-4x text-primary opacity-50"></i>
+                </div>
+                {% endif %}
+                
+                <!-- Price Badge -->
+                <div class="position-absolute top-0 end-0 m-3">
+                    {% if course.price == 0 %}
+                    <span class="badge bg-success">Free</span>
+                    {% else %}
+                    <span class="badge bg-primary">${{ course.price }}</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Level Badge -->
+                <div class="position-absolute bottom-0 start-0 m-3">
+                    <span class="badge bg-white text-dark border">
+                        {% if course.level == 'Beginner' %}
+                        <i class="fas fa-seedling text-success me-1"></i>
+                        {% elif course.level == 'Intermediate' %}
+                        <i class="fas fa-tree text-warning me-1"></i>
+                        {% else %}
+                        <i class="fas fa-tree text-danger me-1"></i>
+                        {% endif %}
+                        {{ course.level }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Category -->
+                <div class="mb-2">
+                    <span class="badge bg-primary-subtle text-primary">
+                        {% if course.category == 'Programming' %}
+                        <i class="fas fa-code me-1"></i>
+                        {% elif course.category == 'Robotics' %}
+                        <i class="fas fa-robot me-1"></i>
+                        {% elif course.category == 'Artificial Intelligence' %}
+                        <i class="fas fa-brain me-1"></i>
+                        {% elif course.category == 'Machine Learning' %}
+                        <i class="fas fa-chart-line me-1"></i>
+                        {% elif course.category == 'Networking' %}
+                        <i class="fas fa-network-wired me-1"></i>
+                        {% elif course.category == 'Cyber Security' %}
+                        <i class="fas fa-shield-alt me-1"></i>
+                        {% else %}
+                        <i class="fas fa-book me-1"></i>
+                        {% endif %}
+                        {{ course.category or 'Uncategorized' }}
+                    </span>
+                </div>
+                
+                <!-- Title -->
+                <h5 class="card-title fw-bold mb-3">
+                    <a href="/courses/{{ course.id }}" class="text-dark text-decoration-none">
+                        {{ course.title }}
+                    </a>
+                </h5>
+                
+                <!-- Description -->
+                <p class="card-text text-muted small mb-3">
+                    {{ course.description[:120] if course.description else 'No description available' }}{% if course.description and course.description|length > 120 %}...{% endif %}
+                </p>
+                
+                <!-- Instructor with safety checks -->
+                <div class="d-flex align-items-center mb-3">
+                    {% if course.instructor and course.instructor.avatar_url %}
+                    <img src="{{ course.instructor.avatar_url }}" 
+                         class="rounded-circle me-2" width="30" height="30" 
+                         alt="{{ course.instructor.full_name or 'Instructor' }}">
+                    {% else %}
+                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-2" 
+                         style="width: 30px; height: 30px;">
+                        <i class="fas fa-user text-primary small"></i>
+                    </div>
+                    {% endif %}
+                    <small class="text-muted">
+                        {% if course.instructor and course.instructor.full_name %}
+                            {{ course.instructor.full_name }}
+                        {% else %}
+                            Unknown Instructor
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <!-- Course Stats with safety checks -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-users text-primary me-1 small"></i>
+                        <small class="text-muted">{{ course.enrollment_count or 0 }} students</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-clock text-primary me-1 small"></i>
+                        <small class="text-muted">{{ course.duration or 'Self-paced' }}</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                <a href="/courses/{{ course.id }}" class="btn btn-outline-primary w-100">
+                    View Course <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <i class="fas fa-search fa-4x text-muted mb-3"></i>
+        <h3>No courses found</h3>
+        <p class="text-muted mb-4">Try adjusting your filters or search criteria</p>
+        <a href="/courses" class="btn btn-primary">Clear Filters</a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav aria-label="Courses pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page-1 }}&search={{ search_query or '' }}&category={{ category or '' }}&level={{ level or '' }}&price={{ price or '' }}&sort={{ sort or 'newest' }}">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>
+        
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="?page={{ p }}&search={{ search_query or '' }}&category={{ category or '' }}&level={{ level or '' }}&price={{ price or '' }}&sort={{ sort or 'newest' }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="?page={{ page+1 }}&search={{ search_query or '' }}&category={{ category or '' }}&level={{ level or '' }}&price={{ price or '' }}&sort={{ sort or 'newest' }}">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-</script>
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.bg-primary-subtle {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.pagination .page-link {
+    color: var(--bs-primary);
+    padding: 0.75rem 1rem;
+}
+
+.pagination .active .page-link {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+.form-select, .form-control {
+    border: 1px solid #dee2e6;
+    padding: 0.6rem 1rem;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+</style>
+{% endblock %}

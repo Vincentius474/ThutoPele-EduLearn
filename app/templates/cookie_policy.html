@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">Cookie Policy</h1>
+            <p class="text-muted">Last updated: January 1, 2024</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    
+                    <section class="mb-5">
+                        <h3 class="h4 fw-bold mb-3">What Are Cookies</h3>
+                        <p>Cookies are small text files that are placed on your computer or mobile device when you visit a website. They are widely used to make websites work more efficiently and provide information to the website owners.</p>
+                    </section>
+
+                    <section class="mb-5">
+                        <h3 class="h4 fw-bold mb-3">How We Use Cookies</h3>
+                        <p>ThutoPele EduLearn uses cookies for the following purposes:</p>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Cookie Type</th>
+                                        <th>Purpose</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Essential Cookies</strong></td>
+                                        <td>Required for the website to function properly. They enable core functionality such as security, network management, and account access.</td>
+                                        <td>Session / Persistent</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Preference Cookies</strong></td>
+                                        <td>Remember your preferences and settings, such as language preferences and course progress.</td>
+                                        <td>1 year</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Analytics Cookies</strong></td>
+                                        <td>Help us understand how visitors interact with our website by collecting anonymous information. We use this data to improve our services.</td>
+                                        <td>2 years</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Marketing Cookies</strong></td>
+                                        <td>Used to track visitors across websites to display relevant advertisements and measure ad effectiveness.</td>
+                                        <td>90 days</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <section class="mb-5">
+                        <h3 class="h4 fw-bold mb-3">Third-Party Cookies</h3>
+                        <p>In addition to our own cookies, we may also use various third-party cookies to report usage statistics and deliver advertisements:</p>
+                        
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-transparent">
+                                <strong>Google Analytics:</strong> Used to analyze website traffic and user behavior.
+                                <a href="https://policies.google.com/technologies/cookies" target="_blank" class="d-block small">Learn more</a>
+                            </li>
+                            <li class="list-group-item bg-transparent">
+                                <strong>Stripe:</strong> Used for payment processing and fraud prevention.
+                                <a href="https://stripe.com/privacy" target="_blank" class="d-block small">Learn more</a>
+                            </li>
+                            <li class="list-group-item bg-transparent">
+                                <strong>Supabase:</strong> Used for authentication and database services.
+                                <a href="https://supabase.com/privacy" target="_blank" class="d-block small">Learn more</a>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <section class="mb-5">
+                        <h3 class="h4 fw-bold mb-3">Managing Cookies</h3>
+                        <p>Most web browsers allow you to control cookies through their settings preferences. However, limiting cookies may impact your experience on our website.</p>
+                        
+                        <h5 class="h6 fw-bold mt-4">Browser Settings:</h5>
+                        <ul>
+                            <li><strong>Chrome:</strong> Settings → Privacy and Security → Cookies and other site data</li>
+                            <li><strong>Firefox:</strong> Options → Privacy & Security → Cookies and Site Data</li>
+                            <li><strong>Safari:</strong> Preferences → Privacy → Cookies and website data</li>
+                            <li><strong>Edge:</strong> Settings → Cookies and site permissions → Manage and delete cookies</li>
+                        </ul>
+                        
+                        <div class="alert alert-info mt-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Note:</strong> If you disable cookies, some features of our platform may not function properly.
+                        </div>
+                    </section>
+
+                    <section class="mb-5">
+                        <h3 class="h4 fw-bold mb-3">Cookie Consent</h3>
+                        <p>When you first visit our website, you will see a cookie banner asking for your consent. You can change your preferences at any time by clicking the "Cookie Settings" link in the footer.</p>
+                        
+                        <div class="text-center mt-4">
+                            <button class="btn btn-primary" onclick="openCookieSettings()">
+                                <i class="fas fa-cog me-2"></i>Cookie Settings
+                            </button>
+                        </div>
+                    </section>
+
+                    <section class="mb-5">
+                        <h3 class="h4 fw-bold mb-3">Updates to This Policy</h3>
+                        <p>We may update this Cookie Policy from time to time. Any changes will be posted on this page with an updated revision date. We encourage you to review this policy periodically to stay informed about how we use cookies.</p>
+                    </section>
+
+                    <section>
+                        <h3 class="h4 fw-bold mb-3">Contact Us</h3>
+                        <p>If you have any questions about our use of cookies, please contact us:</p>
+                        <address>
+                            <i class="fas fa-envelope me-2"></i> privacy@thutopele.com<br>
+                            <i class="fas fa-phone me-2"></i> +27 12 345 6789
+                        </address>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cookie Settings Modal -->
+<div class="modal fade" id="cookieSettingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cookie Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="cookieSettingsForm">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="essentialCookies" checked disabled>
+                            <label class="form-check-label" for="essentialCookies">
+                                <strong>Essential Cookies</strong>
+                                <p class="small text-muted mb-0">Required for the website to function properly.</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="preferenceCookies" checked>
+                            <label class="form-check-label" for="preferenceCookies">
+                                <strong>Preference Cookies</strong>
+                                <p class="small text-muted mb-0">Remember your settings and preferences.</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="analyticsCookies" checked>
+                            <label class="form-check-label" for="analyticsCookies">
+                                <strong>Analytics Cookies</strong>
+                                <p class="small text-muted mb-0">Help us improve our website.</p>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="marketingCookies">
+                            <label class="form-check-label" for="marketingCookies">
+                                <strong>Marketing Cookies</strong>
+                                <p class="small text-muted mb-0">Used for personalized advertising.</p>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveCookieSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openCookieSettings() {
+    new bootstrap.Modal(document.getElementById('cookieSettingsModal')).show();
+}
+
+function saveCookieSettings() {
+    const preferences = {
+        essential: true,
+        preference: document.getElementById('preferenceCookies').checked,
+        analytics: document.getElementById('analyticsCookies').checked,
+        marketing: document.getElementById('marketingCookies').checked
+    };
+    
+    // Save to localStorage or send to server
+    localStorage.setItem('cookiePreferences', JSON.stringify(preferences));
+    
+    alert('Cookie preferences saved!');
+    bootstrap.Modal.getInstance(document.getElementById('cookieSettingsModal')).hide();
+}
+
+// Load saved preferences on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const saved = localStorage.getItem('cookiePreferences');
+    if (saved) {
+        const preferences = JSON.parse(saved);
+        document.getElementById('preferenceCookies').checked = preferences.preference;
+        document.getElementById('analyticsCookies').checked = preferences.analytics;
+        document.getElementById('marketingCookies').checked = preferences.marketing;
+    }
+});
+</script>
+{% endblock %}

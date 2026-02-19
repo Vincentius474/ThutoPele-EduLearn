@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">Frequently Asked Questions</h1>
+            <p class="lead text-muted">Find answers to common questions about our platform</p>
+        </div>
+    </div>
+
+    <!-- Search FAQ -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <div class="input-group">
+                <input type="text" class="form-control form-control-lg" id="faqSearch" 
+                       placeholder="Search FAQs...">
+                <button class="btn btn-primary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Categories -->
+    <div class="row">
+        <!-- General Questions -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4">
+                    <h3 class="h4 text-primary">
+                        <i class="fas fa-question-circle me-2"></i>General Questions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="generalFaq">
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#general1">
+                                    What is ThutoPele EduLearn?
+                                </button>
+                            </h2>
+                            <div id="general1" class="accordion-collapse collapse show" 
+                                 data-bs-parent="#generalFaq">
+                                <div class="accordion-body">
+                                    ThutoPele EduLearn is an online learning platform that offers courses in Programming, Robotics, Artificial Intelligence, Machine Learning, Networking, and Cyber Security. We provide quality education to learners worldwide, from beginners to advanced professionals.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#general2">
+                                    How do I get started?
+                                </button>
+                            </h2>
+                            <div id="general2" class="accordion-collapse collapse" 
+                                 data-bs-parent="#generalFaq">
+                                <div class="accordion-body">
+                                    Getting started is easy! Simply create a free account, browse our course catalog, and enroll in any course that interests you. Most beginner courses are free to get you started on your learning journey.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#general3">
+                                    Is ThutoPele EduLearn free?
+                                </button>
+                            </h2>
+                            <div id="general3" class="accordion-collapse collapse" 
+                                 data-bs-parent="#generalFaq">
+                                <div class="accordion-body">
+                                    We offer both free and paid courses. Many beginner-level courses are completely free. Paid courses provide advanced content, projects, and certificates of completion. We also have subscription plans for unlimited access to our course library.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#general4">
+                                    Can I access courses on mobile?
+                                </button>
+                            </h2>
+                            <div id="general4" class="accordion-collapse collapse" 
+                                 data-bs-parent="#generalFaq">
+                                <div class="accordion-body">
+                                    Yes! Our platform is fully responsive and works on all devices. You can access courses on your smartphone, tablet, or computer. We're also developing mobile apps for iOS and Android for an even better mobile experience.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account & Billing -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4">
+                    <h3 class="h4 text-primary">
+                        <i class="fas fa-user-circle me-2"></i>Account & Billing
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="accountFaq">
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#account1">
+                                    How do I create an account?
+                                </button>
+                            </h2>
+                            <div id="account1" class="accordion-collapse collapse" 
+                                 data-bs-parent="#accountFaq">
+                                <div class="accordion-body">
+                                    Click the "Register" button in the top right corner. You can sign up as a student directly. If you're interested in becoming an instructor, you'll need an invitation code from our admin team.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#account2">
+                                    What payment methods do you accept?
+                                </button>
+                            </h2>
+                            <div id="account2" class="accordion-collapse collapse" 
+                                 data-bs-parent="#accountFaq">
+                                <div class="accordion-body">
+                                    We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers for South African students. All payments are processed securely through our payment partners.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#account3">
+                                    Can I get a refund?
+                                </button>
+                            </h2>
+                            <div id="account3" class="accordion-collapse collapse" 
+                                 data-bs-parent="#accountFaq">
+                                <div class="accordion-body">
+                                    Yes, we offer a 30-day money-back guarantee for all paid courses. If you're not satisfied with a course, contact our support team within 30 days of purchase for a full refund.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#account4">
+                                    How do I reset my password?
+                                </button>
+                            </h2>
+                            <div id="account4" class="accordion-collapse collapse" 
+                                 data-bs-parent="#accountFaq">
+                                <div class="accordion-body">
+                                    Click on "Forgot Password" on the login page. Enter your email address, and we'll send you a link to reset your password. The link expires after 24 hours for security.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courses & Learning -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4">
+                    <h3 class="h4 text-primary">
+                        <i class="fas fa-graduation-cap me-2"></i>Courses & Learning
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="coursesFaq">
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#courses1">
+                                    How long do I have access to a course?
+                                </button>
+                            </h2>
+                            <div id="courses1" class="accordion-collapse collapse" 
+                                 data-bs-parent="#coursesFaq">
+                                <div class="accordion-body">
+                                    Once you enroll in a course, you have lifetime access to all course materials. You can learn at your own pace and revisit the content anytime.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#courses2">
+                                    Do you provide certificates?
+                                </button>
+                            </h2>
+                            <div id="courses2" class="accordion-collapse collapse" 
+                                 data-bs-parent="#coursesFaq">
+                                <div class="accordion-body">
+                                    Yes! Upon successful completion of any paid course, you'll receive a verified certificate that you can share on LinkedIn, add to your resume, or print. Free courses may offer a certificate of completion.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#courses3">
+                                    Are the courses self-paced?
+                                </button>
+                            </h2>
+                            <div id="courses3" class="accordion-collapse collapse" 
+                                 data-bs-parent="#coursesFaq">
+                                <div class="accordion-body">
+                                    Most courses are self-paced, allowing you to learn at your convenience. Some advanced courses may have scheduled sessions or cohort-based learning for better interaction.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#courses4">
+                                    Can I download course materials?
+                                </button>
+                            </h2>
+                            <div id="courses4" class="accordion-collapse collapse" 
+                                 data-bs-parent="#coursesFaq">
+                                <div class="accordion-body">
+                                    Yes, most courses provide downloadable resources including code files, PDFs, and practice exercises. Videos are streamed online but can be accessed offline through our mobile app.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Support -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4">
+                    <h3 class="h4 text-primary">
+                        <i class="fas fa-cog me-2"></i>Technical Support
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="techFaq">
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#tech1">
+                                    What browsers do you support?
+                                </button>
+                            </h2>
+                            <div id="tech1" class="accordion-collapse collapse" 
+                                 data-bs-parent="#techFaq">
+                                <div class="accordion-body">
+                                    We support the latest versions of Chrome, Firefox, Safari, and Edge. For the best experience, we recommend using Chrome or Firefox.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#tech2">
+                                    Videos won't play. What should I do?
+                                </button>
+                            </h2>
+                            <div id="tech2" class="accordion-collapse collapse" 
+                                 data-bs-parent="#techFaq">
+                                <div class="accordion-body">
+                                    Try refreshing the page, clearing your browser cache, or using a different browser. If problems persist, check your internet connection or contact our support team.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#tech3">
+                                    How do I contact technical support?
+                                </button>
+                            </h2>
+                            <div id="tech3" class="accordion-collapse collapse" 
+                                 data-bs-parent="#techFaq">
+                                <div class="accordion-body">
+                                    You can reach our technical support team through the Help Center, email at support@thutopele.com, or through the live chat feature on our website. We're available 24/7 to assist you.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item border-0 mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed rounded-3 shadow-sm" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#tech4">
+                                    Is my data secure?
+                                </button>
+                            </h2>
+                            <div id="tech4" class="accordion-collapse collapse" 
+                                 data-bs-parent="#techFaq">
+                                <div class="accordion-body">
+                                    Yes, we take data security seriously. All data is encrypted using industry-standard SSL/TLS protocols. We never share your personal information with third parties. Read our Privacy Policy for more details.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Still Have Questions -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0">
+                <div class="card-body p-5 text-center">
+                    <h3 class="mb-3">Still Have Questions?</h3>
+                    <p class="mb-4">Can't find what you're looking for? We're here to help!</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="/contact" class="btn btn-light btn-lg">
+                            <i class="fas fa-envelope me-2"></i>Contact Us
+                        </a>
+                        <a href="/help" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-life-ring me-2"></i>Help Center
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('faqSearch').addEventListener('keyup', function() {
+    const searchTerm = this.value.toLowerCase();
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    
+    accordionItems.forEach(item => {
+        const question = item.querySelector('.accordion-button').textContent.toLowerCase();
+        const answer = item.querySelector('.accordion-body').textContent.toLowerCase();
+        
+        if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+</script>
+
+<style>
+.accordion-button:not(.collapsed) {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--bs-primary);
+}
+
+.accordion-button:focus {
+    box-shadow: none;
+    border-color: rgba(13, 110, 253, 0.1);
+}
+
+.accordion-item {
+    background-color: transparent;
+}
+</style>
+{% endblock %}

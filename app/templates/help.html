@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">Help Center</h1>
+            <p class="lead text-muted">How can we help you today?</p>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto">
+            <div class="input-group input-group-lg">
+                <input type="text" class="form-control" placeholder="Search for help articles...">
+                <button class="btn btn-primary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Categories -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="display-1 text-primary mb-3">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <h4>Account Help</h4>
+                    <p class="text-muted">Manage your account, login issues, and profile settings</p>
+                    <a href="#" class="btn btn-outline-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="display-1 text-primary mb-3">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h4>Course Help</h4>
+                    <p class="text-muted">Enrollment, access, certificates, and course materials</p>
+                    <a href="#" class="btn btn-outline-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="display-1 text-primary mb-3">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h4>Billing Help</h4>
+                    <p class="text-muted">Payments, refunds, subscriptions, and invoices</p>
+                    <a href="#" class="btn btn-outline-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="display-1 text-primary mb-3">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h4>Instructor Help</h4>
+                    <p class="text-muted">Create courses, manage students, and earnings</p>
+                    <a href="#" class="btn btn-outline-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="display-1 text-primary mb-3">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h4>Technical Support</h4>
+                    <p class="text-muted">Video playback, website issues, and system requirements</p>
+                    <a href="#" class="btn btn-outline-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="display-1 text-primary mb-3">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4>Security Help</h4>
+                    <p class="text-muted">Account security, privacy, and data protection</p>
+                    <a href="#" class="btn btn-outline-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Articles -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="mb-4">Popular Articles</h3>
+        </div>
+        <div class="col-md-6">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        How to reset your password
+                    </a>
+                </li>
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Getting started with your first course
+                    </a>
+                </li>
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Understanding course certificates
+                    </a>
+                </li>
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Payment methods and billing
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        How to become an instructor
+                    </a>
+                </li>
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Troubleshooting video playback
+                    </a>
+                </li>
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Account security tips
+                    </a>
+                </li>
+                <li class="list-group-item bg-transparent">
+                    <a href="#" class="text-decoration-none">
+                        <i class="fas fa-file-alt text-primary me-2"></i>
+                        Refund policy
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Contact Options -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">Still Need Help?</h3>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-comment-dots fa-3x"></i>
+                    </div>
+                    <h5>Live Chat</h5>
+                    <p class="text-muted">Chat with our support team in real-time</p>
+                    <button class="btn btn-primary" id="liveChatBtn">
+                        <i class="fas fa-comment me-2"></i>Start Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-envelope fa-3x"></i>
+                    </div>
+                    <h5>Email Support</h5>
+                    <p class="text-muted">Get a response within 24 hours</p>
+                    <a href="mailto:support@thutopele.com" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>Email Us
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-phone-alt fa-3x"></i>
+                    </div>
+                    <h5>Phone Support</h5>
+                    <p class="text-muted">Mon-Fri, 9:00 AM - 6:00 PM</p>
+                    <a href="tel:+27123456789" class="btn btn-outline-primary">
+                        <i class="fas fa-phone-alt me-2"></i>+27 12 345 6789
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('liveChatBtn')?.addEventListener('click', function() {
+    // Implement live chat functionality here
+    alert('Live chat feature coming soon! Please email us at support@thutopele.com');
+});
+</script>
+{% endblock %}
