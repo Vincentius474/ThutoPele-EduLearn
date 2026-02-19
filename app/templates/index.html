@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-lg-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">Welcome to ThutoPele EduLearn</h1>
+        <p class="lead">Your gateway to quality education. Learn from expert instructors and advance your career.</p>
+        {% if not current_user %}
+        <div class="mt-4">
+            <a href="/register" class="btn btn-primary btn-lg me-2">Get Started</a>
+            <a href="/courses" class="btn btn-outline-secondary btn-lg">Browse Courses</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Categories Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">Browse by Category</h2>
+        <p class="text-center text-muted mb-5">Explore our wide range of technology courses</p>
+    </div>
+    
+    <!-- Programming -->
+    <div class="col-md-4 col-lg-2 mb-3">
+        <div class="card category-card h-100 text-center">
+            <div class="card-body">
+                <div class="category-icon mb-3">
+                    <i class="fas fa-code fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Programming</h5>
+                <p class="card-text small text-muted">Python, Java, JavaScript & more</p>
+                <a href="/courses?category=Programming" class="btn btn-outline-primary btn-sm">Browse</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Robotics -->
+    <div class="col-md-4 col-lg-2 mb-3">
+        <div class="card category-card h-100 text-center">
+            <div class="card-body">
+                <div class="category-icon mb-3">
+                    <i class="fas fa-robot fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Robotics</h5>
+                <p class="card-text small text-muted">ROS, Arduino, Automation</p>
+                <a href="/courses?category=Robotics" class="btn btn-outline-success btn-sm">Browse</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Artificial Intelligence -->
+    <div class="col-md-4 col-lg-2 mb-3">
+        <div class="card category-card h-100 text-center">
+            <div class="card-body">
+                <div class="category-icon mb-3">
+                    <i class="fas fa-brain fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">AI</h5>
+                <p class="card-text small text-muted">Neural Networks, NLP, Computer Vision</p>
+                <a href="/courses?category=Artificial Intelligence" class="btn btn-outline-info btn-sm">Browse</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Machine Learning -->
+    <div class="col-md-4 col-lg-2 mb-3">
+        <div class="card category-card h-100 text-center">
+            <div class="card-body">
+                <div class="category-icon mb-3">
+                    <i class="fas fa-chart-line fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title">Machine Learning</h5>
+                <p class="card-text small text-muted">TensorFlow, PyTorch, Scikit-learn</p>
+                <a href="/courses?category=Machine Learning" class="btn btn-outline-warning btn-sm">Browse</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Networking -->
+    <div class="col-md-4 col-lg-2 mb-3">
+        <div class="card category-card h-100 text-center">
+            <div class="card-body">
+                <div class="category-icon mb-3">
+                    <i class="fas fa-network-wired fa-3x text-secondary"></i>
+                </div>
+                <h5 class="card-title">Networking</h5>
+                <p class="card-text small text-muted">CCNA, TCP/IP, Cloud Computing</p>
+                <a href="/courses?category=Networking" class="btn btn-outline-secondary btn-sm">Browse</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cyber Security -->
+    <div class="col-md-4 col-lg-2 mb-3">
+        <div class="card category-card h-100 text-center">
+            <div class="card-body">
+                <div class="category-icon mb-3">
+                    <i class="fas fa-shield-alt fa-3x text-danger"></i>
+                </div>
+                <h5 class="card-title">Cyber Security</h5>
+                <p class="card-text small text-muted">Ethical Hacking, Cryptography</p>
+                <a href="/courses?category=Cyber Security" class="btn btn-outline-danger btn-sm">Browse</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <hr>
+    </div>
+</div>
+
+<!-- Featured Courses -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-center mb-4">Featured Courses</h2>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for course in courses %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+            {% if course.thumbnail_url %}
+            <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}" style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                <i class="fas fa-image fa-3x text-muted"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ course.title }}</h5>
+                <p class="card-text text-muted">{{ course.description[:100] }}{% if course.description|length > 100 %}...{% endif %}</p>
+                <div class="mb-2">
+                    <span class="badge bg-primary">{{ course.level }}</span>
+                    <span class="badge bg-secondary">{{ course.category }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-user"></i> {{ course.instructor.full_name if course.instructor else 'Instructor' }}
+                    </small>
+                    <strong>
+                        {% if course.price == 0 %}
+                            Free
+                        {% else %}
+                            ${{ course.price }}
+                        {% endif %}
+                    </strong>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="/courses/{{ course.id }}" class="btn btn-outline-primary w-100">View Course</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center">
+        <p class="text-muted">No courses available yet.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

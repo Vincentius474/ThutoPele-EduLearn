@@ -1,0 +1,513 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Sign In</h4>
+            </div>
+            <div class="card-body">
+                <!-- Role Selection Tabs -->
+                <ul class="nav nav-pills nav-justified mb-4" id="roleTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="password-tab" data-bs-toggle="tab" 
+                                data-bs-target="#password" type="button" role="tab">
+                            <i class="fas fa-key me-2"></i>Password
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="magic-tab" data-bs-toggle="tab" 
+                                data-bs-target="#magic" type="button" role="tab">
+                            <i class="fas fa-magic me-2"></i>Magic Link
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="otp-tab" data-bs-toggle="tab" 
+                                data-bs-target="#otp" type="button" role="tab">
+                            <i class="fas fa-mobile-alt me-2"></i>OTP
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="loginTabContent">
+                    <!-- Password Login -->
+                    <div class="tab-pane fade show active" id="password" role="tabpanel">
+                        <form id="passwordLoginForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" name="username" 
+                                           placeholder="Enter your email" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" name="password" 
+                                           placeholder="Enter your password" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="remember">
+                                <label class="form-check-label" for="remember">Remember me</label>
+                                <a href="/forgot-password" class="float-end text-decoration-none">Forgot Password?</a>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Magic Link Login -->
+                    <div class="tab-pane fade" id="magic" role="tabpanel">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-envelope-open-text fa-3x text-primary mb-3"></i>
+                            <p class="text-muted">We'll send you a magic link to sign in instantly</p>
+                        </div>
+                        <form id="magicLinkForm">
+                            <div class="mb-3">
+                                <label for="magicEmail" class="form-label">Email address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="magicEmail" 
+                                           placeholder="Enter your email" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-paper-plane me-2"></i>Send Magic Link
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- OTP Login -->
+                    <div class="tab-pane fade" id="otp" role="tabpanel">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-mobile-alt fa-3x text-primary mb-3"></i>
+                            <p class="text-muted">Enter your email to receive a one-time code</p>
+                        </div>
+                        <form id="otpRequestForm">
+                            <div class="mb-3">
+                                <label for="otpEmail" class="form-label">Email address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="otpEmail" 
+                                           placeholder="Enter your email" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-paper-plane me-2"></i>Send OTP
+                            </button>
+                        </form>
+                        
+                        <!-- OTP Verification (hidden initially) -->
+                        <div id="otpVerification" style="display: none;">
+                            <hr>
+                            <form id="otpVerifyForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Enter 6-digit code</label>
+                                    <div class="d-flex justify-content-between gap-2" id="otpInputs">
+                                        <input type="text" class="form-control text-center otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                        <input type="text" class="form-control text-center otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                        <input type="text" class="form-control text-center otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                        <input type="text" class="form-control text-center otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                        <input type="text" class="form-control text-center otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                        <input type="text" class="form-control text-center otp-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted" id="timer">Code expires in 05:00</small>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-check-circle me-2"></i>Verify & Sign In
+                                </button>
+                            </form>
+                            <div class="text-center mt-3">
+                                <button class="btn btn-link" id="resendOtp">Resend Code</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Social Login Options -->
+                <div class="mt-4">
+                    <div class="text-center mb-3">
+                        <span class="text-muted">Or continue with</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col">
+                            <button class="btn btn-outline-danger w-100" id="googleLogin">
+                                <i class="fab fa-google me-2"></i>Google
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button class="btn btn-outline-primary w-100" id="facebookLogin">
+                                <i class="fab fa-facebook-f me-2"></i>Facebook
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button class="btn btn-outline-dark w-100" id="githubLogin">
+                                <i class="fab fa-github me-2"></i>GitHub
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+                <p class="text-center mb-0">
+                    Don't have an account? <a href="/register">Sign up here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-key me-2"></i>Reset Password
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Enter your email address and we'll send you a link to reset your password.</p>
+                <form id="forgotPasswordForm">
+                    <div class="mb-3">
+                        <label for="resetEmail" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="resetEmail" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="fas fa-paper-plane me-2"></i>Send Reset Link
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Success!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-envelope-open-text fa-4x text-success mb-3"></i>
+                <p id="successMessage">Check your email for the login link!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const password = document.getElementById('password');
+        const icon = this.querySelector('i');
+        
+        if (password.type === 'password') {
+            password.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            password.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+    
+    // Password Login
+    document.getElementById('passwordLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('username', document.getElementById('email').value);
+        formData.append('password', document.getElementById('password').value);
+        
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                document.cookie = `access_token=${data.access_token}; path=/; max-age=3600`;
+                window.location.href = '/dashboard';
+            } else {
+                showAlert('error', data.detail || 'Login failed');
+            }
+        } catch (error) {
+            showAlert('error', 'An error occurred');
+        }
+    });
+    
+    // Magic Link Login
+    document.getElementById('magicLinkForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('magicEmail').value;
+        
+        try {
+            const response = await fetch('/api/v1/auth/magic-link', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email})
+            });
+            
+            if (response.ok) {
+                document.getElementById('successMessage').textContent = 
+                    'Magic link sent! Check your email to sign in.';
+                new bootstrap.Modal(document.getElementById('successModal')).show();
+                document.getElementById('magicLinkForm').reset();
+            } else {
+                const data = await response.json();
+                showAlert('error', data.detail || 'Failed to send magic link');
+            }
+        } catch (error) {
+            showAlert('error', 'An error occurred');
+        }
+    });
+    
+    // Request OTP
+    document.getElementById('otpRequestForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('otpEmail').value;
+        
+        try {
+            const response = await fetch('/api/v1/auth/request-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email})
+            });
+            
+            if (response.ok) {
+                // Hide request form, show verification
+                document.getElementById('otpRequestForm').style.display = 'none';
+                document.getElementById('otpVerification').style.display = 'block';
+                startOtpTimer(300); // 5 minutes
+                
+                // Store email for verification
+                document.getElementById('otpVerifyForm').dataset.email = email;
+                
+                // Focus first input
+                document.querySelector('.otp-input').focus();
+            } else {
+                const data = await response.json();
+                showAlert('error', data.detail || 'Failed to send OTP');
+            }
+        } catch (error) {
+            showAlert('error', 'An error occurred');
+        }
+    });
+    
+    // OTP Input handling
+    const otpInputs = document.querySelectorAll('.otp-input');
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('keyup', (e) => {
+            if (e.key >= '0' && e.key <= '9') {
+                if (index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            } else if (e.key === 'Backspace') {
+                if (index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            }
+        });
+        
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const paste = e.clipboardData.getData('text');
+            if (paste.length === 6 && /^\d+$/.test(paste)) {
+                paste.split('').forEach((char, i) => {
+                    if (otpInputs[i]) {
+                        otpInputs[i].value = char;
+                    }
+                });
+                otpInputs[5].focus();
+            }
+        });
+    });
+    
+    // Verify OTP
+    document.getElementById('otpVerifyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = e.target.dataset.email;
+        const otp = Array.from(otpInputs).map(input => input.value).join('');
+        
+        if (otp.length !== 6) {
+            showAlert('error', 'Please enter the 6-digit code');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/v1/auth/verify-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, otp})
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                document.cookie = `access_token=${data.access_token}; path=/; max-age=3600`;
+                window.location.href = '/dashboard';
+            } else {
+                showAlert('error', data.detail || 'Invalid OTP');
+            }
+        } catch (error) {
+            showAlert('error', 'An error occurred');
+        }
+    });
+    
+    // Resend OTP
+    document.getElementById('resendOtp').addEventListener('click', async () => {
+        const email = document.getElementById('otpEmail').value;
+        
+        try {
+            const response = await fetch('/api/v1/auth/request-otp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email})
+            });
+            
+            if (response.ok) {
+                showAlert('success', 'New OTP sent!');
+                startOtpTimer(300);
+            }
+        } catch (error) {
+            showAlert('error', 'Failed to resend OTP');
+        }
+    });
+    
+    // Forgot Password
+    document.querySelector('a[href="/forgot-password"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        new bootstrap.Modal(document.getElementById('forgotPasswordModal')).show();
+    });
+    
+    document.getElementById('forgotPasswordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('resetEmail').value;
+        
+        try {
+            const response = await fetch('/api/v1/auth/forgot-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email})
+            });
+            
+            if (response.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
+                document.getElementById('successMessage').textContent = 
+                    'Password reset link sent! Check your email.';
+                new bootstrap.Modal(document.getElementById('successModal')).show();
+            } else {
+                const data = await response.json();
+                showAlert('error', data.detail || 'Failed to send reset link');
+            }
+        } catch (error) {
+            showAlert('error', 'An error occurred');
+        }
+    });
+    
+    // Social Login
+    document.getElementById('googleLogin').addEventListener('click', () => {
+        window.location.href = '/api/v1/auth/google';
+    });
+    
+    document.getElementById('facebookLogin').addEventListener('click', () => {
+        window.location.href = '/api/v1/auth/facebook';
+    });
+    
+    document.getElementById('githubLogin').addEventListener('click', () => {
+        window.location.href = '/api/v1/auth/github';
+    });
+});
+
+// OTP Timer
+function startOtpTimer(duration) {
+    const timerDisplay = document.getElementById('timer');
+    let timer = duration;
+    
+    const interval = setInterval(() => {
+        const minutes = Math.floor(timer / 60);
+        const seconds = timer % 60;
+        
+        timerDisplay.textContent = `Code expires in ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (--timer < 0) {
+            clearInterval(interval);
+            timerDisplay.textContent = 'Code expired - request a new one';
+            timerDisplay.classList.add('text-danger');
+        }
+    }, 1000);
+}
+
+// Show alert message
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+
+<style>
+.otp-input {
+    width: 50px;
+    height: 60px;
+    font-size: 24px;
+    text-align: center;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.otp-input:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    outline: none;
+}
+
+@media (max-width: 576px) {
+    .otp-input {
+        width: 40px;
+        height: 50px;
+        font-size: 20px;
+    }
+}
+</style>
+{% endblock %}

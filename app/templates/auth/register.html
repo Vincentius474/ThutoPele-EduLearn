@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>Register</h4>
+            </div>
+            <div class="card-body">
+                <!-- Role Selection Tabs -->
+                <ul class="nav nav-pills nav-justified mb-4" id="roleTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="student-tab" data-bs-toggle="tab" 
+                                data-bs-target="#student" type="button" role="tab">
+                            <i class="fas fa-user-graduate me-2"></i>Student
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="instructor-tab" data-bs-toggle="tab" 
+                                data-bs-target="#instructor" type="button" role="tab">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Instructor
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Tab Content -->
+                <div class="tab-content" id="roleTabContent">
+                    <!-- Student Registration -->
+                    <div class="tab-pane fade show active" id="student" role="tabpanel">
+                        <form id="studentRegisterForm">
+                            <div class="mb-3">
+                                <label for="studentEmail" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="studentEmail" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="studentUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="studentUsername" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="studentFullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="studentFullName" name="full_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="studentPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="studentPassword" name="password" required minlength="8">
+                                <small class="text-muted">Minimum 8 characters</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="studentConfirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="studentConfirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Register as Student</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Instructor Registration -->
+                    <div class="tab-pane fade" id="instructor" role="tabpanel">
+                        <form id="instructorRegisterForm">
+                            <div class="mb-3">
+                                <label for="instructorEmail" class="form-label">Email address</label>
+                                <input type="email" class="form-control" id="instructorEmail" name="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="instructorUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="instructorUsername" name="username" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="instructorFullName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="instructorFullName" name="full_name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="invitationCode" class="form-label">Invitation Code</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="invitationCode" name="invitation_code" 
+                                           placeholder="INST-XXXX-XXXX" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="verifyCode">
+                                        <i class="fas fa-check"></i> Verify
+                                    </button>
+                                </div>
+                                <small class="text-muted" id="codeStatus"></small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="instructorPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="instructorPassword" name="password" required minlength="8">
+                                <small class="text-muted">Minimum 8 characters</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="instructorConfirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="instructorConfirmPassword" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="registerInstructorBtn" disabled>
+                                Register as Instructor
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <hr>
+                <p class="text-center mb-0">
+                    Already have an account? <a href="/login">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Student Registration
+    document.getElementById('studentRegisterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const password = document.getElementById('studentPassword').value;
+        const confirmPassword = document.getElementById('studentConfirmPassword').value;
+        
+        if (password !== confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+        
+        const formData = {
+            email: document.getElementById('studentEmail').value,
+            username: document.getElementById('studentUsername').value,
+            full_name: document.getElementById('studentFullName').value,
+            password: password,
+            role: 'student'
+        };
+        
+        try {
+            const response = await fetch('/api/v1/auth/register/student', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('Registration successful! Please login.');
+                window.location.href = '/login';
+            } else {
+                alert(data.detail || 'Registration failed');
+            }
+        } catch (error) {
+            alert('An error occurred');
+        }
+    });
+    
+    // Verify Invitation Code
+    document.getElementById('verifyCode').addEventListener('click', async () => {
+        const email = document.getElementById('instructorEmail').value;
+        const code = document.getElementById('invitationCode').value;
+        const statusEl = document.getElementById('codeStatus');
+        const registerBtn = document.getElementById('registerInstructorBtn');
+        
+        if (!email || !code) {
+            statusEl.textContent = 'Please enter both email and code';
+            statusEl.className = 'text-danger';
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/v1/auth/verify-invitation', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, code})
+            });
+            
+            const data = await response.json();
+            
+            if (data.valid) {
+                statusEl.textContent = '✓ Code verified! You can now register.';
+                statusEl.className = 'text-success';
+                registerBtn.disabled = false;
+                
+                // Pre-fill name if available
+                if (data.full_name) {
+                    document.getElementById('instructorFullName').value = data.full_name;
+                }
+                if (data.username) {
+                    document.getElementById('instructorUsername').value = data.username;
+                }
+            } else {
+                statusEl.textContent = '✗ ' + data.message;
+                statusEl.className = 'text-danger';
+                registerBtn.disabled = true;
+            }
+        } catch (error) {
+            statusEl.textContent = 'Error verifying code';
+            statusEl.className = 'text-danger';
+        }
+    });
+    
+    // Instructor Registration
+    document.getElementById('instructorRegisterForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const password = document.getElementById('instructorPassword').value;
+        const confirmPassword = document.getElementById('instructorConfirmPassword').value;
+        
+        if (password !== confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+        
+        const formData = {
+            email: document.getElementById('instructorEmail').value,
+            username: document.getElementById('instructorUsername').value,
+            full_name: document.getElementById('instructorFullName').value,
+            password: password,
+            invitation_code: document.getElementById('invitationCode').value
+        };
+        
+        try {
+            const response = await fetch('/api/v1/auth/register/instructor', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('Instructor registration successful! Please login.');
+                window.location.href = '/login';
+            } else {
+                alert(data.detail || 'Registration failed');
+            }
+        } catch (error) {
+            alert('An error occurred');
+        }
+    });
+});
+</script>
+{% endblock %}

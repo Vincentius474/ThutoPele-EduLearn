@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Welcome, {{ current_user.full_name or current_user.email }}!</h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h5 class="card-title">Enrolled Courses</h5>
+                <h2>{{ enrolled_courses|length }}</h2>
+            </div>
+        </div>
+    </div>
+    {% if current_user.is_instructor %}
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h5 class="card-title">Teaching</h5>
+                <h2>{{ taught_courses|length }}</h2>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5 class="card-title">Completed</h5>
+                <h2>0</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enrolled Courses -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h3>My Courses</h3>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for course in enrolled_courses %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            {% if course.thumbnail_url %}
+            <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}" style="height: 150px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ course.title }}</h5>
+                
+                {# Safely get progress value #}
+                {% if course.enrollment and course.enrollment.progress is defined %}
+                    {% set progress = course.enrollment.progress %}
+                {% else %}
+                    {% set progress = 0 %}
+                {% endif %}
+                
+                <div class="progress mb-2">
+                    <div class="progress-bar" 
+                         role="progressbar" 
+                         style="width: {{ progress }}%;" 
+                         aria-valuenow="{{ progress }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                        {{ progress }}%
+                    </div>
+                </div>
+                <a href="/courses/{{ course.id }}" class="btn btn-primary btn-sm">Continue Learning</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center">
+        <p class="text-muted">You haven't enrolled in any courses yet.</p>
+        <a href="/courses" class="btn btn-primary">Browse Courses</a>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Teaching Courses (if instructor) -->
+<!-- Category Statistics for Instructors -->
+{% if current_user.is_instructor %}
+<div class="row mt-4">
+    <div class="col-12">
+        <h4>Course Distribution by Category</h4>
+    </div>
+    {% set categories = ['Programming', 'Robotics', 'Artificial Intelligence', 'Machine Learning', 'Networking', 'Cyber Security'] %}
+    {% for category in categories %}
+        {% set count = taught_courses|selectattr('category', 'equalto', category)|list|length %}
+        <div class="col-md-4 col-lg-2 mb-3">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h6>{{ category }}</h6>
+                    <h3>{{ count }}</h3>
+                    <small class="text-muted">courses</small>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if current_user.is_instructor and taught_courses %}
+<div class="row mt-5 mb-4">
+    <div class="col-12">
+        <h3>Courses I'm Teaching</h3>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for course in taught_courses %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            {% if course.thumbnail_url %}
+            <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}" style="height: 150px; object-fit: cover;">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ course.title }}</h5>
+                <p class="text-muted small">
+                    <span class="badge 
+                        {% if course.is_published %}bg-success{% else %}bg-warning{% endif %}">
+                        {% if course.is_published %}Published{% else %}Draft{% endif %}
+                    </span>
+                </p>
+                <div class="btn-group">
+                    <a href="/courses/{{ course.id }}" class="btn btn-outline-primary btn-sm">View</a>
+                    <a href="/courses/{{ course.id }}/edit" class="btn btn-outline-secondary btn-sm">Edit</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

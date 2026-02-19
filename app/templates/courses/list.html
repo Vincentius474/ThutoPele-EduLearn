@@ -1,0 +1,29 @@
+<!-- Filter Section -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <label for="categoryFilter" class="form-label">Category</label>
+        <select class="form-select" id="categoryFilter" onchange="filterCourses()">
+            <option value="">All Categories</option>
+            <option value="Programming">💻 Programming</option>
+            <option value="Robotics">🤖 Robotics</option>
+            <option value="Artificial Intelligence">🧠 Artificial Intelligence</option>
+            <option value="Machine Learning">📊 Machine Learning</option>
+            <option value="Networking">🌐 Networking</option>
+            <option value="Cyber Security">🛡️ Cyber Security</option>
+        </select>
+    </div>
+    <!-- ... other filters ... -->
+</div>
+
+<script>
+function filterCourses() {
+    const category = document.getElementById('categoryFilter').value;
+    const level = document.getElementById('levelFilter').value;
+    
+    let url = '/courses?';
+    if (category) url += `category=${encodeURIComponent(category)}&`;
+    if (level) url += `level=${level}`;
+    
+    window.location.href = url;
+}
+</script>

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-envelope-open-text me-2"></i>Instructor Invitations</h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Create New Invitation</h5>
+            </div>
+            <div class="card-body">
+                <form id="invitationForm">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="fullName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Generate Invitation</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Quick Stats</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h3>{{ pending_count }}</h3>
+                        <p class="text-muted">Pending</p>
+                    </div>
+                    <div class="col-6">
+                        <h3>{{ used_count }}</h3>
+                        <p class="text-muted">Used</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="invitationTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#pending" data-bs-toggle="tab">Pending</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#used" data-bs-toggle="tab">Used</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#all" data-bs-toggle="tab">All</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="pending">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Name</th>
+                                        <th>Username</th>
+                                        <th>Code</th>
+                                        <th>Expires</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inv in pending_invitations %}
+                                    <tr>
+                                        <td>{{ inv.email }}</td>
+                                        <td>{{ inv.full_name }}</td>
+                                        <td>{{ inv.username }}</td>
+                                        <td><code>{{ inv.code }}</code></td>
+                                        <td>{{ inv.expires_at[:10] }}</td>
+                                        <td>{{ inv.created_at[:10] }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No pending invitations</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane" id="used">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Name</th>
+                                        <th>Code</th>
+                                        <th>Used At</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inv in used_invitations %}
+                                    <tr>
+                                        <td>{{ inv.email }}</td>
+                                        <td>{{ inv.full_name }}</td>
+                                        <td><code>{{ inv.code }}</code></td>
+                                        <td>{{ inv.used_at[:10] if inv.used_at else 'N/A' }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No used invitations</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane" id="all">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Name</th>
+                                        <th>Code</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Expires</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inv in all_invitations %}
+                                    <tr>
+                                        <td>{{ inv.email }}</td>
+                                        <td>{{ inv.full_name }}</td>
+                                        <td><code>{{ inv.code }}</code></td>
+                                        <td>
+                                            {% if inv.is_used %}
+                                            <span class="badge bg-secondary">Used</span>
+                                            {% else %}
+                                            <span class="badge bg-success">Pending</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ inv.created_at[:10] }}</td>
+                                        <td>{{ inv.expires_at[:10] }}</td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No invitations found</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('invitationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        email: document.getElementById('email').value,
+        full_name: document.getElementById('fullName').value,
+        username: document.getElementById('username').value
+    };
+    
+    try {
+        const response = await fetch('/api/v1/admin/invitations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getCookie('access_token')}`
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+            alert('Invitation created successfully!');
+            location.reload();
+        } else {
+            const data = await response.json();
+            alert(data.detail || 'Failed to create invitation');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+});
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+</script>
+{% endblock %}
