@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">Events & Webinars</h1>
+            <p class="lead text-muted">Join our live sessions, workshops, and community events</p>
+        </div>
+    </div>
+
+    <!-- Upcoming Events Highlight -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-5">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <span class="badge bg-danger mb-3">LIVE THIS WEEK</span>
+                            <h2 class="display-6 fw-bold mb-3">Introduction to Machine Learning</h2>
+                            <p class="lead text-muted mb-4">Join us for a free webinar on ML fundamentals with hands-on examples.</p>
+                            <div class="d-flex gap-4 mb-4">
+                                <div>
+                                    <i class="fas fa-calendar text-primary me-2"></i>
+                                    <span>March 25, 2024</span>
+                                </div>
+                                <div>
+                                    <i class="fas fa-clock text-primary me-2"></i>
+                                    <span>15:00 - 17:00 SAST</span>
+                                </div>
+                                <div>
+                                    <i class="fas fa-users text-primary me-2"></i>
+                                    <span>120 spots left</span>
+                                </div>
+                            </div>
+                            <a href="#" class="btn btn-primary btn-lg">
+                                <i class="fas fa-ticket-alt me-2"></i>Register Now
+                            </a>
+                        </div>
+                        <div class="col-lg-4 text-center">
+                            <i class="fas fa-chalkboard-teacher fa-6x text-primary opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <button class="btn btn-outline-primary active" data-filter="all">All Events</button>
+                <button class="btn btn-outline-primary" data-filter="webinar">Webinars</button>
+                <button class="btn btn-outline-primary" data-filter="workshop">Workshops</button>
+                <button class="btn btn-outline-primary" data-filter="hackathon">Hackathons</button>
+                <button class="btn btn-outline-primary" data-filter="meetup">Meetups</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Events Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Event 1 -->
+        <div class="col-md-6 col-lg-4" data-category="webinar">
+            <div class="card h-100 border-0 shadow-sm event-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-primary">Webinar</span>
+                        <small class="text-success"><i class="fas fa-circle me-1"></i>Free</small>
+                    </div>
+                    <h5 class="card-title fw-bold mb-2">Python for Data Science</h5>
+                    <p class="card-text text-muted small mb-3">Learn how to use Python for data analysis and visualization.</p>
+                    <div class="event-details mb-3">
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-calendar-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>April 2, 2024</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-clock text-primary me-2" style="width: 20px;"></i>
+                            <small>14:00 - 15:30 SAST</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-user text-primary me-2" style="width: 20px;"></i>
+                            <small>Dr. Thabo Mbeki</small>
+                        </div>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-success" style="width: 45%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">45 spots available</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Register</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event 2 -->
+        <div class="col-md-6 col-lg-4" data-category="workshop">
+            <div class="card h-100 border-0 shadow-sm event-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-success">Workshop</span>
+                        <small class="text-warning"><i class="fas fa-tag me-1"></i>$49</small>
+                    </div>
+                    <h5 class="card-title fw-bold mb-2">Build Your First Robot</h5>
+                    <p class="card-text text-muted small mb-3">Hands-on workshop with Arduino. Build and program a simple robot.</p>
+                    <div class="event-details mb-3">
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-calendar-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>April 5-6, 2024</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-clock text-primary me-2" style="width: 20px;"></i>
+                            <small>10:00 - 16:00 Daily</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-map-marker-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>Johannesburg, SA</small>
+                        </div>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-warning" style="width: 75%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">15 spots left</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Book Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event 3 -->
+        <div class="col-md-6 col-lg-4" data-category="hackathon">
+            <div class="card h-100 border-0 shadow-sm event-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-danger">Hackathon</span>
+                        <small class="text-success"><i class="fas fa-trophy me-1"></i>$1000 prize</small>
+                    </div>
+                    <h5 class="card-title fw-bold mb-2">AI Innovation Challenge</h5>
+                    <p class="card-text text-muted small mb-3">Build an AI solution for social good. Win prizes and recognition.</p>
+                    <div class="event-details mb-3">
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-calendar-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>April 15-17, 2024</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-globe text-primary me-2" style="width: 20px;"></i>
+                            <small>Virtual Event</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-users text-primary me-2" style="width: 20px;"></i>
+                            <small>Team of 2-4</small>
+                        </div>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-danger" style="width: 30%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">35 teams registered</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Join</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event 4 -->
+        <div class="col-md-6 col-lg-4" data-category="meetup">
+            <div class="card h-100 border-0 shadow-sm event-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-info">Meetup</span>
+                        <small class="text-success"><i class="fas fa-circle me-1"></i>Free</small>
+                    </div>
+                    <h5 class="card-title fw-bold mb-2">Women in Tech Networking</h5>
+                    <p class="card-text text-muted small mb-3">Connect with women in technology. Share experiences and opportunities.</p>
+                    <div class="event-details mb-3">
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-calendar-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>April 10, 2024</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-clock text-primary me-2" style="width: 20px;"></i>
+                            <small>18:00 - 20:00</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-map-marker-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>Cape Town, SA</small>
+                        </div>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-info" style="width: 60%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">40 attending</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">RSVP</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event 5 -->
+        <div class="col-md-6 col-lg-4" data-category="webinar">
+            <div class="card h-100 border-0 shadow-sm event-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-primary">Webinar</span>
+                        <small class="text-success"><i class="fas fa-circle me-1"></i>Free</small>
+                    </div>
+                    <h5 class="card-title fw-bold mb-2">Cybersecurity Basics</h5>
+                    <p class="card-text text-muted small mb-3">Learn essential security practices for individuals and businesses.</p>
+                    <div class="event-details mb-3">
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-calendar-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>April 12, 2024</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-clock text-primary me-2" style="width: 20px;"></i>
+                            <small>11:00 - 12:30 SAST</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-user text-primary me-2" style="width: 20px;"></i>
+                            <small>Sipho Ngubane</small>
+                        </div>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-success" style="width: 20%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">80 spots available</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Register</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event 6 -->
+        <div class="col-md-6 col-lg-4" data-category="workshop">
+            <div class="card h-100 border-0 shadow-sm event-card">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-success">Workshop</span>
+                        <small class="text-warning"><i class="fas fa-tag me-1"></i>$79</small>
+                    </div>
+                    <h5 class="card-title fw-bold mb-2">Cloud Computing with AWS</h5>
+                    <p class="card-text text-muted small mb-3">Intensive workshop on AWS services and cloud architecture.</p>
+                    <div class="event-details mb-3">
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-calendar-alt text-primary me-2" style="width: 20px;"></i>
+                            <small>April 20, 2024</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-clock text-primary me-2" style="width: 20px;"></i>
+                            <small>09:00 - 17:00</small>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-laptop text-primary me-2" style="width: 20px;"></i>
+                            <small>Virtual</small>
+                        </div>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-warning" style="width: 40%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">12 spots left</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Book Now</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar View -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Event Calendar</h3>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center">
+                            <thead>
+                                <tr>
+                                    <th>Mon</th>
+                                    <th>Tue</th>
+                                    <th>Wed</th>
+                                    <th>Thu</th>
+                                    <th>Fri</th>
+                                    <th>Sat</th>
+                                    <th>Sun</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="p-3">1</td>
+                                    <td class="p-3">2</td>
+                                    <td class="p-3">3</td>
+                                    <td class="p-3">4</td>
+                                    <td class="p-3 bg-light">5<br><small class="text-primary">Workshop</small></td>
+                                    <td class="p-3 bg-light">6<br><small class="text-primary">Workshop</small></td>
+                                    <td class="p-3">7</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">8</td>
+                                    <td class="p-3">9</td>
+                                    <td class="p-3 bg-light">10<br><small class="text-info">Meetup</small></td>
+                                    <td class="p-3">11</td>
+                                    <td class="p-3 bg-light">12<br><small class="text-primary">Webinar</small></td>
+                                    <td class="p-3">13</td>
+                                    <td class="p-3">14</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 bg-light">15<br><small class="text-danger">Hackathon</small></td>
+                                    <td class="p-3 bg-light">16<br><small class="text-danger">Hackathon</small></td>
+                                    <td class="p-3 bg-light">17<br><small class="text-danger">Hackathon</small></td>
+                                    <td class="p-3">18</td>
+                                    <td class="p-3">19</td>
+                                    <td class="p-3 bg-light">20<br><small class="text-success">Workshop</small></td>
+                                    <td class="p-3">21</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">22</td>
+                                    <td class="p-3">23</td>
+                                    <td class="p-3">24</td>
+                                    <td class="p-3 bg-light">25<br><small class="text-primary">Webinar</small></td>
+                                    <td class="p-3">26</td>
+                                    <td class="p-3">27</td>
+                                    <td class="p-3">28</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">29</td>
+                                    <td class="p-3">30</td>
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Host an Event -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0">
+                <div class="card-body p-5 text-center">
+                    <h3 class="mb-3">Want to Host an Event?</h3>
+                    <p class="mb-4">Share your knowledge with our community by hosting a webinar or workshop.</p>
+                    <a href="/contact" class="btn btn-light btn-lg">
+                        <i class="fas fa-calendar-plus me-2"></i>Propose an Event
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Filter functionality
+document.querySelectorAll('[data-filter]').forEach(button => {
+    button.addEventListener('click', () => {
+        // Update active state
+        document.querySelectorAll('[data-filter]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        button.classList.add('active');
+        
+        const filter = button.dataset.filter;
+        
+        // Filter events
+        document.querySelectorAll('[data-category]').forEach(event => {
+            if (filter === 'all' || event.dataset.category === filter) {
+                event.style.display = 'block';
+            } else {
+                event.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.event-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.table .bg-light {
+    background-color: #f8f9fa !important;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.table .bg-light:hover {
+    background-color: var(--bs-primary) !important;
+    color: white;
+}
+
+.table .bg-light:hover small {
+    color: white !important;
+}
+</style>
+{% endblock %}

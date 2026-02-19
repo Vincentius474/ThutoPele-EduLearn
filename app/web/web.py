@@ -405,77 +405,6 @@ async def contact_page(
         }
     )
 
-@web_router.get("/blog", response_class=HTMLResponse)
-async def blog_page(
-    request: Request,
-    category: Optional[str] = None,
-    page: int = 1,
-    templates: Jinja2Templates = Depends(get_templates),
-    current_user: Optional[dict] = Depends(get_current_user_web)
-):
-    """Blog listing page"""
-    try:
-        supabase = get_supabase_client()
-        blog_service = BlogService(supabase)
-        
-        # Pagination settings
-        posts_per_page = 9
-        offset = (page - 1) * posts_per_page
-        
-        # Get posts with filters
-        posts = await blog_service.get_posts(
-            category=category,
-            limit=posts_per_page,
-            offset=offset
-        )
-        
-        # Get total count for pagination
-        all_posts = await blog_service.get_posts(category=category)
-        total_posts = len(all_posts)
-        total_pages = (total_posts + posts_per_page - 1) // posts_per_page if total_posts > 0 else 1
-        
-        # Get featured post for the first page only
-        featured_post = None
-        if page == 1:
-            featured = await blog_service.get_featured_posts(limit=1)
-            featured_post = featured[0] if featured else None
-        
-        # Get categories with counts
-        categories = await blog_service.get_categories()
-        
-        # Get recent posts for sidebar
-        recent_posts = await blog_service.get_recent_posts(limit=5)
-        
-        return templates.TemplateResponse(
-            "blog.html",
-            {
-                "request": request,
-                "current_user": current_user,
-                "posts": posts,
-                "featured_post": featured_post,
-                "categories": categories,
-                "recent_posts": recent_posts,
-                "selected_category": category,
-                "page": page,
-                "total_pages": total_pages,
-                "total_posts": total_posts,
-                "title": "Blog" + (f" - {category}" if category else "")
-            }
-        )
-        
-    except Exception as e:
-        logger.error(f"Error in blog page: {e}")
-        return templates.TemplateResponse(
-            "error.html",
-            {
-                "request": request,
-                "current_user": current_user,
-                "error": "Unable to load blog posts. Please try again later.",
-                "title": "Blog Error"
-            },
-            status_code=500
-        )
-
 @web_router.get("/blog/{slug}", response_class=HTMLResponse)
 async def blog_post_detail(
     request: Request,
@@ -613,62 +542,6 @@ async def cookie_policy_page(
         }
     )
 
-@web_router.get("/tutorials", response_class=HTMLResponse)
-async def tutorials_page(
-    request: Request,
-    templates: Jinja2Templates = Depends(get_templates)
-):
-    """Tutorials page"""
-    return templates.TemplateResponse(
-        "tutorials.html",
-        {
-            "request": request,
-            "title": "Tutorials"
-        }
-    )
-
-@web_router.get("/resources", response_class=HTMLResponse)
-async def resources_page(
-    request: Request,
-    templates: Jinja2Templates = Depends(get_templates)
-):
-    """Free Resources page"""
-    return templates.TemplateResponse(
-        "resources.html",
-        {
-            "request": request,
-            "title": "Free Resources"
-        }
-    )
-
-@web_router.get("/success-stories", response_class=HTMLResponse)
-async def success_stories_page(
-    request: Request,
-    templates: Jinja2Templates = Depends(get_templates)
-):
-    """Success Stories page"""
-    return templates.TemplateResponse(
-        "success_stories.html",
-        {
-            "request": request,
-            "title": "Success Stories"
-        }
-    )
-
-@web_router.get("/events", response_class=HTMLResponse)
-async def events_page(
-    request: Request,
-    templates: Jinja2Templates = Depends(get_templates)
-):
-    """Events page"""
-    return templates.TemplateResponse(
-        "events.html",
-        {
-            "request": request,
-            "title": "Events"
-        }
-    )
-
 @web_router.get("/community-projects", response_class=HTMLResponse)
 async def community_projects_page(
     request: Request,
@@ -717,5 +590,132 @@ async def search_page(
             "query": q,
             "results": results,
             "title": f"Search results for '{q}'" if q else "Search"
+        }
+    )
+
+@web_router.get("/blog", response_class=HTMLResponse)
+async def blog_page(
+    request: Request,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    page: int = 1,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
+):
+    """Blog listing page"""
+    try:
+        supabase = get_supabase_client()
+        blog_service = BlogService(supabase)
+        
+        # Get posts with filters
+        posts_per_page = 9
+        offset = (page - 1) * posts_per_page
+        
+        posts = await blog_service.get_posts(
+            category=category,
+            limit=posts_per_page,
+            offset=offset
+        )
+        
+        # Get total count
+        all_posts = await blog_service.get_posts(category=category)
+        total_posts = len(all_posts)
+        total_pages = (total_posts + posts_per_page - 1) // posts_per_page if total_posts > 0 else 1
+        
+        # Get featured post
+        featured = await blog_service.get_featured_posts(limit=1)
+        featured_post = featured[0] if featured else None
+        
+        return templates.TemplateResponse(
+            "blog.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "posts": posts,
+                "featured_post": featured_post,
+                "selected_category": category,
+                "search_query": search,
+                "page": page,
+                "total_pages": total_pages,
+                "title": "Blog"
+            }
+        )
+    except Exception as e:
+        logger.error(f"Error in blog page: {e}")
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "error": "Unable to load blog posts",
+                "title": "Error"
+            }
+        )
+
+@web_router.get("/tutorials", response_class=HTMLResponse)
+async def tutorials_page(
+    request: Request,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
+):
+    """Tutorials page"""
+    return templates.TemplateResponse(
+        "tutorials.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "selected_category": category,
+            "search_query": search,
+            "title": "Tutorials"
+        }
+    )
+
+@web_router.get("/resources", response_class=HTMLResponse)
+async def resources_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
+):
+    """Free resources page"""
+    return templates.TemplateResponse(
+        "resources.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Free Resources"
+        }
+    )
+
+@web_router.get("/success-stories", response_class=HTMLResponse)
+async def success_stories_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
+):
+    """Success stories page"""
+    return templates.TemplateResponse(
+        "success_stories.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Success Stories"
+        }
+    )
+
+@web_router.get("/events", response_class=HTMLResponse)
+async def events_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
+):
+    """Events page"""
+    return templates.TemplateResponse(
+        "events.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Events"
         }
     )

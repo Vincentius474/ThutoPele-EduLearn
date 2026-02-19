@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">Free Tutorials</h1>
+            <p class="lead text-muted">Learn with our step-by-step tutorials and practical guides</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <form method="GET" action="/tutorials" class="mb-4">
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-lg" name="search" 
+                           placeholder="Search tutorials..." value="{{ search_query or '' }}">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-pills nav-justified flex-column flex-md-row gap-2" id="tutorialTabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if not selected_category %}active{% endif %}" href="/tutorials">
+                        <i class="fas fa-th-large me-2"></i>All
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if selected_category == 'beginner' %}active{% endif %}" 
+                       href="/tutorials?category=beginner">
+                        <i class="fas fa-seedling me-2 text-success"></i>Beginner
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if selected_category == 'intermediate' %}active{% endif %}" 
+                       href="/tutorials?category=intermediate">
+                        <i class="fas fa-tree me-2 text-warning"></i>Intermediate
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if selected_category == 'advanced' %}active{% endif %}" 
+                       href="/tutorials?category=advanced">
+                        <i class="fas fa-crown me-2 text-danger"></i>Advanced
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if selected_category == 'projects' %}active{% endif %}" 
+                       href="/tutorials?category=projects">
+                        <i class="fas fa-project-diagram me-2 text-info"></i>Projects
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Featured Tutorial -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0">
+                <div class="card-body p-5">
+                    <div class="row align-items-center">
+                        <div class="col-lg-8">
+                            <h2 class="display-6 fw-bold mb-3">Getting Started with Python</h2>
+                            <p class="lead mb-4">A complete beginner's guide to Python programming. Learn variables, functions, loops, and build your first project.</p>
+                            <div class="d-flex gap-3 mb-3">
+                                <span><i class="fas fa-clock me-2"></i>2 hours</span>
+                                <span><i class="fas fa-signal me-2"></i>Beginner</span>
+                                <span><i class="fas fa-video me-2"></i>12 videos</span>
+                            </div>
+                            <a href="#" class="btn btn-light btn-lg">
+                                <i class="fas fa-play-circle me-2"></i>Start Learning
+                            </a>
+                        </div>
+                        <div class="col-lg-4 text-center">
+                            <i class="fas fa-code fa-6x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tutorial Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Python Tutorials -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1526379095098-400a3a1c9e9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         class="card-img-top" alt="Python Tutorial" style="height: 180px; object-fit: cover;">
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-success">Free</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-primary">Python</span>
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>45 min</small>
+                    </div>
+                    <h5 class="card-title fw-bold">Python Functions and Modules</h5>
+                    <p class="card-text text-muted small">Learn how to organize your code with functions and import modules in Python.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-signal text-primary me-2"></i>
+                        <small class="text-muted">Intermediate</small>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar" style="width: 75%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-users me-1"></i>1.2k views</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Start</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript Tutorial -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         class="card-img-top" alt="JavaScript Tutorial" style="height: 180px; object-fit: cover;">
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-success">Free</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-warning text-dark">JavaScript</span>
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>60 min</small>
+                    </div>
+                    <h5 class="card-title fw-bold">DOM Manipulation</h5>
+                    <p class="card-text text-muted small">Learn how to interact with HTML elements using JavaScript.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-signal text-primary me-2"></i>
+                        <small class="text-muted">Beginner</small>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar" style="width: 60%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-users me-1"></i>890 views</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Start</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- React Tutorial -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         class="card-img-top" alt="React Tutorial" style="height: 180px; object-fit: cover;">
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-success">Free</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-info">React</span>
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>90 min</small>
+                    </div>
+                    <h5 class="card-title fw-bold">React Hooks Explained</h5>
+                    <p class="card-text text-muted small">Master useState, useEffect, and custom hooks in React.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-signal text-primary me-2"></i>
+                        <small class="text-muted">Intermediate</small>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar" style="width: 40%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-users me-1"></i>2.1k views</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Start</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Machine Learning -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         class="card-img-top" alt="ML Tutorial" style="height: 180px; object-fit: cover;">
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-success">Free</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-danger">ML</span>
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>120 min</small>
+                    </div>
+                    <h5 class="card-title fw-bold">Linear Regression in Python</h5>
+                    <p class="card-text text-muted small">Implement linear regression from scratch using NumPy.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-signal text-primary me-2"></i>
+                        <small class="text-muted">Advanced</small>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar" style="width: 25%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-users me-1"></i>560 views</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Start</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cyber Security -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         class="card-img-top" alt="Security Tutorial" style="height: 180px; object-fit: cover;">
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-success">Free</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-dark">Security</span>
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>75 min</small>
+                    </div>
+                    <h5 class="card-title fw-bold">Basic Cryptography</h5>
+                    <p class="card-text text-muted small">Understand encryption, hashing, and digital signatures.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-signal text-primary me-2"></i>
+                        <small class="text-muted">Intermediate</small>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar" style="width: 15%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-users me-1"></i>340 views</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Start</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Robotics -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         class="card-img-top" alt="Robotics Tutorial" style="height: 180px; object-fit: cover;">
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-success">Free</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-secondary">Robotics</span>
+                        <small class="text-muted"><i class="fas fa-clock me-1"></i>60 min</small>
+                    </div>
+                    <h5 class="card-title fw-bold">Arduino Basics</h5>
+                    <p class="card-text text-muted small">Get started with Arduino programming and basic circuits.</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-signal text-primary me-2"></i>
+                        <small class="text-muted">Beginner</small>
+                    </div>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar" style="width: 90%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-users me-1"></i>1.8k views</small>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Start</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Difficulty Levels -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Tutorials by Difficulty</h3>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm bg-success bg-opacity-10">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-seedling fa-3x text-success mb-3"></i>
+                    <h4 class="fw-bold">Beginner</h4>
+                    <p class="text-muted">24 tutorials</p>
+                    <a href="/tutorials?category=beginner" class="btn btn-outline-success">Browse</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm bg-warning bg-opacity-10">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-tree fa-3x text-warning mb-3"></i>
+                    <h4 class="fw-bold">Intermediate</h4>
+                    <p class="text-muted">18 tutorials</p>
+                    <a href="/tutorials?category=intermediate" class="btn btn-outline-warning">Browse</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-crown fa-3x text-danger mb-3"></i>
+                    <h4 class="fw-bold">Advanced</h4>
+                    <p class="text-muted">12 tutorials</p>
+                    <a href="/tutorials?category=advanced" class="btn btn-outline-danger">Browse</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Tutorial -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0">
+                <div class="card-body p-5 text-center">
+                    <h3 class="mb-3">Can't Find What You're Looking For?</h3>
+                    <p class="mb-4">Request a tutorial and our community might create it!</p>
+                    <a href="/contact" class="btn btn-light btn-lg">
+                        <i class="fas fa-lightbulb me-2"></i>Request Tutorial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.nav-pills .nav-link {
+    color: #495057;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.nav-pills .nav-link:not(.active):hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+</style>
+{% endblock %}

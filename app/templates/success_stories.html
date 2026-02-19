@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">Success Stories</h1>
+            <p class="lead text-muted">Real stories from our amazing community of learners</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-5">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-primary">10K+</h2>
+                    <p class="text-muted">Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-success">85%</h2>
+                    <p class="text-muted">Job Placement</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-info">500+</h2>
+                    <p class="text-muted">Success Stories</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-warning">15</h2>
+                    <p class="text-muted">Countries</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Story -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-lg-4">
+                        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                             class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 300px;" 
+                             alt="Featured Story">
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="mb-3">
+                                <span class="badge bg-primary">Featured Story</span>
+                                <span class="badge bg-success ms-2">Programming</span>
+                            </div>
+                            <h2 class="card-title fw-bold mb-3">From Cashier to Software Engineer</h2>
+                            <p class="card-text mb-4 fs-5">"I never thought I could become a programmer. After completing the Python and JavaScript courses, I landed my dream job at a tech startup."</p>
+                            <div class="d-flex align-items-center mb-4">
+                                <img src="https://ui-avatars.com/api/?name=Thabo+Mokoena&size=60&background=0D6EFD&color=fff" 
+                                     class="rounded-circle me-3" width="60" height="60" alt="Thabo Mokoena">
+                                <div>
+                                    <h5 class="mb-1">Thabo Mokoena</h5>
+                                    <p class="text-muted small">Software Engineer at TechCorp</p>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <span class="text-muted"><i class="fas fa-calendar me-1"></i>Completed: 2023</span>
+                                <span class="text-muted"><i class="fas fa-trophy me-1"></i>Python, JavaScript</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Stories Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Story 1 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm story-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Lerato+Moloi&size=60&background=20c997&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Lerato Moloi">
+                        <div>
+                            <h5 class="fw-bold mb-0">Lerato Moloi</h5>
+                            <small class="text-muted">Data Analyst</small>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-3">"The Data Science course gave me the skills I needed to switch careers. Within 3 months of completing the course, I got a job as a junior data analyst."</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary me-1">Python</span>
+                            <span class="badge bg-primary">SQL</span>
+                        </div>
+                        <small class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story 2 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm story-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Sipho+Ndlovu&size=60&background=dc3545&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Sipho Ndlovu">
+                        <div>
+                            <h5 class="fw-bold mb-0">Sipho Ndlovu</h5>
+                            <small class="text-muted">Security Analyst</small>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-3">"The Cyber Security course was comprehensive and practical. I passed the CompTIA Security+ exam and now work in SOC."</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-danger me-1">Security+</span>
+                            <span class="badge bg-danger">CEH</span>
+                        </div>
+                        <small class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story 3 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm story-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Nomsa+Zulu&size=60&background=fd7e14&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Nomsa Zulu">
+                        <div>
+                            <h5 class="fw-bold mb-0">Nomsa Zulu</h5>
+                            <small class="text-muted">Robotics Engineer</small>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-3">"Started my own robotics startup after completing the Robotics and AI courses. Now we're building educational robots for schools."</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-warning text-dark me-1">ROS</span>
+                            <span class="badge bg-warning text-dark">Arduino</span>
+                        </div>
+                        <small class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story 4 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm story-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Palesa+Mokwena&size=60&background=6f42c1&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Palesa Mokwena">
+                        <div>
+                            <h5 class="fw-bold mb-0">Palesa Mokwena</h5>
+                            <small class="text-muted">ML Engineer</small>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-3">"From biology background to machine learning engineer. The ML courses were challenging but worth it!"</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-info me-1">TensorFlow</span>
+                            <span class="badge bg-info">PyTorch</span>
+                        </div>
+                        <small class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story 5 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm story-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Kagiso+Modise&size=60&background=198754&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Kagiso Modise">
+                        <div>
+                            <h5 class="fw-bold mb-0">Kagiso Modise</h5>
+                            <small class="text-muted">Network Engineer</small>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-3">"Got my CCNA certification through the Networking course. Now managing network infrastructure for a bank."</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-secondary me-1">CCNA</span>
+                            <span class="badge bg-secondary">Network+</span>
+                        </div>
+                        <small class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Story 6 -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm story-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="https://ui-avatars.com/api/?name=Lindiwe+Dlamini&size=60&background=0dcaf0&color=000" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Lindiwe Dlamini">
+                        <div>
+                            <h5 class="fw-bold mb-0">Lindiwe Dlamini</h5>
+                            <small class="text-muted">Cloud Architect</small>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mb-3">"The cloud computing courses helped me get AWS certified. Now I design cloud solutions for enterprises."</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-info me-1">AWS</span>
+                            <span class="badge bg-info">Azure</span>
+                        </div>
+                        <small class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Your Story -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0">
+                <div class="card-body p-5 text-center">
+                    <h3 class="mb-3">Have a Success Story to Share?</h3>
+                    <p class="mb-4">Your journey could inspire others to start their learning path.</p>
+                    <a href="/contact" class="btn btn-light btn-lg">
+                        <i class="fas fa-pen me-2"></i>Share Your Story
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.story-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.story-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.text-warning i {
+    margin-right: 2px;
+}
+</style>
+{% endblock %}
