@@ -2,13 +2,15 @@ from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 from datetime import datetime
 
-# Add this new schema for instructor registration
+# Instructor register
 class InstructorRegister(BaseModel):
     email: EmailStr
     password: str
     full_name: str
     username: str
     invitation_code: str
+    expertise: Optional[str] = None
+    experience: Optional[str] = None
     
     @validator('password')
     def validate_password(cls, v):

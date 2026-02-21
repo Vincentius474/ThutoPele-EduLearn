@@ -59,24 +59,48 @@ async def login_page(
         }
     )
 
-# Register page
-@web_router.get("/register", response_class=HTMLResponse)
-async def register_page(
+# Register
+@web_router.get("/register/student", response_class=HTMLResponse)
+async def register_student_page(
     request: Request,
     templates: Jinja2Templates = Depends(get_templates),
     current_user: Optional[dict] = Depends(get_current_user_web)
 ):
-    """Register page"""
+    """Student registration page"""
     if current_user:
         return RedirectResponse(url="/dashboard", status_code=302)
     
     return templates.TemplateResponse(
-        "auth/register.html",
+        "auth/register_student.html",
         {
             "request": request,
-            "title": "Register"
+            "title": "Register as Student"
         }
     )
+
+@web_router.get("/register/instructor", response_class=HTMLResponse)
+async def register_instructor_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
+):
+    """Instructor registration page"""
+    if current_user:
+        return RedirectResponse(url="/dashboard", status_code=302)
+    
+    return templates.TemplateResponse(
+        "auth/register_instructor.html",
+        {
+            "request": request,
+            "title": "Register as Instructor"
+        }
+    )
+
+# Update the existing register route to redirect to student registration
+@web_router.get("/register", response_class=HTMLResponse)
+async def register_redirect():
+    """Redirect to student registration"""
+    return RedirectResponse(url="/register/student", status_code=302)
 
 # Dashboard
 @web_router.get("/dashboard", response_class=HTMLResponse)
@@ -85,31 +109,147 @@ async def dashboard(
     templates: Jinja2Templates = Depends(get_templates),
     current_user: dict = Depends(get_current_user_web)
 ):
-    """User dashboard"""
+    """Role-based dashboard"""
     if not current_user:
         return RedirectResponse(url="/login", status_code=302)
     
     supabase = get_supabase_client()
-    user_service = UserService(supabase)
     
-    # Get user's enrolled courses
-    enrolled_courses = await user_service.get_user_courses(current_user["id"])
-    
-    # Get user's taught courses if instructor
-    taught_courses = []
-    if current_user.get("is_instructor"):
-        taught_courses = await user_service.get_user_taught_courses(current_user["id"])
-    
-    return templates.TemplateResponse(
-        "dashboard/index.html",
-        {
-            "request": request,
-            "current_user": current_user,
-            "enrolled_courses": enrolled_courses,
-            "taught_courses": taught_courses,
-            "title": "Dashboard"
-        }
-    )
+    # Route to appropriate dashboard based on role
+    if current_user.get("is_admin"):
+        # Admin dashboard data
+        total_users = supabase.table("users").select("*", count="exact").execute()
+        total_instructors = supabase.table("users").select("*", count="exact").eq("is_instructor", True).execute()
+        total_students = total_users.count - total_instructors.count
+        total_courses = supabase.table("courses").select("*", count="exact").execute()
+        
+        # Get pending instructor applications
+        pending_instructors = supabase.table("instructor_applications")\
+            .select("*")\
+            .eq("status", "pending")\
+            .execute()
+        
+        # Get pending course reviews
+        pending_courses = supabase.table("courses")\
+            .select("*, users(full_name)")\
+            .eq("is_published", False)\
+            .execute()
+        
+        # Get recent users
+        recent_users = supabase.table("users")\
+            .select("*")\
+            .order("created_at", desc=True)\
+            .limit(5)\
+            .execute()
+        
+        return templates.TemplateResponse(
+            "dashboard/admin.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "total_users": total_users.count,
+                "total_instructors": total_instructors.count,
+                "total_students": total_students,
+                "total_courses": total_courses.count,
+                "pending_instructors": pending_instructors.data or [],
+                "pending_courses": pending_courses.data or [],
+                "recent_users": recent_users.data or [],
+                "title": "Admin Dashboard"
+            }
+        )
+        
+    elif current_user.get("is_instructor"):
+        # Instructor dashboard data
+        courses = supabase.table("courses")\
+            .select("*")\
+            .eq("instructor_id", current_user["id"])\
+            .execute()
+        
+        published_courses = [c for c in courses.data if c.get("is_published")]
+        draft_courses = [c for c in courses.data if not c.get("is_published")]
+        
+        # Get total students across all courses
+        total_students = 0
+        for course in courses.data:
+            enrollments = supabase.table("enrollments")\
+                .select("*", count="exact")\
+                .eq("course_id", course["id"])\
+                .execute()
+            total_students += enrollments.count
+        
+        # Get recent reviews
+        recent_reviews = supabase.table("reviews")\
+            .select("*, users(full_name), courses(title)")\
+            .in_("course_id", [c["id"] for c in courses.data])\
+            .order("created_at", desc=True)\
+            .limit(5)\
+            .execute()
+        
+        return templates.TemplateResponse(
+            "dashboard/instructor.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "total_courses": len(courses.data),
+                "published_courses": published_courses,
+                "draft_courses": draft_courses,
+                "total_students": total_students,
+                "avg_rating": "4.5",  # Calculate from reviews
+                "total_earnings": "0",  # Calculate from purchases
+                "recent_reviews": recent_reviews.data or [],
+                "title": "Instructor Dashboard"
+            }
+        )
+        
+    else:
+        # Student dashboard data
+        enrollments = supabase.table("enrollments")\
+            .select("*, courses(*)")\
+            .eq("user_id", current_user["id"])\
+            .execute()
+        
+        enrolled_courses = []
+        in_progress_courses = []
+        completed_courses = 0
+        
+        for enrollment in enrollments.data:
+            if enrollment.get("courses"):
+                course = enrollment["courses"]
+                course["progress"] = enrollment.get("progress", 0)
+                course["enrollment"] = enrollment
+                enrolled_courses.append(course)
+                
+                if enrollment.get("progress", 0) == 100:
+                    completed_courses += 1
+                elif enrollment.get("progress", 0) > 0:
+                    in_progress_courses.append(course)
+        
+        # Get recommended courses (based on categories of enrolled courses)
+        categories = list(set([c.get("category") for c in enrolled_courses if c.get("category")]))
+        recommended = []
+        if categories:
+            recommended_query = supabase.table("courses")\
+                .select("*")\
+                .eq("is_published", True)\
+                .in_("category", categories)\
+                .limit(5)\
+                .execute()
+            recommended = recommended_query.data or []
+        
+        return templates.TemplateResponse(
+            "dashboard/student.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "enrolled_courses": enrolled_courses,
+                "in_progress_courses": in_progress_courses[:3],
+                "completed_courses": completed_courses,
+                "certificates": completed_courses,  # Could be different if certificates are optional
+                "total_hours": "24",  # Calculate from course durations
+                "recommended_courses": recommended,
+                "title": "My Dashboard"
+            }
+        )
 
 # Profile page
 @web_router.get("/profile", response_class=HTMLResponse)

@@ -83,15 +83,14 @@ async def register_instructor(
         
         invitation = verification["invitation"]
         
-        # Register user as instructor
+        # Register user (as student first)
         result = await auth_service.register_user(
             email=user_in.email,
             password=user_in.password,
             user_data={
                 "full_name": user_in.full_name,
                 "username": user_in.username,
-                "role": "instructor",
-                "is_instructor": True
+                "role": "student"  # Register as student first
             }
         )
         
@@ -101,16 +100,28 @@ async def register_instructor(
                 detail=result["error"]
             )
         
+        # Create instructor application
+        application_data = {
+            "user_id": result["user"].id,
+            "email": user_in.email,
+            "full_name": user_in.full_name,
+            "username": user_in.username,
+            "expertise": user_in.expertise,
+            "experience": user_in.experience,
+            "status": "pending"
+        }
+        
+        supabase.table("instructor_applications").insert(application_data).execute()
+        
         # Mark invitation as used
         await invitation_service.mark_invitation_used(invitation["id"])
         
         return {
-            "message": "Instructor registered successfully",
+            "message": "Instructor application submitted successfully. Our team will review your application.",
             "user": {
                 "id": result["user"].id,
                 "email": result["user"].email,
-                "username": user_in.username,
-                "role": "instructor"
+                "username": user_in.username
             }
         }
         

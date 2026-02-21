@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-success text-white border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="fw-bold mb-2">Welcome back, {{ current_user.full_name }}! 📚</h2>
+                            <p class="mb-0 opacity-75">Your impact: {{ total_students }} students learning from your courses.</p>
+                        </div>
+                        <div class="d-none d-md-block">
+                            <i class="fas fa-chalkboard-teacher fa-4x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Quick Actions</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/courses/create" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Create New Course
+                        </a>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-upload me-2"></i>Upload Materials
+                        </a>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-comment me-2"></i>Message Students
+                        </a>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-line me-2"></i>View Analytics
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-book text-primary fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">{{ total_courses }}</h3>
+                            <span class="text-muted small">Total Courses</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-users text-success fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">{{ total_students }}</h3>
+                            <span class="text-muted small">Students</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-warning bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-star text-warning fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">{{ avg_rating }}</h3>
+                            <span class="text-muted small">Avg Rating</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-dollar-sign text-info fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">${{ total_earnings }}</h3>
+                            <span class="text-muted small">Earnings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Courses -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-book-open text-primary me-2"></i>My Courses
+            </h4>
+        </div>
+        
+        <!-- Published Courses -->
+        <div class="col-12 mb-3">
+            <h5 class="mb-3">Published Courses</h5>
+        </div>
+        {% for course in published_courses %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm course-card">
+                {% if course.thumbnail_url %}
+                <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}" style="height: 150px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title fw-bold mb-0">{{ course.title }}</h5>
+                        <span class="badge bg-success">Published</span>
+                    </div>
+                    <p class="card-text small text-muted mb-2">{{ course.students }} students • {{ course.rating }} ⭐</p>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-success" style="width: 100%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <a href="/courses/{{ course.id }}" class="btn btn-sm btn-outline-primary">View</a>
+                        <a href="/courses/{{ course.id }}/edit" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        <a href="#" class="btn btn-sm btn-outline-info">Analytics</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Draft Courses -->
+        <div class="col-12 mb-3 mt-3">
+            <h5 class="mb-3">Draft Courses</h5>
+        </div>
+        {% for course in draft_courses %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 border-0 shadow-sm course-card bg-light">
+                {% if course.thumbnail_url %}
+                <img src="{{ course.thumbnail_url }}" class="card-img-top opacity-50" alt="{{ course.title }}" style="height: 150px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h5 class="card-title fw-bold mb-0">{{ course.title }}</h5>
+                        <span class="badge bg-warning">Draft</span>
+                    </div>
+                    <p class="card-text small text-muted mb-2">Last edited: {{ course.updated_at[:10] }}</p>
+                    <div class="progress mb-2" style="height: 5px;">
+                        <div class="progress-bar bg-warning" style="width: {{ course.completion }}%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <a href="/courses/{{ course.id }}/edit" class="btn btn-sm btn-primary">Continue</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-pen fa-3x text-primary opacity-50 mb-3"></i>
+                    <h5>No Draft Courses</h5>
+                    <p class="text-muted mb-3">Start creating your first course today!</p>
+                    <a href="/courses/create" class="btn btn-primary">Create Course</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Reviews -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-star text-warning me-2"></i>Recent Reviews
+            </h4>
+        </div>
+        {% for review in recent_reviews %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <strong>{{ review.student_name }}</strong>
+                            <span class="text-muted ms-2">on {{ review.course_title }}</span>
+                        </div>
+                        <div class="text-warning">
+                            {% for i in range(review.rating) %}⭐{% endfor %}
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small">{{ review.comment }}</p>
+                    <small class="text-muted">{{ review.created_at[:10] }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Performance Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="fw-bold mb-0">Student Engagement</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('performanceChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Student Enrollments',
+            data: [12, 19, 3, 5, 2, 3],
+            borderColor: 'rgb(13, 110, 253)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+</style>
+{% endblock %}

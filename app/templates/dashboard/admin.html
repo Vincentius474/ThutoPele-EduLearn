@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-danger text-white border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="fw-bold mb-2">Admin Dashboard, {{ current_user.full_name }}! ⚡</h2>
+                            <p class="mb-0 opacity-75">Platform overview and management controls.</p>
+                        </div>
+                        <div class="d-none d-md-block">
+                            <i class="fas fa-cog fa-4x opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-users text-primary fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+                            <span class="text-muted small">Total Users</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-success bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-chalkboard-teacher text-success fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">{{ total_instructors }}</h3>
+                            <span class="text-muted small">Instructors</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-graduation-cap text-info fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">{{ total_students }}</h3>
+                            <span class="text-muted small">Students</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="stat-icon bg-warning bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-book text-warning fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="fw-bold mb-0">{{ total_courses }}</h3>
+                            <span class="text-muted small">Courses</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Admin Actions</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="/admin/users" class="btn btn-outline-primary">
+                            <i class="fas fa-user-cog me-2"></i>Manage Users
+                        </a>
+                        <a href="/admin/courses" class="btn btn-outline-primary">
+                            <i class="fas fa-book me-2"></i>Manage Courses
+                        </a>
+                        <a href="/admin/invitations" class="btn btn-outline-primary">
+                            <i class="fas fa-envelope me-2"></i>Invitations
+                        </a>
+                        <a href="/admin/reports" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-bar me-2"></i>Reports
+                        </a>
+                        <a href="/admin/settings" class="btn btn-outline-primary">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Approvals -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-clock text-warning me-2"></i>Pending Instructor Approvals
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for application in pending_instructors %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ application.full_name }}</h6>
+                            <small class="text-muted d-block">{{ application.email }}</small>
+                            <small class="text-muted">Expertise: {{ application.expertise }}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-success me-1" onclick="approveInstructor('{{ application.id }}')">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectInstructor('{{ application.id }}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No pending approvals</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-flag text-danger me-2"></i>Pending Course Reviews
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for course in pending_courses %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ course.title }}</h6>
+                            <small class="text-muted d-block">By: {{ course.instructor_name }}</small>
+                            <small class="text-muted">{{ course.category }} • {{ course.level }}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-success me-1" onclick="approveCourse('{{ course.id }}')">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning me-1" onclick="reviewCourse('{{ course.id }}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectCourse('{{ course.id }}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No pending course reviews</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Recent Users</h5>
+                    <a href="/admin/users" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ user.avatar_url or 'https://ui-avatars.com/api/?name=' + user.full_name|urlencode }}" 
+                                                 class="rounded-circle me-2" width="30" height="30" alt="{{ user.full_name }}">
+                                            {{ user.full_name }}
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.is_admin %}
+                                        <span class="badge bg-danger">Admin</span>
+                                        {% elif user.is_instructor %}
+                                        <span class="badge bg-success">Instructor</span>
+                                        {% else %}
+                                        <span class="badge bg-info">Student</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.created_at[:10] }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if user.is_active else 'secondary' }}">
+                                            {{ 'Active' if user.is_active else 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser('{{ user.id }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleUserStatus('{{ user.id }}')">
+                                            <i class="fas fa-ban"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Analytics -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="fw-bold mb-0">Revenue Overview</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h5 class="fw-bold mb-0">Course Categories</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Revenue Chart
+const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+new Chart(revenueCtx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'Revenue ($)',
+            data: [12000, 19000, 15000, 25000, 22000, 30000],
+            borderColor: 'rgb(13, 110, 253)',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+// Category Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Programming', 'Robotics', 'AI', 'ML', 'Networking', 'Security'],
+        datasets: [{
+            data: [30, 15, 20, 15, 10, 10],
+            backgroundColor: [
+                '#0d6efd',
+                '#20c997',
+                '#0dcaf0',
+                '#ffc107',
+                '#6c757d',
+                '#dc3545'
+            ]
+        }]
+    },
+    options: {
+        responsive: true
+    }
+});
+
+// Admin action functions
+function approveInstructor(id) {
+    if(confirm('Approve this instructor application?')) {
+        fetch(`/admin/instructors/${id}/approve`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+
+function rejectInstructor(id) {
+    if(confirm('Reject this instructor application?')) {
+        fetch(`/admin/instructors/${id}/reject`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+
+function approveCourse(id) {
+    if(confirm('Publish this course?')) {
+        fetch(`/admin/courses/${id}/approve`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+
+function reviewCourse(id) {
+    window.location.href = `/admin/courses/${id}/review`;
+}
+
+function rejectCourse(id) {
+    if(confirm('Reject this course?')) {
+        fetch(`/admin/courses/${id}/reject`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+
+function editUser(id) {
+    window.location.href = `/admin/users/${id}/edit`;
+}
+
+function toggleUserStatus(id) {
+    if(confirm('Toggle user active status?')) {
+        fetch(`/admin/users/${id}/toggle-status`, { method: 'POST' })
+            .then(() => location.reload());
+    }
+}
+</script>
+
+<style>
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table td {
+    vertical-align: middle;
+}
+</style>
+{% endblock %}

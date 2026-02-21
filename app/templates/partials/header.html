@@ -42,19 +42,21 @@
           </ul>
         </li>
         
-        <!-- Join Dropdown -->
+        <!-- Join Dropdown - Only show when not logged in -->
+        {% if not current_user %}
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fas fa-user-plus me-1"></i>Join
             </a>
             <ul class="dropdown-menu dropdown-menu-end shadow">
-                <li><a class="dropdown-item" href="/register"><i class="fas fa-user-graduate me-2 text-success"></i>As Student</a></li>
-                <li><a class="dropdown-item" href="/register"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>As Instructor</a></li>
+                <li><a class="dropdown-item" href="/register/student"><i class="fas fa-user-graduate me-2 text-success"></i>As Student</a></li>
+                <li><a class="dropdown-item" href="/register/instructor"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>As Instructor</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="/community-projects"><i class="fas fa-users me-2 text-info"></i>Community Projects</a></li>
                 <li><a class="dropdown-item" href="/become-coordinator"><i class="fas fa-user-tie me-2 text-warning"></i>Become Coordinator</a></li>
             </ul>
         </li>
+        {% endif %}
         
         <!-- About Dropdown -->
         <li class="nav-item dropdown">
@@ -71,7 +73,6 @@
             </ul>
         </li>
         
-
         <!-- Resources Dropdown -->
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -87,6 +88,15 @@
             </ul>
         </li>
 
+        <!-- Community Projects Link (shown when logged in) -->
+        {% if current_user %}
+        <li class="nav-item">
+            <a class="nav-link {% if request.url.path == '/community-projects' %}active fw-bold{% endif %}" 
+               href="/community-projects">
+                <i class="fas fa-users me-1"></i>Community
+            </a>
+        </li>
+        {% endif %}
       </ul>
       
       <!-- Search Form -->
@@ -103,27 +113,46 @@
       <!-- Auth Buttons (Conditional based on user login status) -->
       <div class="d-flex align-items-center gap-2">
         {% if current_user %}
-          <!-- User is logged in -->
+          <!-- User is logged in - Role-based dropdown menu -->
           <div class="dropdown">
             <button class="btn btn-outline-primary dropdown-toggle" type="button" 
                     data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fas fa-user-circle me-1"></i>{{ current_user.full_name or current_user.email }}
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow">
+              <!-- Common items for all users -->
               <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard</a></li>
               <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2 text-success"></i>My Profile</a></li>
+              
+              <!-- Student-specific items -->
+              {% if not current_user.is_instructor and not current_user.is_admin %}
               <li><a class="dropdown-item" href="/my-courses"><i class="fas fa-book me-2 text-info"></i>My Courses</a></li>
+              <li><a class="dropdown-item" href="/my-certificates"><i class="fas fa-certificate me-2 text-warning"></i>My Certificates</a></li>
+              {% endif %}
+              
+              <!-- Instructor-specific items -->
               {% if current_user.is_instructor %}
               <li><hr class="dropdown-divider"></li>
+              <li><h6 class="dropdown-header">Instructor Tools</h6></li>
               <li><a class="dropdown-item" href="/courses/create"><i class="fas fa-plus-circle me-2 text-primary"></i>Create Course</a></li>
-              <li><a class="dropdown-item" href="/instructor-dashboard"><i class="fas fa-chalkboard-teacher me-2 text-success"></i>Instructor Dashboard</a></li>
+              <li><a class="dropdown-item" href="/my-taught-courses"><i class="fas fa-chalkboard-teacher me-2 text-success"></i>My Courses</a></li>
+              <li><a class="dropdown-item" href="/instructor/analytics"><i class="fas fa-chart-line me-2 text-info"></i>Analytics</a></li>
+              <li><a class="dropdown-item" href="/instructor/earnings"><i class="fas fa-dollar-sign me-2 text-warning"></i>Earnings</a></li>
               {% endif %}
+              
+              <!-- Admin-specific items -->
               {% if current_user.is_admin %}
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="/admin"><i class="fas fa-cog me-2 text-danger"></i>Admin Panel</a></li>
+              <li><h6 class="dropdown-header">Admin Tools</h6></li>
+              <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users-cog me-2 text-danger"></i>Manage Users</a></li>
+              <li><a class="dropdown-item" href="/admin/courses"><i class="fas fa-book me-2 text-danger"></i>Manage Courses</a></li>
               <li><a class="dropdown-item" href="/admin/invitations"><i class="fas fa-envelope-open-text me-2 text-warning"></i>Invitations</a></li>
+              <li><a class="dropdown-item" href="/admin/reports"><i class="fas fa-chart-bar me-2 text-info"></i>Reports</a></li>
+              <li><a class="dropdown-item" href="/admin/settings"><i class="fas fa-cog me-2 text-secondary"></i>Settings</a></li>
               {% endif %}
+              
               <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2 text-secondary"></i>Settings</a></li>
               <li><a class="dropdown-item text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
             </ul>
           </div>
@@ -139,8 +168,8 @@
               <i class="fas fa-user-plus me-1"></i>Register
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow">
-              <li><a class="dropdown-item" href="/register"><i class="fas fa-user-graduate me-2 text-success"></i>As Student</a></li>
-              <li><a class="dropdown-item" href="/register"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>As Instructor</a></li>
+              <li><a class="dropdown-item" href="/register/student"><i class="fas fa-user-graduate me-2 text-success"></i>As Student</a></li>
+              <li><a class="dropdown-item" href="/register/instructor"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>As Instructor</a></li>
             </ul>
           </div>
         {% endif %}
@@ -148,3 +177,137 @@
     </div>
   </div>
 </nav>
+
+<!-- Add this CSS to your style.css file -->
+<style>
+/* Navbar customization */
+.navbar {
+  padding: 1rem 0;
+}
+
+.custom-brand-font {
+  font-size: 1.5rem;
+  letter-spacing: -0.5px;
+  transition: all 0.3s ease;
+}
+
+.custom-brand-font:hover {
+  transform: translateY(-2px);
+}
+
+.nav-link {
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: var(--bs-primary) !important;
+  background-color: rgba(13, 110, 253, 0.05);
+  border-radius: 5px;
+}
+
+.nav-link.active {
+  color: var(--bs-primary) !important;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 1rem;
+  right: 1rem;
+  height: 3px;
+  background: var(--bs-primary);
+  border-radius: 3px 3px 0 0;
+}
+
+.dropdown-menu {
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 0;
+  animation: slideDown 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  padding: 0.7rem 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+  transform: translateX(5px);
+}
+
+.dropdown-header {
+  color: var(--bs-primary);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Search form */
+.input-group-sm .form-control {
+  border-right: none;
+}
+
+.input-group-sm .btn {
+  border-left: none;
+  background-color: white;
+}
+
+.input-group-sm .btn:hover {
+  background-color: var(--bs-primary);
+  color: white;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 991.98px) {
+  .navbar-nav {
+    padding: 1rem 0;
+  }
+  
+  .nav-link.active::after {
+    display: none;
+  }
+  
+  .dropdown-menu {
+    border: none;
+    background-color: rgba(13, 110, 253, 0.03);
+    box-shadow: none;
+  }
+  
+  .d-flex.align-items-center.gap-2 {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .d-flex.align-items-center.gap-2 > * {
+    width: 100%;
+    margin: 0.25rem 0;
+  }
+}
+
+/* Role-based styling */
+.dropdown-item.text-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.badge {
+  font-weight: 500;
+}
+</style>
