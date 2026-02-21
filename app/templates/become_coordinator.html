@@ -1,0 +1,458 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold text-primary">Become a Course Coordinator</h1>
+            <p class="lead text-muted">Share your expertise, build your reputation, and earn while teaching</p>
+        </div>
+    </div>
+
+    <!-- Hero Image/CTA -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-lg-6">
+                        <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                             class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 300px;" 
+                             alt="Teaching">
+                    </div>
+                    <div class="col-lg-6 bg-primary text-white">
+                        <div class="card-body p-4 p-lg-5">
+                            <h2 class="fw-bold mb-4">Join Our Instructor Community</h2>
+                            <p class="lead mb-4">We're looking for passionate experts to create and coordinate courses in technology and innovation.</p>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Flexible schedule</li>
+                                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Competitive revenue share</li>
+                                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Global reach</li>
+                                <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Professional development</li>
+                            </ul>
+                            <a href="#apply" class="btn btn-light btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Apply Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benefits -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">Why Become a Coordinator?</h2>
+            <p class="lead text-muted">Great benefits for our instructor community</p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="benefit-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-4">
+                        <i class="fas fa-dollar-sign fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Earn Revenue</h4>
+                    <p class="text-muted">Get 70% revenue share on your courses. The more students you reach, the more you earn.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="benefit-icon bg-success bg-opacity-10 text-success rounded-circle mx-auto mb-4">
+                        <i class="fas fa-globe-africa fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Global Impact</h4>
+                    <p class="text-muted">Reach thousands of students across Africa and beyond. Make a real difference in people's lives.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="benefit-icon bg-info bg-opacity-10 text-info rounded-circle mx-auto mb-4">
+                        <i class="fas fa-clock fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Flexible Schedule</h4>
+                    <p class="text-muted">Create and manage your courses on your own time. Work from anywhere in the world.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="benefit-icon bg-warning bg-opacity-10 text-warning rounded-circle mx-auto mb-4">
+                        <i class="fas fa-certificate fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Build Credibility</h4>
+                    <p class="text-muted">Establish yourself as an expert in your field. Get verified instructor certificates.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="benefit-icon bg-danger bg-opacity-10 text-danger rounded-circle mx-auto mb-4">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Community Support</h4>
+                    <p class="text-muted">Join a community of expert instructors. Get support with course creation and marketing.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <div class="benefit-icon bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mb-4">
+                        <i class="fas fa-chart-line fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Growth Opportunities</h4>
+                    <p class="text-muted">Access professional development resources and advance your teaching career.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requirements -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5">
+                    <h3 class="fw-bold mb-4 text-center">What We're Looking For</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Expertise:</strong> 3+ years of experience in your field
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Communication:</strong> Clear teaching and communication skills
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Passion:</strong> Genuine desire to help others learn
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Reliability:</strong> Commitment to updating course content
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>English Proficiency:</strong> Good command of English (or local languages)
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <strong>Technical Skills:</strong> Basic video and content creation ability
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">Your Journey to Becoming a Coordinator</h2>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="process-number bg-primary text-white mx-auto mb-3">1</div>
+                    <h5 class="fw-bold">Submit Application</h5>
+                    <p class="text-muted small">Fill out our application form with your details and expertise</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="process-number bg-primary text-white mx-auto mb-3">2</div>
+                    <h5 class="fw-bold">Interview</h5>
+                    <p class="text-muted small">Chat with our team about your experience and course ideas</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="process-number bg-primary text-white mx-auto mb-3">3</div>
+                    <h5 class="fw-bold">Create Sample</h5>
+                    <p class="text-muted small">Create a short sample lesson to showcase your teaching style</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 text-center">
+                <div class="card-body">
+                    <div class="process-number bg-primary text-white mx-auto mb-3">4</div>
+                    <h5 class="fw-bold">Start Teaching</h5>
+                    <p class="text-muted small">Get onboarded and start creating your first course</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold">What Our Coordinators Say</h2>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text fst-italic mb-4">"Becoming a coordinator has been life-changing. I've reached over 5,000 students and built a thriving community."</p>
+                    <div class="d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=John+Doe&size=50&background=0D6EFD&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="John Doe">
+                        <div>
+                            <h6 class="fw-bold mb-0">Dr. Sarah Ndlovu</h6>
+                            <small class="text-muted">Data Science Coordinator</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text fst-italic mb-4">"The platform's support team is amazing. They helped me every step of the way in creating my first course."</p>
+                    <div class="d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Jane+Smith&size=50&background=20c997&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Jane Smith">
+                        <div>
+                            <h6 class="fw-bold mb-0">Michael Okafor</h6>
+                            <small class="text-muted">Web Development Coordinator</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                    </div>
+                    <p class="card-text fst-italic mb-4">"The revenue share is fair and the platform handles all the technical aspects. I just focus on teaching."</p>
+                    <div class="d-flex align-items-center">
+                        <img src="https://ui-avatars.com/api/?name=Mike+Johnson&size=50&background=dc3545&color=fff" 
+                             class="rounded-circle me-3" width="50" height="50" alt="Mike Johnson">
+                        <div>
+                            <h6 class="fw-bold mb-0">Grace Mwangi</h6>
+                            <small class="text-muted">Cyber Security Coordinator</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold text-center mb-4">Frequently Asked Questions</h3>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">How much time does it take?</h5>
+                    <p class="text-muted">Most coordinators spend 5-10 hours per week creating and updating courses. You set your own schedule.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">What subjects are in demand?</h5>
+                    <p class="text-muted">Programming, AI/ML, Cybersecurity, Cloud Computing, and Data Science are our most requested areas.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Do I need teaching experience?</h5>
+                    <p class="text-muted">Not necessarily. Subject matter expertise is most important. We'll help you develop teaching skills.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">How does payment work?</h5>
+                    <p class="text-muted">You receive 70% of course revenue. Payments are made monthly via PayPal or bank transfer.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Form -->
+    <div class="row" id="apply">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white p-4">
+                    <h3 class="fw-bold mb-0"><i class="fas fa-pencil-alt me-2"></i>Apply to Become a Coordinator</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form id="coordinatorApplication">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Area of Expertise *</label>
+                                <select class="form-select" required>
+                                    <option value="">Select your primary expertise</option>
+                                    <option>Programming</option>
+                                    <option>Robotics</option>
+                                    <option>Artificial Intelligence</option>
+                                    <option>Machine Learning</option>
+                                    <option>Networking</option>
+                                    <option>Cyber Security</option>
+                                    <option>Data Science</option>
+                                    <option>Cloud Computing</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Years of Experience *</label>
+                                <select class="form-select" required>
+                                    <option value="">Select years</option>
+                                    <option>1-2 years</option>
+                                    <option>3-5 years</option>
+                                    <option>5-10 years</option>
+                                    <option>10+ years</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Tell us about your experience *</label>
+                                <textarea class="form-control" rows="4" placeholder="Describe your background, achievements, and why you want to teach..." required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">What course would you like to create? *</label>
+                                <input type="text" class="form-control" placeholder="e.g., Advanced Python Programming" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">LinkedIn Profile</label>
+                                <input type="url" class="form-control" placeholder="https://linkedin.com/in/...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">GitHub/Portfolio</label>
+                                <input type="url" class="form-control" placeholder="https://github.com/...">
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a> *
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Application
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.benefit-icon {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.process-number {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin: 0 auto;
+}
+
+.form-control, .form-select {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+</style>
+
+<script>
+document.getElementById('coordinatorApplication')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    alert('Thank you for your application! Our team will review it and contact you within 5-7 business days.');
+    e.target.reset();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 fw-bold text-primary">Community Projects</h1>
+            <p class="lead text-muted">Collaborate, build, and learn together with fellow students</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row mb-5">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-primary">45+</h2>
+                    <p class="text-muted">Active Projects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-success">200+</h2>
+                    <p class="text-muted">Contributors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-info">15</h2>
+                    <p class="text-muted">Completed Projects</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card border-0 shadow-sm text-center h-100">
+                <div class="card-body p-4">
+                    <h2 class="display-5 fw-bold text-warning">8</h2>
+                    <p class="text-muted">Mentors</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured Project -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-lg overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-lg-6">
+                        <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                             class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 300px;" 
+                             alt="Featured Project">
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card-body p-4 p-lg-5">
+                            <div class="mb-3">
+                                <span class="badge bg-primary">Featured Project</span>
+                                <span class="badge bg-success ms-2">AI/ML</span>
+                            </div>
+                            <h2 class="card-title fw-bold mb-3">AI-Powered Crop Disease Detection</h2>
+                            <p class="card-text text-muted mb-4">Building a mobile app that helps farmers identify crop diseases using computer vision. Looking for ML engineers and mobile developers.</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://ui-avatars.com/api/?name=Thabo+Mokoena&size=40&background=0D6EFD&color=fff" 
+                                     class="rounded-circle me-2" width="40" height="40" alt="Project Lead">
+                                <div>
+                                    <small class="fw-bold d-block">Led by Thabo Mokoena</small>
+                                    <small class="text-muted">ML Engineer</small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-3 mb-4">
+                                <span class="badge bg-light text-dark"><i class="fab fa-python me-1"></i>Python</span>
+                                <span class="badge bg-light text-dark"><i class="fas fa-brain me-1"></i>TensorFlow</span>
+                                <span class="badge bg-light text-dark"><i class="fab fa-react me-1"></i>React Native</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted d-block"><i class="fas fa-users me-1"></i>4 members needed</small>
+                                    <small class="text-muted"><i class="fas fa-clock me-1"></i>3 months project</small>
+                                </div>
+                                <a href="#" class="btn btn-primary">
+                                    <i class="fas fa-hand-paper me-2"></i>Join Project
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Categories -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-pills nav-justified flex-column flex-md-row gap-2" id="projectTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#all">
+                        <i class="fas fa-th-large me-2"></i>All Projects
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#web">
+                        <i class="fas fa-globe me-2"></i>Web Development
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#mobile">
+                        <i class="fas fa-mobile-alt me-2"></i>Mobile Apps
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#ai">
+                        <i class="fas fa-brain me-2"></i>AI/ML
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#iot">
+                        <i class="fas fa-microchip me-2"></i>IoT/Robotics
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#security">
+                        <i class="fas fa-shield-alt me-2"></i>Cyber Security
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="tab-content mb-5">
+        <!-- All Projects Tab -->
+        <div class="tab-pane fade show active" id="all">
+            <div class="row g-4">
+                <!-- Project 1 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm project-card">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 class="card-img-top" alt="Project" style="height: 160px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-primary">Web Dev</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-2">E-Learning Platform for Rural Schools</h5>
+                            <p class="card-text text-muted small mb-3">Building an offline-first learning platform for schools with limited internet access.</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://ui-avatars.com/api/?name=Lerato+Moloi&size=30&background=20c997&color=fff" 
+                                     class="rounded-circle me-2" width="30" height="30" alt="Lead">
+                                <small class="text-muted">Lerato Moloi</small>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge bg-light text-dark">React</span>
+                                <span class="badge bg-light text-dark">Node.js</span>
+                                <span class="badge bg-light text-dark">MongoDB</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="fas fa-users me-1"></i>3/5 members</small>
+                                <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm project-card">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 class="card-img-top" alt="Project" style="height: 160px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-success">Mobile</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-2">Health Tracker App</h5>
+                            <p class="card-text text-muted small mb-3">Mobile app for tracking medication adherence and health metrics for chronic patients.</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://ui-avatars.com/api/?name=Sipho+Ndlovu&size=30&background=dc3545&color=fff" 
+                                     class="rounded-circle me-2" width="30" height="30" alt="Lead">
+                                <small class="text-muted">Sipho Ndlovu</small>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge bg-light text-dark">Flutter</span>
+                                <span class="badge bg-light text-dark">Firebase</span>
+                                <span class="badge bg-light text-dark">HealthKit</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="fas fa-users me-1"></i>2/4 members</small>
+                                <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm project-card">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 class="card-img-top" alt="Project" style="height: 160px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-info">AI/ML</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-2">Traffic Prediction System</h5>
+                            <p class="card-text text-muted small mb-3">ML model to predict traffic patterns in Johannesburg using historical data.</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://ui-avatars.com/api/?name=Palesa+Mokwena&size=30&background=6f42c1&color=fff" 
+                                     class="rounded-circle me-2" width="30" height="30" alt="Lead">
+                                <small class="text-muted">Palesa Mokwena</small>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge bg-light text-dark">Python</span>
+                                <span class="badge bg-light text-dark">TensorFlow</span>
+                                <span class="badge bg-light text-dark">Pandas</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="fas fa-users me-1"></i>4/6 members</small>
+                                <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm project-card">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 class="card-img-top" alt="Project" style="height: 160px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-warning text-dark">IoT</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-2">Smart Agriculture Sensors</h5>
+                            <p class="card-text text-muted small mb-3">IoT system for monitoring soil moisture and automating irrigation.</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://ui-avatars.com/api/?name=Kagiso+Modise&size=30&background=198754&color=fff" 
+                                     class="rounded-circle me-2" width="30" height="30" alt="Lead">
+                                <small class="text-muted">Kagiso Modise</small>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge bg-light text-dark">Arduino</span>
+                                <span class="badge bg-light text-dark">Raspberry Pi</span>
+                                <span class="badge bg-light text-dark">Python</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="fas fa-users me-1"></i>3/5 members</small>
+                                <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 5 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm project-card">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 class="card-img-top" alt="Project" style="height: 160px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-danger">Security</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-2">Phishing Detection Tool</h5>
+                            <p class="card-text text-muted small mb-3">Browser extension that detects and warns about phishing attempts.</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://ui-avatars.com/api/?name=Lindiwe+Dlamini&size=30&background=0dcaf0&color=000" 
+                                     class="rounded-circle me-2" width="30" height="30" alt="Lead">
+                                <small class="text-muted">Lindiwe Dlamini</small>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge bg-light text-dark">JavaScript</span>
+                                <span class="badge bg-light text-dark">Python</span>
+                                <span class="badge bg-light text-dark">ML</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="fas fa-users me-1"></i>2/4 members</small>
+                                <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 6 -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm project-card">
+                        <div class="position-relative">
+                            <img src="https://images.unsplash.com/photo-1526379095098-400a3a1c9e9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 class="card-img-top" alt="Project" style="height: 160px; object-fit: cover;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge bg-primary">Web Dev</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-2">Open Source Library Catalog</h5>
+                            <p class="card-text text-muted small mb-3">Building a modern catalog system for community libraries.</p>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://ui-avatars.com/api/?name=Thabo+Zulu&size=30&background=fd7e14&color=fff" 
+                                     class="rounded-circle me-2" width="30" height="30" alt="Lead">
+                                <small class="text-muted">Thabo Zulu</small>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge bg-light text-dark">Django</span>
+                                <span class="badge bg-light text-dark">PostgreSQL</span>
+                                <span class="badge bg-light text-dark">Bootstrap</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted"><i class="fas fa-users me-1"></i>5/8 members</small>
+                                <a href="#" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other tabs would have similar structure -->
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="fw-bold text-center mb-4">How Community Projects Work</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <div class="step-circle bg-primary text-white mx-auto mb-3">1</div>
+                    <h5 class="fw-bold">Find a Project</h5>
+                    <p class="text-muted small">Browse projects that match your skills and interests</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <div class="step-circle bg-primary text-white mx-auto mb-3">2</div>
+                    <h5 class="fw-bold">Join the Team</h5>
+                    <p class="text-muted small">Apply to join and meet your fellow contributors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <div class="step-circle bg-primary text-white mx-auto mb-3">3</div>
+                    <h5 class="fw-bold">Collaborate</h5>
+                    <p class="text-muted small">Work together with guidance from experienced mentors</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 text-center h-100">
+                <div class="card-body">
+                    <div class="step-circle bg-primary text-white mx-auto mb-3">4</div>
+                    <h5 class="fw-bold">Showcase</h5>
+                    <p class="text-muted small">Add the project to your portfolio and earn badges</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benefits -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-primary text-white border-0">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">Why Join Community Projects?</h3>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-briefcase fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="fw-bold">Real Experience</h5>
+                                    <p class="small opacity-75">Work on real-world projects that solve actual problems</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-users fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="fw-bold">Network</h5>
+                                    <p class="small opacity-75">Connect with like-minded learners and mentors</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-certificate fa-2x me-3"></i>
+                                <div>
+                                    <h5 class="fw-bold">Get Recognized</h5>
+                                    <p class="small opacity-75">Earn badges and certificates for your contributions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start a Project -->
+    <div class="row">
+        <div class="col-12 text-center">
+            <div class="card border-0 bg-light">
+                <div class="card-body p-5">
+                    <h3 class="fw-bold mb-3">Have a Project Idea?</h3>
+                    <p class="lead text-muted mb-4">Start your own community project and lead a team of contributors</p>
+                    <a href="#" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle me-2"></i>Start a Project
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.project-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.nav-pills .nav-link {
+    color: #495057;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.nav-pills .nav-link:not(.active):hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+</style>
+{% endblock %}

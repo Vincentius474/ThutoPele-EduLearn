@@ -545,13 +545,15 @@ async def cookie_policy_page(
 @web_router.get("/community-projects", response_class=HTMLResponse)
 async def community_projects_page(
     request: Request,
-    templates: Jinja2Templates = Depends(get_templates)
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
 ):
     """Community Projects page"""
     return templates.TemplateResponse(
         "community_projects.html",
         {
             "request": request,
+            "current_user": current_user,
             "title": "Community Projects"
         }
     )
@@ -559,13 +561,15 @@ async def community_projects_page(
 @web_router.get("/become-coordinator", response_class=HTMLResponse)
 async def become_coordinator_page(
     request: Request,
-    templates: Jinja2Templates = Depends(get_templates)
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_web)
 ):
     """Become a Coordinator page"""
     return templates.TemplateResponse(
         "become_coordinator.html",
         {
             "request": request,
+            "current_user": current_user,
             "title": "Become a Course Coordinator"
         }
     )
