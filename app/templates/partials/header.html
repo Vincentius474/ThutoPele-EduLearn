@@ -160,7 +160,7 @@
           </div>
         {% else %}
           <!-- User is not logged in -->
-          <a class="btn btn-outline-primary" href="/login">
+          <!-- <a class="btn btn-outline-primary" href="/login">
             <i class="fas fa-sign-in-alt me-1"></i>Login
           </a>
           <span class="text-muted">|</span>
@@ -173,7 +173,15 @@
               <li><a class="dropdown-item" href="/register/student"><i class="fas fa-user-graduate me-2 text-success"></i>As Student</a></li>
               <li><a class="dropdown-item" href="/register/instructor"><i class="fas fa-chalkboard-teacher me-2 text-primary"></i>As Instructor</a></li>
             </ul>
+          </div> -->
+          <!-- Replace the login/register buttons with a single auth link -->
+          {% if not current_user %}
+          <div class="d-flex align-items-center gap-2">
+              <a class="btn btn-primary" href="/auth">
+                  <i class="fas fa-sign-in-alt me-2"></i>Sign In / Register
+              </a>
           </div>
+          {% endif %}
         {% endif %}
       </div>
     </div>

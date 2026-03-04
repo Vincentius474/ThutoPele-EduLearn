@@ -1,3 +1,36 @@
+// Handle logout with AJAX
+document.querySelectorAll('.logout-link, .dropdown-item.text-danger').forEach(link => {
+    link.addEventListener('click', async (e) => {
+        // Only handle if it's the logout link
+        if (link.getAttribute('href') === '/api/v1/auth/logout' || 
+            link.innerHTML.includes('Logout')) {
+            e.preventDefault();
+            
+            try {
+                const response = await fetch('/api/v1/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                // Clear any client-side storage
+                sessionStorage.clear();
+                localStorage.removeItem('supabase.auth.token');
+                
+                // Redirect to login page
+                window.location.href = data.redirect || '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/login';
+            }
+        }
+    });
+});
+
+
 // Show/hide loading spinner
 function showLoading() {
     const spinner = document.createElement('div');
