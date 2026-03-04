@@ -1,10 +1,12 @@
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, logger, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from app.core.supabase_client import get_supabase
 from app.services.course_service import CourseService
 from app.schemas.course import Course, CourseCreate, CourseUpdate
-from app.api.api_v1.dependencies import get_current_user
+from app.api.api_v1.dependencies import get_current_user, get_current_instructor
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 async def get_course_service(supabase=Depends(get_supabase)) -> CourseService:
@@ -18,133 +20,109 @@ async def get_courses(
     limit: int = 100,
     category: Optional[str] = None,
     level: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: Optional[dict] = Depends(get_current_user)  # Optional - can be None
 ) -> Any:
     """
     Retrieve courses with optional filters.
     """
-    # If user is instructor, show all courses, otherwise only published
-    is_published = None
-    if not current_user or not current_user.get("is_instructor"):
-        is_published = True
-    
-    courses = await course_service.get_courses(
-        skip=skip,
-        limit=limit,
-        category=category,
-        level=level,
-        is_published=is_published
-    )
-    
-    # Get instructor details for each course
-    for course in courses:
-        supabase = course_service.supabase
-        instructor = supabase.table("users")\
-            .select("id, email, full_name, username")\
-            .eq("id", course["instructor_id"])\
-            .execute()
-        if instructor.data:
-            course["instructor"] = instructor.data[0]
-    
-    return courses
-
-# @router.post("/", response_model=Course)
-# async def create_course(
-#     *,
-#     course_service: CourseService = Depends(get_course_service),
-#     course_in: CourseCreate,
-#     current_user: dict = Depends(get_current_user)
-# ) -> Any:
-#     """
-#     Create new course.
-#     """
-#     if not current_user.get("is_instructor"):
-#         raise HTTPException(
-#             status_code=status.HTTP_403_FORBIDDEN,
-#             detail="Only instructors can create courses"
-#         )
-    
-#     course_data = course_in.dict()
-#     course_data["instructor_id"] = current_user["id"]
-    
-#     course = await course_service.create_course(course_data)
-#     if not course:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="Course creation failed"
-#         )
-    
-#     return course
-
+    try:
+        # If user is instructor, show all courses, otherwise only published
+        is_published = None
+        if not current_user or not current_user.get("is_instructor"):
+            is_published = True
+        
+        courses = await course_service.get_courses(
+            skip=skip,
+            limit=limit,
+            category=category,
+            level=level,
+            is_published=is_published
+        )
+        
+        # Get instructor details for each course
+        for course in courses:
+            supabase = course_service.supabase
+            instructor = supabase.table("users")\
+                .select("id, email, full_name, username, avatar_url")\
+                .eq("id", course["instructor_id"])\
+                .execute()
+            if instructor.data:
+                course["instructor"] = instructor.data[0]
+            else:
+                course["instructor"] = {
+                    "full_name": "Unknown Instructor",
+                    "avatar_url": None
+                }
+        
+        return courses
+        
+    except Exception as e:
+        logger.error(f"Error getting courses: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving courses"
+        )
 
 @router.post("/", response_model=Course)
 async def create_course(
-    request: Request,
-    course_in: CourseCreate,
+    *,
     course_service: CourseService = Depends(get_course_service),
-    current_user: dict = Depends(get_current_user)
+    course_in: CourseCreate,
+    current_user: dict = Depends(get_current_instructor)  # Requires instructor
 ) -> Any:
     """
-    Create new course.
+    Create new course (instructors only).
     """
     try:
-        # Log the request
-        logger.info(f"Create course request from user: {current_user.get('id')}")
-        logger.info(f"Course data: {course_in.dict()}")
-        
-        # Check if user is instructor
-        if not current_user.get("is_instructor"):
-            logger.warning(f"User {current_user.get('id')} is not an instructor")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only instructors can create courses"
-            )
-        
-        # Prepare course data
         course_data = course_in.dict()
         course_data["instructor_id"] = current_user["id"]
         
-        # Create course
-        logger.info(f"Creating course with data: {course_data}")
         course = await course_service.create_course(course_data)
-        
         if not course:
-            logger.error("Course creation failed - no data returned")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Course creation failed"
             )
         
-        logger.info(f"Course created successfully: {course.get('id')}")
         return course
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error creating course: {str(e)}", exc_info=True)
+        logger.error(f"Error creating course: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}"
+            detail="Error creating course"
         )
-
 
 @router.get("/{course_id}", response_model=Course)
 async def get_course(
     *,
     course_service: CourseService = Depends(get_course_service),
-    course_id: str
+    course_id: str,
+    current_user: Optional[dict] = Depends(get_current_user)  # Optional
 ) -> Any:
     """
     Get course by ID with all details.
     """
-    course = await course_service.get_course_with_details(course_id)
-    if not course:
+    try:
+        course = await course_service.get_course_with_details(course_id)
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        return course
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting course {course_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving course"
         )
-    
-    return course
 
 @router.put("/{course_id}", response_model=Course)
 async def update_course(
@@ -152,120 +130,217 @@ async def update_course(
     course_service: CourseService = Depends(get_course_service),
     course_id: str,
     course_in: CourseUpdate,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_instructor)  # Requires instructor
 ) -> Any:
     """
-    Update a course.
+    Update a course (instructor only - must own the course).
     """
-    # Check if course exists and user owns it
-    course = await course_service.get_course(course_id)
-    if not course:
+    try:
+        # Check if course exists and user owns it
+        course = await course_service.get_course(course_id)
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        if course["instructor_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this course"
+            )
+        
+        # Filter out None values
+        update_data = {k: v for k, v in course_in.dict().items() if v is not None}
+        
+        if not update_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No data to update"
+            )
+        
+        updated_course = await course_service.update_course(course_id, update_data)
+        return updated_course
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating course {course_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error updating course"
         )
-    
-    if course["instructor_id"] != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to update this course"
-        )
-    
-    # Filter out None values
-    update_data = {k: v for k, v in course_in.dict().items() if v is not None}
-    
-    if not update_data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No data to update"
-        )
-    
-    updated_course = await course_service.update_course(course_id, update_data)
-    return updated_course
 
 @router.delete("/{course_id}")
 async def delete_course(
     *,
     course_service: CourseService = Depends(get_course_service),
     course_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_instructor)  # Requires instructor
 ) -> Any:
     """
-    Delete a course.
+    Delete a course (instructor only - must own the course).
     """
-    # Check if course exists and user owns it
-    course = await course_service.get_course(course_id)
-    if not course:
+    try:
+        # Check if course exists and user owns it
+        course = await course_service.get_course(course_id)
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        if course["instructor_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this course"
+            )
+        
+        deleted = await course_service.delete_course(course_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Course deletion failed"
+            )
+        
+        return {"message": "Course deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting course {course_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error deleting course"
         )
-    
-    if course["instructor_id"] != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to delete this course"
-        )
-    
-    deleted = await course_service.delete_course(course_id)
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Course deletion failed"
-        )
-    
-    return {"message": "Course deleted successfully"}
 
 @router.post("/{course_id}/publish")
 async def publish_course(
     *,
     course_service: CourseService = Depends(get_course_service),
     course_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_instructor)  # Requires instructor
 ) -> Any:
     """
-    Publish a course.
+    Publish a course (instructor only - must own the course).
     """
-    # Check if course exists and user owns it
-    course = await course_service.get_course(course_id)
-    if not course:
+    try:
+        # Check if course exists and user owns it
+        course = await course_service.get_course(course_id)
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        if course["instructor_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to publish this course"
+            )
+        
+        updated_course = await course_service.publish_course(course_id)
+        return updated_course
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error publishing course {course_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error publishing course"
         )
-    
-    if course["instructor_id"] != current_user["id"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to publish this course"
-        )
-    
-    updated_course = await course_service.publish_course(course_id)
-    return updated_course
 
 @router.post("/{course_id}/unpublish")
 async def unpublish_course(
     *,
     course_service: CourseService = Depends(get_course_service),
     course_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_instructor)  # Requires instructor
 ) -> Any:
     """
-    Unpublish a course.
+    Unpublish a course (instructor only - must own the course).
     """
-    # Check if course exists and user owns it
-    course = await course_service.get_course(course_id)
-    if not course:
+    try:
+        # Check if course exists and user owns it
+        course = await course_service.get_course(course_id)
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        if course["instructor_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to unpublish this course"
+            )
+        
+        updated_course = await course_service.unpublish_course(course_id)
+        return updated_course
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error unpublishing course {course_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Course not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error unpublishing course"
         )
-    
-    if course["instructor_id"] != current_user["id"]:
+
+@router.post("/{course_id}/thumbnail")
+async def upload_course_thumbnail(
+    *,
+    supabase=Depends(get_supabase),
+    course_service: CourseService = Depends(get_course_service),
+    course_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_instructor)  # Requires instructor
+) -> Any:
+    """
+    Upload course thumbnail to Supabase Storage.
+    """
+    try:
+        # Check if user owns the course
+        course = await course_service.get_course(course_id)
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        if course["instructor_id"] != current_user["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this course"
+            )
+        
+        # Upload to Supabase Storage
+        file_content = await file.read()
+        file_path = f"courses/{course_id}/thumbnail/{file.filename}"
+        
+        storage = supabase.storage.from_("course-materials")
+        result = storage.upload(file_path, file_content)
+        
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File upload failed"
+            )
+        
+        # Get public URL
+        public_url = storage.get_public_url(file_path)
+        
+        # Update course with thumbnail URL
+        updated_course = await course_service.update_course(course_id, {"thumbnail_url": public_url})
+        
+        return {"thumbnail_url": public_url, "course": updated_course}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading thumbnail for course {course_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to unpublish this course"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error uploading thumbnail"
         )
-    
-    updated_course = await course_service.unpublish_course(course_id)
-    return updated_course

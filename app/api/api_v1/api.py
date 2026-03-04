@@ -1,9 +1,9 @@
 from fastapi import APIRouter
-from app.api.api_v1.endpoints import auth, users, courses, admin
+from app.api.api_v1.endpoints import auth_social, users, courses, admin
 
 api_router = APIRouter()
 
-api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
+api_router.include_router(auth_social.router, prefix="/auth", tags=["authentication"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(courses.router, prefix="/courses", tags=["courses"])
-api_router.include_router(admin.router, prefix="/admin", tags=["admin"])  # New admin routes
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
