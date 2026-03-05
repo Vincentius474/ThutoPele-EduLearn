@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold text-primary"><i class="fas fa-certificate me-2"></i>My Certificates</h1>
+        </div>
+    </div>
+    
+    {% if certificates %}
+    <div class="row g-4">
+        {% for cert in certificates %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm certificate-card">
+                <div class="card-body text-center p-4">
+                    <div class="certificate-icon mb-3">
+                        <i class="fas fa-certificate fa-4x text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">{{ cert.course_title }}</h5>
+                    <p class="text-muted small mb-2">Issued to: <strong>{{ current_user.full_name }}</strong></p>
+                    <p class="text-muted small mb-3">Date: {{ cert.issued_date[:10] }}</p>
+                    <div class="d-grid gap-2">
+                        <a href="/certificates/{{ cert.id }}/view" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-eye me-2"></i>View Certificate
+                        </a>
+                        <a href="/certificates/{{ cert.id }}/download" class="btn btn-outline-success">
+                            <i class="fas fa-download me-2"></i>Download PDF
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="shareCertificate('{{ cert.id }}')">
+                            <i class="fas fa-share-alt me-2"></i>Share
+                        </button>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pb-4 text-center">
+                    <span class="badge bg-primary">Verified</span>
+                    <span class="badge bg-success">Lifetime Access</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-certificate fa-5x text-muted mb-4"></i>
+                    <h3>No Certificates Yet</h3>
+                    <p class="text-muted mb-4">Complete courses to earn certificates and showcase your achievements!</p>
+                    <a href="/courses" class="btn btn-primary btn-lg">Browse Courses</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.certificate-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.certificate-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+
+.certificate-icon {
+    transition: transform 0.3s ease;
+}
+
+.certificate-card:hover .certificate-icon {
+    transform: scale(1.1);
+}
+</style>
+
+<script>
+function shareCertificate(certId) {
+    // This would open a sharing modal
+    alert('Sharing feature coming soon!');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold text-primary"><i class="fas fa-book me-2"></i>My Courses</h1>
+        </div>
+    </div>
+    
+    <!-- Course Tabs -->
+    <ul class="nav nav-tabs mb-4" id="courseTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#in-progress">In Progress</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#completed">Completed</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#wishlist">Wishlist</a>
+        </li>
+    </ul>
+    
+    <div class="tab-content">
+        <!-- In Progress Tab -->
+        <div class="tab-pane fade show active" id="in-progress">
+            <div class="row g-4">
+                {% if in_progress_courses %}
+                    {% for course in in_progress_courses %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            {% if course.thumbnail_url %}
+                            <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}" style="height: 160px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ course.title }}</h5>
+                                <p class="card-text text-muted small">{{ course.description[:100] }}...</p>
+                                <div class="progress mb-2" style="height: 5px;">
+                                    <div class="progress-bar" style="width: {{ course.progress }}%;"></div>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted small">{{ course.progress }}% complete</span>
+                                    <a href="/courses/{{ course.id }}" class="btn btn-sm btn-primary">Continue</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+                    <h3>No Courses In Progress</h3>
+                    <p class="text-muted">Start learning by enrolling in a course today!</p>
+                    <a href="/courses" class="btn btn-primary">Browse Courses</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Completed Tab -->
+        <div class="tab-pane fade" id="completed">
+            <div class="row g-4">
+                {% if completed_courses %}
+                    {% for course in completed_courses %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm bg-light">
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <i class="fas fa-check-circle fa-3x text-success"></i>
+                                </div>
+                                <h5 class="card-title text-center">{{ course.title }}</h5>
+                                <p class="text-muted small text-center mb-3">Completed on {{ course.completed_at[:10] }}</p>
+                                <div class="d-grid gap-2">
+                                    <a href="/certificates/{{ course.id }}" class="btn btn-outline-primary">View Certificate</a>
+                                    <a href="/courses/{{ course.id }}/review" class="btn btn-outline-secondary">Leave Review</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-check-circle fa-4x text-muted mb-3"></i>
+                    <h3>No Completed Courses</h3>
+                    <p class="text-muted">Keep learning and you'll see your completed courses here!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Wishlist Tab -->
+        <div class="tab-pane fade" id="wishlist">
+            <div class="row g-4">
+                {% if wishlist_courses %}
+                    {% for course in wishlist_courses %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            {% if course.thumbnail_url %}
+                            <img src="{{ course.thumbnail_url }}" class="card-img-top" alt="{{ course.title }}" style="height: 160px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ course.title }}</h5>
+                                <p class="card-text text-muted small">{{ course.description[:100] }}...</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold">${{ course.price }}</span>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-danger me-1" onclick="removeFromWishlist('{{ course.id }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <a href="/courses/{{ course.id }}" class="btn btn-sm btn-primary">View</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-heart fa-4x text-muted mb-3"></i>
+                    <h3>Your Wishlist is Empty</h3>
+                    <p class="text-muted">Save courses you're interested in for later!</p>
+                    <a href="/courses" class="btn btn-primary">Browse Courses</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function removeFromWishlist(courseId) {
+    if (confirm('Remove this course from your wishlist?')) {
+        // Implement wishlist removal
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

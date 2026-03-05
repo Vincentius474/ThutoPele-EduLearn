@@ -1,14 +1,174 @@
-from typing import Any, Dict
+from typing import Any, Optional, Dict
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import HTTPBearer
 
 from app.core.supabase_client import get_supabase
 from app.core.config import settings
-from app.api.api_v1.dependencies import get_current_active_user, get_current_user_from_cookie
-from app.schemas.user import Token
+from app.schemas.user import User, Token
+from app.schemas.invitation import InvitationResponse
+from app.api.api_v1.dependencies import get_current_user_from_cookie
 
 router = APIRouter()
+security = HTTPBearer()
+
+# ==================== REGISTRATION ENDPOINTS ====================
+
+@router.post("/register/student", response_model=dict)
+async def register_student(
+    request: Request,
+    supabase=Depends(get_supabase)
+) -> Any:
+    """
+    Register a new student (no invitation code required).
+    """
+    try:
+        # Parse request body
+        body = await request.json()
+        email = body.get("email")
+        password = body.get("password")
+        username = body.get("username")
+        full_name = body.get("full_name")
+        
+        print(f"Student registration attempt for: {email}")
+        
+        # Validate input
+        if not all([email, password, username, full_name]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing required fields: email, password, username, full_name"
+            )
+        
+        # Register with Supabase Auth
+        auth_response = supabase.auth.sign_up({
+            "email": email,
+            "password": password,
+            "options": {
+                "data": {
+                    "full_name": full_name,
+                    "username": username
+                }
+            }
+        })
+        
+        if not auth_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Registration failed - no user returned"
+            )
+        
+        print(f"User created successfully with ID: {auth_response.user.id}")
+        
+        return {
+            "message": "Student registered successfully",
+            "user": {
+                "id": auth_response.user.id,
+                "email": email,
+                "username": username,
+                "full_name": full_name
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Registration error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+@router.post("/register/instructor", response_model=dict)
+async def register_instructor(
+    request: Request,
+    supabase=Depends(get_supabase)
+) -> Any:
+    """
+    Register a new instructor (requires valid invitation code).
+    """
+    try:
+        # Parse request body
+        body = await request.json()
+        email = body.get("email")
+        password = body.get("password")
+        username = body.get("username")
+        full_name = body.get("full_name")
+        invitation_code = body.get("invitation_code")
+        expertise = body.get("expertise", "")
+        experience = body.get("experience", "")
+        
+        print(f"Instructor registration attempt for: {email}")
+        
+        # Validate input
+        if not all([email, password, username, full_name, invitation_code]):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing required fields"
+            )
+        
+        # Verify invitation code
+        invitation_result = supabase.table("invitations")\
+            .select("*")\
+            .eq("email", email)\
+            .eq("code", invitation_code)\
+            .eq("is_used", False)\
+            .execute()
+        
+        if not invitation_result.data or len(invitation_result.data) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired invitation code"
+            )
+        
+        invitation = invitation_result.data[0]
+        
+        # Register with Supabase Auth
+        auth_response = supabase.auth.sign_up({
+            "email": email,
+            "password": password,
+            "options": {
+                "data": {
+                    "full_name": full_name,
+                    "username": username,
+                    "is_instructor": True,
+                    "expertise": expertise,
+                    "experience": experience
+                }
+            }
+        })
+        
+        if not auth_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Registration failed"
+            )
+        
+        # Mark invitation as used
+        supabase.table("invitations")\
+            .update({"is_used": True, "used_at": "now()"})\
+            .eq("id", invitation["id"])\
+            .execute()
+        
+        print(f"Instructor created successfully with ID: {auth_response.user.id}")
+        
+        return {
+            "message": "Instructor registered successfully",
+            "user": {
+                "id": auth_response.user.id,
+                "email": email,
+                "username": username,
+                "full_name": full_name
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Registration error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 # ==================== LOGIN ENDPOINT ====================
 
@@ -19,18 +179,17 @@ async def login(
 ) -> Any:
     """
     Login with email and password.
-    This endpoint is called by the Supabase Auth UI.
     """
     try:
         # Try to parse as JSON first
         try:
             data = await request.json()
-            email = data.get("email")
+            email = data.get("email") or data.get("username")
             password = data.get("password")
         except:
             # If not JSON, try form data
             form_data = await request.form()
-            email = form_data.get("email") or form_data.get("username")
+            email = form_data.get("username") or form_data.get("email")
             password = form_data.get("password")
         
         if not email or not password:
@@ -46,19 +205,35 @@ async def login(
         })
         
         if hasattr(auth_response, 'session') and auth_response.session:
-            # Set session cookie
+            # Get user profile
+            profile = supabase.table("users")\
+                .select("*")\
+                .eq("id", auth_response.user.id)\
+                .execute()
+            
+            user_profile = profile.data[0] if profile.data else {}
+            
             response = JSONResponse(
                 content={
                     "access_token": auth_response.session.access_token,
                     "refresh_token": auth_response.session.refresh_token,
-                    "token_type": "bearer"
+                    "token_type": "bearer",
+                    "user": {
+                        "id": auth_response.user.id,
+                        "email": auth_response.user.email,
+                        "username": user_profile.get("username"),
+                        "full_name": user_profile.get("full_name"),
+                        "is_instructor": user_profile.get("is_instructor", False),
+                        "is_admin": user_profile.get("is_admin", False)
+                    }
                 }
             )
             
+            # Set cookies
             response.set_cookie(
                 key="access_token",
                 value=auth_response.session.access_token,
-                max_age=60 * 60 * 24 * 7,  # 7 days
+                max_age=60 * 60 * 24 * 7,
                 httponly=True,
                 secure=False,
                 samesite="lax",
@@ -69,7 +244,7 @@ async def login(
                 response.set_cookie(
                     key="refresh_token",
                     value=auth_response.session.refresh_token,
-                    max_age=60 * 60 * 24 * 30,  # 30 days
+                    max_age=60 * 60 * 24 * 30,
                     httponly=True,
                     secure=False,
                     samesite="lax",
@@ -128,9 +303,9 @@ async def set_session(
         response.set_cookie(
             key="access_token",
             value=access_token,
-            max_age=60 * 60 * 24 * 7,  # 7 days
+            max_age=60 * 60 * 24 * 7,
             httponly=True,
-            secure=False,  # Set to True in production
+            secure=False,
             samesite="lax",
             path="/"
         )
@@ -139,7 +314,7 @@ async def set_session(
             response.set_cookie(
                 key="refresh_token",
                 value=refresh_token,
-                max_age=60 * 60 * 24 * 30,  # 30 days
+                max_age=60 * 60 * 24 * 30,
                 httponly=True,
                 secure=False,
                 samesite="lax",
@@ -163,21 +338,18 @@ async def logout(
     supabase=Depends(get_supabase)
 ) -> JSONResponse:
     """
-    Logout user and clear session from both client and server.
+    Logout user and clear session.
     """
     try:
-        # Get token from cookie
         token = request.cookies.get("access_token")
         
         if token:
             try:
-                # Sign out from Supabase (revoke token)
                 supabase.auth.sign_out()
                 print("User signed out from Supabase")
             except Exception as e:
                 print(f"Supabase sign-out error (non-critical): {e}")
         
-        # Create response
         response = JSONResponse(
             content={
                 "message": "Logged out successfully",
@@ -185,17 +357,13 @@ async def logout(
             }
         )
         
-        # Clear all auth cookies
         response.delete_cookie("access_token", path="/")
         response.delete_cookie("refresh_token", path="/")
-        
-        print("Auth cookies cleared")
         
         return response
         
     except Exception as e:
         print(f"Logout error: {e}")
-        # Even if there's an error, try to clear cookies
         response = JSONResponse(
             content={"message": "Logged out", "redirect": "/login"},
             status_code=200
@@ -226,23 +394,25 @@ async def logout_get(
     
     return response
 
-@router.get("/me")
+# ==================== USER INFO ENDPOINTS ====================
+
+@router.get("/me", response_model=User)
 async def get_current_user(
     request: Request,
     supabase=Depends(get_supabase)
-) -> Dict[str, Any]:
+) -> Any:
     """
     Get current authenticated user.
     """
-    token = request.cookies.get("access_token")
-    
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated"
-        )
-    
     try:
+        token = request.cookies.get("access_token")
+        
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+        
         user = supabase.auth.get_user(token)
         
         if not user or not hasattr(user, 'user'):
@@ -251,20 +421,21 @@ async def get_current_user(
                 detail="Invalid token"
             )
         
-        # Get profile from database
         profile = supabase.table("users")\
             .select("*")\
             .eq("id", user.user.id)\
             .execute()
         
-        return {
+        user_data = {
             "id": user.user.id,
             "email": user.user.email,
             **(profile.data[0] if profile.data else {})
         }
         
+        return user_data
+        
     except Exception as e:
-        print(f"Error getting user: {e}")
+        print(f"Get current user error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication failed"
@@ -305,7 +476,8 @@ async def get_session(
         
     except Exception:
         return {"authenticated": False}
-    
+
+# ==================== PASSWORD MANAGEMENT ====================
 
 @router.post("/forgot-password")
 async def forgot_password(
@@ -325,7 +497,6 @@ async def forgot_password(
                 detail="Email is required"
             )
         
-        # Send reset password email via Supabase
         supabase.auth.reset_password_for_email(
             email,
             {
@@ -369,7 +540,6 @@ async def reset_password(
                 detail="Password must be at least 8 characters"
             )
         
-        # Verify token and update password
         supabase.auth.update_user({
             "password": new_password
         })
@@ -388,8 +558,7 @@ async def reset_password(
 @router.post("/change-password")
 async def change_password(
     request: Request,
-    supabase=Depends(get_supabase),
-    current_user: dict = Depends(get_current_active_user)
+    supabase=Depends(get_supabase)
 ) -> JSONResponse:
     """
     Change password for authenticated user.
@@ -411,10 +580,25 @@ async def change_password(
                 detail="New password must be at least 8 characters"
             )
         
-        # First verify current password by attempting to sign in
+        # Get current user
+        token = request.cookies.get("access_token")
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+        
+        user = supabase.auth.get_user(token)
+        if not user or not hasattr(user, 'user'):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        
+        # Verify current password by attempting to sign in
         try:
             supabase.auth.sign_in_with_password({
-                "email": current_user["email"],
+                "email": user.user.email,
                 "password": current_password
             })
         except:
@@ -440,7 +624,8 @@ async def change_password(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to change password"
         )
-    
+
+# ==================== TOKEN REFRESH ====================
 
 @router.post("/refresh")
 async def refresh_token(
@@ -460,7 +645,6 @@ async def refresh_token(
                 detail="Refresh token required"
             )
         
-        # Refresh session
         session = supabase.auth.refresh_session(refresh_token)
         
         if not session or not hasattr(session, 'session'):
@@ -477,7 +661,6 @@ async def refresh_token(
             }
         )
         
-        # Update cookies
         response.set_cookie(
             key="access_token",
             value=session.session.access_token,
@@ -506,3 +689,46 @@ async def refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Failed to refresh token"
         )
+
+# ==================== INVITATION VERIFICATION ====================
+
+@router.post("/verify-invitation")
+async def verify_invitation(
+    request: Request,
+    supabase=Depends(get_supabase)
+) -> dict:
+    """
+    Verify if an invitation code is valid.
+    """
+    try:
+        body = await request.json()
+        email = body.get("email")
+        code = body.get("code")
+        
+        result = supabase.table("invitations")\
+            .select("*")\
+            .eq("email", email)\
+            .eq("code", code)\
+            .eq("is_used", False)\
+            .execute()
+        
+        if result.data and len(result.data) > 0:
+            invitation = result.data[0]
+            return {
+                "valid": True,
+                "message": "Invitation code is valid",
+                "email": invitation["email"],
+                "full_name": invitation["full_name"],
+                "username": invitation["username"]
+            }
+        else:
+            return {
+                "valid": False,
+                "message": "Invalid or expired invitation code"
+            }
+            
+    except Exception as e:
+        return {
+            "valid": False,
+            "message": f"Error verifying code: {str(e)}"
+        }

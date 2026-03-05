@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Instructor Sidebar -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/instructor/dashboard' %}active{% endif %}" href="/instructor/dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/courses/create' %}active{% endif %}" href="/courses/create">
+                            <i class="fas fa-plus-circle me-2"></i>Create Course
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/my-taught-courses' %}active{% endif %}" href="/my-taught-courses">
+                            <i class="fas fa-list me-2"></i>My Courses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/instructor/analytics' %}active{% endif %}" href="/instructor/analytics">
+                            <i class="fas fa-chart-line me-2"></i>Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.url.path == '/instructor/earnings' %}active{% endif %}" href="/instructor/earnings">
+                            <i class="fas fa-dollar-sign me-2"></i>Earnings
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ms-sm-auto px-md-4">
+            {% block instructor_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.exceptions import HTTPException
 from pathlib import Path
 
 from app.core.config import settings
@@ -44,6 +45,14 @@ app.include_router(web_router)
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc: HTTPException):
+    return templates.TemplateResponse(
+        "404.html",
+        {"request": request, "title": "Page Not Found"},
+        status_code=404
+    )
 
 @app.on_event("startup")
 async def startup_event():

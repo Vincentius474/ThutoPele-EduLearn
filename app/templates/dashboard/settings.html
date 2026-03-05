@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold text-primary mb-4">Account Settings</h1>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Settings Navigation -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="#profile" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                            <i class="fas fa-user me-2"></i>Profile Settings
+                        </a>
+                        <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-shield-alt me-2"></i>Security
+                        </a>
+                        <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-bell me-2"></i>Notifications
+                        </a>
+                        <a href="#privacy" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-lock me-2"></i>Privacy
+                        </a>
+                        <a href="#billing" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                            <i class="fas fa-credit-card me-2"></i>Billing
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Content -->
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- Profile Settings -->
+                <div class="tab-pane fade show active" id="profile">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-0 pt-4">
+                            <h5 class="fw-bold mb-0">Profile Information</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="profileSettingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" value="{{ current_user.full_name }}" readonly disabled>
+                                    <small class="text-muted">Update your name on the <a href="/profile">profile page</a></small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" value="{{ current_user.email }}" readonly disabled>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Username</label>
+                                    <input type="text" class="form-control" value="{{ current_user.username }}" readonly disabled>
+                                </div>
+                                <hr>
+                                <p class="text-muted">To edit your profile information, please visit the <a href="/profile">profile page</a>.</p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Settings -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-0 pt-4">
+                            <h5 class="fw-bold mb-0">Security Settings</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            {% if not current_user.provider %}
+                            <form id="securitySettingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Current Password</label>
+                                    <input type="password" class="form-control" id="currentPassword">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="newPassword">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm New Password</label>
+                                    <input type="password" class="form-control" id="confirmPassword">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Change Password</button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                You're signed in with {{ current_user.provider|title }}. Password management is handled by your provider.
+                            </div>
+                            {% endif %}
+                            
+                            <hr class="my-4">
+                            
+                            <h6 class="fw-bold mb-3">Two-Factor Authentication</h6>
+                            <button class="btn btn-outline-primary" disabled>Coming Soon</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notifications Settings -->
+                <div class="tab-pane fade" id="notifications">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-0 pt-4">
+                            <h5 class="fw-bold mb-0">Notification Preferences</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                                    <label class="form-check-label" for="emailNotifications">
+                                        Email Notifications
+                                    </label>
+                                    <div class="text-muted small">Receive course updates and announcements via email</div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="courseUpdates" checked>
+                                    <label class="form-check-label" for="courseUpdates">
+                                        Course Updates
+                                    </label>
+                                    <div class="text-muted small">Get notified when your enrolled courses have new content</div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="marketingEmails">
+                                    <label class="form-check-label" for="marketingEmails">
+                                        Marketing Emails
+                                    </label>
+                                    <div class="text-muted small">Receive promotional offers and new course announcements</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary mt-3" onclick="saveNotificationSettings()">Save Preferences</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Privacy Settings -->
+                <div class="tab-pane fade" id="privacy">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-0 pt-4">
+                            <h5 class="fw-bold mb-0">Privacy Settings</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="profileVisibility" id="publicProfile" checked>
+                                    <label class="form-check-label" for="publicProfile">
+                                        Public Profile
+                                    </label>
+                                    <div class="text-muted small">Your profile is visible to everyone</div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="profileVisibility" id="privateProfile">
+                                    <label class="form-check-label" for="privateProfile">
+                                        Private Profile
+                                    </label>
+                                    <div class="text-muted small">Only you and instructors can see your profile</div>
+                                </div>
+                            </div>
+                            <hr>
+                            <h6 class="fw-bold mb-3">Data & Privacy</h6>
+                            <a href="/privacy" class="btn btn-outline-primary me-2">Privacy Policy</a>
+                            <a href="/terms" class="btn btn-outline-primary">Terms of Service</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Billing Settings -->
+                <div class="tab-pane fade" id="billing">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent border-0 pt-4">
+                            <h5 class="fw-bold mb-0">Billing Information</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No billing information available. You currently have no payment methods on file.
+                            </div>
+                            
+                            <h6 class="fw-bold mb-3 mt-4">Purchase History</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Course</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">
+                                                No purchase history
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <button class="btn btn-primary mt-3">Add Payment Method</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveNotificationSettings() {
+    // This would save to backend
+    alert('Notification preferences saved!');
+}
+
+document.getElementById('securitySettingsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const currentPass = document.getElementById('currentPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const confirmPass = document.getElementById('confirmPassword').value;
+    
+    if (newPass !== confirmPass) {
+        alert('New passwords do not match');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/auth/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                current_password: currentPass,
+                new_password: newPass
+            })
+        });
+        
+        if (response.ok) {
+            alert('Password changed successfully!');
+            document.getElementById('securitySettingsForm').reset();
+        } else {
+            const data = await response.json();
+            alert(data.detail || 'Failed to change password');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+});
+</script>
+{% endblock %}
