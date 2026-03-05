@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core.supabase_client import get_supabase
 from app.core.config import settings
-from app.api.api_v1.dependencies import get_current_user_from_cookie
+from app.api.api_v1.dependencies import get_current_active_user, get_current_user_from_cookie
 from app.schemas.user import Token
 
 router = APIRouter()
@@ -305,3 +305,204 @@ async def get_session(
         
     except Exception:
         return {"authenticated": False}
+    
+
+@router.post("/forgot-password")
+async def forgot_password(
+    request: Request,
+    supabase=Depends(get_supabase)
+) -> JSONResponse:
+    """
+    Send password reset email.
+    """
+    try:
+        data = await request.json()
+        email = data.get("email")
+        
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email is required"
+            )
+        
+        # Send reset password email via Supabase
+        supabase.auth.reset_password_for_email(
+            email,
+            {
+                "redirect_to": f"{settings.BASE_URL}/reset-password"
+            }
+        )
+        
+        return JSONResponse(
+            content={"message": "Password reset email sent"}
+        )
+        
+    except Exception as e:
+        print(f"Forgot password error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send reset email"
+        )
+
+@router.post("/reset-password")
+async def reset_password(
+    request: Request,
+    supabase=Depends(get_supabase)
+) -> JSONResponse:
+    """
+    Reset password with token.
+    """
+    try:
+        data = await request.json()
+        token = data.get("token")
+        new_password = data.get("new_password")
+        
+        if not token or not new_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token and new password are required"
+            )
+        
+        if len(new_password) < 8:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Password must be at least 8 characters"
+            )
+        
+        # Verify token and update password
+        supabase.auth.update_user({
+            "password": new_password
+        })
+        
+        return JSONResponse(
+            content={"message": "Password updated successfully"}
+        )
+        
+    except Exception as e:
+        print(f"Reset password error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset password"
+        )
+
+@router.post("/change-password")
+async def change_password(
+    request: Request,
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_active_user)
+) -> JSONResponse:
+    """
+    Change password for authenticated user.
+    """
+    try:
+        data = await request.json()
+        current_password = data.get("current_password")
+        new_password = data.get("new_password")
+        
+        if not current_password or not new_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password and new password are required"
+            )
+        
+        if len(new_password) < 8:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be at least 8 characters"
+            )
+        
+        # First verify current password by attempting to sign in
+        try:
+            supabase.auth.sign_in_with_password({
+                "email": current_user["email"],
+                "password": current_password
+            })
+        except:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Current password is incorrect"
+            )
+        
+        # Update password
+        supabase.auth.update_user({
+            "password": new_password
+        })
+        
+        return JSONResponse(
+            content={"message": "Password changed successfully"}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Change password error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to change password"
+        )
+    
+
+@router.post("/refresh")
+async def refresh_token(
+    request: Request,
+    supabase=Depends(get_supabase)
+) -> JSONResponse:
+    """
+    Refresh access token using refresh token.
+    """
+    try:
+        data = await request.json()
+        refresh_token = data.get("refresh_token")
+        
+        if not refresh_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Refresh token required"
+            )
+        
+        # Refresh session
+        session = supabase.auth.refresh_session(refresh_token)
+        
+        if not session or not hasattr(session, 'session'):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
+        
+        response = JSONResponse(
+            content={
+                "access_token": session.session.access_token,
+                "refresh_token": session.session.refresh_token,
+                "token_type": "bearer"
+            }
+        )
+        
+        # Update cookies
+        response.set_cookie(
+            key="access_token",
+            value=session.session.access_token,
+            max_age=60 * 60 * 24 * 7,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            path="/"
+        )
+        
+        response.set_cookie(
+            key="refresh_token",
+            value=session.session.refresh_token,
+            max_age=60 * 60 * 24 * 30,
+            httponly=True,
+            secure=False,
+            samesite="lax",
+            path="/"
+        )
+        
+        return response
+        
+    except Exception as e:
+        print(f"Refresh error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Failed to refresh token"
+        )

@@ -875,6 +875,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional
 import logging
 
+from app.api.api_v1.dependencies import get_current_active_user
 from app.web.dependencies import get_templates, get_current_user_from_cookie, get_supabase_client
 from app.services.course_service import CourseService
 from app.services.blog_service import BlogService
@@ -1606,14 +1607,11 @@ async def search_page(
 async def profile_page(
     request: Request,
     templates: Jinja2Templates = Depends(get_templates),
-    current_user: dict = Depends(get_current_user_from_cookie)
+    current_user: dict = Depends(get_current_active_user)
 ):
     """User profile page"""
-    if not current_user:
-        return RedirectResponse(url="/auth", status_code=302)
-    
     return templates.TemplateResponse(
-        "dashboard/profile.html",
+        "profile.html",
         {
             "request": request,
             "current_user": current_user,

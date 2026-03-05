@@ -79,19 +79,19 @@
                                 </button>
                             </form>
                             
-                            <div class="text-center mb-4">
+                            <!-- <div class="text-center mb-4">
                                 <span class="text-muted">or continue with</span>
-                            </div>
+                            </div> -->
                             
                             <!-- Social Login Buttons -->
-                            <div class="d-grid gap-3">
+                            <!-- <div class="d-grid gap-3">
                                 <button class="btn btn-outline-dark py-2" id="githubLoginBtn">
                                     <i class="fab fa-github me-2"></i>Continue with GitHub
                                 </button>
                                 <button class="btn btn-outline-danger py-2" id="googleLoginBtn">
                                     <i class="fab fa-google me-2"></i>Continue with Google
                                 </button>
-                            </div>
+                            </div> -->
                         </div>
 
                         <!-- Register Tab -->
@@ -177,19 +177,19 @@
                                 </button>
                             </form>
                             
-                            <div class="text-center mb-4">
+                            <!-- <div class="text-center mb-4">
                                 <span class="text-muted">or sign up with</span>
-                            </div>
+                            </div> -->
                             
                             <!-- Social Register Buttons -->
-                            <div class="d-grid gap-3">
+                            <!-- <div class="d-grid gap-3">
                                 <button class="btn btn-outline-dark py-2" id="githubRegisterBtn">
                                     <i class="fab fa-github me-2"></i>Sign up with GitHub
                                 </button>
                                 <button class="btn btn-outline-danger py-2" id="googleRegisterBtn">
                                     <i class="fab fa-google me-2"></i>Sign up with Google
                                 </button>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                 </div>
@@ -275,240 +275,11 @@
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Toggle password visibility
-    document.getElementById('toggleSigninPassword')?.addEventListener('click', function() {
-        togglePassword('signinPassword', this);
-    });
-    
-    document.getElementById('toggleRegisterPassword')?.addEventListener('click', function() {
-        togglePassword('registerPassword', this);
-    });
-    
-    function togglePassword(inputId, button) {
-        const input = document.getElementById(inputId);
-        const icon = button.querySelector('i');
-        
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            input.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    }
-    
-    // Password confirmation validation
-    const registerPassword = document.getElementById('registerPassword');
-    const confirmPassword = document.getElementById('confirmPassword');
-    const passwordMatch = document.getElementById('passwordMatch');
-    
-    function validatePasswordMatch() {
-        if (confirmPassword.value) {
-            if (registerPassword.value === confirmPassword.value) {
-                passwordMatch.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Passwords match</span>';
-                confirmPassword.classList.remove('is-invalid');
-                confirmPassword.classList.add('is-valid');
-            } else {
-                passwordMatch.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle"></i> Passwords do not match</span>';
-                confirmPassword.classList.remove('is-valid');
-                confirmPassword.classList.add('is-invalid');
-            }
-        } else {
-            passwordMatch.innerHTML = '';
-        }
-    }
-    
-    registerPassword?.addEventListener('input', validatePasswordMatch);
-    confirmPassword?.addEventListener('input', validatePasswordMatch);
-    
-    // Sign In Form Submission
-    document.getElementById('signinForm')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const email = document.getElementById('signinEmail').value;
-        const password = document.getElementById('signinPassword').value;
-        const btn = document.getElementById('signinBtn');
-        const spinner = document.getElementById('signinSpinner');
-        const btnText = document.getElementById('signinText');
-        
-        // Show loading state
-        btn.disabled = true;
-        spinner.classList.remove('d-none');
-        btnText.textContent = 'Signing in...';
-        
-        try {
-            const formData = new FormData();
-            formData.append('username', email);
-            formData.append('password', password);
-            
-            const response = await fetch('/api/v1/auth/login', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                // Set session via our endpoint
-                const sessionResponse = await fetch('/api/v1/auth/set-session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        access_token: data.access_token,
-                        refresh_token: data.refresh_token
-                    })
-                });
-                
-                if (sessionResponse.ok) {
-                    window.location.href = '/dashboard';
-                } else {
-                    showError('Failed to set session');
-                }
-            } else {
-                showError(data.detail || 'Invalid credentials');
-            }
-        } catch (error) {
-            showError('An error occurred. Please try again.');
-        } finally {
-            // Reset button state
-            btn.disabled = false;
-            spinner.classList.add('d-none');
-            btnText.textContent = 'Sign In';
-        }
-    });
-    
-    // Register Form Submission
-    document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const fullName = document.getElementById('registerFullName').value;
-        const email = document.getElementById('registerEmail').value;
-        const username = document.getElementById('registerUsername').value;
-        const password = document.getElementById('registerPassword').value;
-        const confirmPwd = document.getElementById('confirmPassword').value;
-        
-        // Validate passwords match
-        if (password !== confirmPwd) {
-            showError('Passwords do not match');
-            return;
-        }
-        
-        // Validate password length
-        if (password.length < 8) {
-            showError('Password must be at least 8 characters long');
-            return;
-        }
-        
-        const btn = document.getElementById('registerBtn');
-        const spinner = document.getElementById('registerSpinner');
-        const btnText = document.getElementById('registerText');
-        
-        // Show loading state
-        btn.disabled = true;
-        spinner.classList.remove('d-none');
-        btnText.textContent = 'Creating account...';
-        
-        try {
-            const response = await fetch('/api/v1/auth/register/student', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    username: username,
-                    full_name: fullName
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                showSuccess('Account created successfully! You can now sign in.');
-                
-                // Switch to sign in tab
-                document.getElementById('signin-tab').click();
-                
-                // Clear form
-                document.getElementById('registerForm').reset();
-            } else {
-                showError(data.detail || 'Registration failed');
-            }
-        } catch (error) {
-            showError('An error occurred. Please try again.');
-        } finally {
-            // Reset button state
-            btn.disabled = false;
-            spinner.classList.add('d-none');
-            btnText.textContent = 'Create Account';
-        }
-    });
-    
-    // Social Login
-    function socialLogin(provider) {
-        window.location.href = `/api/v1/auth/login/${provider}`;
-    }
-    
-    document.getElementById('githubLoginBtn')?.addEventListener('click', () => socialLogin('github'));
-    document.getElementById('googleLoginBtn')?.addEventListener('click', () => socialLogin('google'));
-    document.getElementById('githubRegisterBtn')?.addEventListener('click', () => socialLogin('github'));
-    document.getElementById('googleRegisterBtn')?.addEventListener('click', () => socialLogin('google'));
-    
-    // Forgot Password
-    document.getElementById('forgotPasswordForm')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const email = document.getElementById('resetEmail').value;
-        
-        try {
-            // In your supabase_auth.html, update the fetch URL
-            const response = await fetch('/api/v1/auth/register/student', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    username: username,
-                    full_name: fullName
-                })
-            });
-            
-            if (response.ok) {
-                bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
-                showSuccess('Password reset link sent to your email!');
-                document.getElementById('forgotPasswordForm').reset();
-            } else {
-                const data = await response.json();
-                showError(data.detail || 'Failed to send reset link');
-            }
-        } catch (error) {
-            showError('An error occurred. Please try again.');
-        }
-    });
-    
-    // Helper functions for modals
-    function showSuccess(message) {
-        document.getElementById('successMessage').textContent = message;
-        new bootstrap.Modal(document.getElementById('successModal')).show();
-    }
-    
-    function showError(message) {
-        document.getElementById('errorMessage').textContent = message;
-        new bootstrap.Modal(document.getElementById('errorModal')).show();
-    }
-});
-</script>
+<!-- Link to external JavaScript -->
+<script src="{{ url_for('static', path='/js/auth.js') }}"></script>
 
 <style>
+/* Keep all the CSS styles here */
 .card {
     border: none;
     transition: transform 0.3s ease;

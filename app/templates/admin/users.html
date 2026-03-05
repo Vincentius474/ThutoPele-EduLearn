@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-users-cog me-2"></i>User Management</h2>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <input type="text" class="form-control" id="searchInput" placeholder="Search users...">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="roleFilter">
+                <option value="">All Roles</option>
+                <option value="student">Students</option>
+                <option value="instructor">Instructors</option>
+                <option value="admin">Admins</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" onclick="exportUsers()">
+                <i class="fas fa-download me-2"></i>Export
+            </button>
+        </div>
+    </div>
+    
+    <!-- Users Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ user.avatar_url or 'https://ui-avatars.com/api/?name=' + user.full_name|urlencode }}" 
+                                         class="rounded-circle me-2" width="40" height="40" alt="{{ user.full_name }}">
+                                    <div>
+                                        <div class="fw-bold">{{ user.full_name }}</div>
+                                        <small class="text-muted">@{{ user.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <select class="form-select form-select-sm role-select" 
+                                        data-user-id="{{ user.id }}"
+                                        onchange="updateUserRole('{{ user.id }}', this.value)">
+                                    <option value="student" {% if not user.is_instructor and not user.is_admin %}selected{% endif %}>Student</option>
+                                    <option value="instructor" {% if user.is_instructor %}selected{% endif %}>Instructor</option>
+                                    <option value="admin" {% if user.is_admin %}selected{% endif %}>Admin</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" 
+                                           {% if user.is_active %}checked{% endif %}
+                                           onchange="toggleUserStatus('{{ user.id }}', this.checked)">
+                                </div>
+                            </td>
+                            <td>{{ user.created_at[:10] if user.created_at else 'N/A' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="editUser('{{ user.id }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('{{ user.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Filter functionality
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('roleFilter').addEventListener('change', filterTable);
+document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const role = document.getElementById('roleFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    
+    const rows = document.querySelectorAll('#usersTableBody tr');
+    
+    rows.forEach(row => {
+        let show = true;
+        
+        if (search) {
+            const text = row.textContent.toLowerCase();
+            show = text.includes(search);
+        }
+        
+        if (show && role) {
+            const roleSelect = row.querySelector('.role-select').value;
+            show = roleSelect === role;
+        }
+        
+        if (show && status) {
+            const statusCheck = row.querySelector('.form-check-input').checked;
+            show = (status === 'active' && statusCheck) || (status === 'inactive' && !statusCheck);
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+// Role update
+async function updateUserRole(userId, role) {
+    try {
+        const response = await fetch(`/api/v1/admin/users/${userId}/role`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ role })
+        });
+        
+        if (response.ok) {
+            showSuccess('User role updated successfully');
+        } else {
+            showError('Failed to update user role');
+            // Revert select
+            location.reload();
+        }
+    } catch (error) {
+        showError('An error occurred');
+        location.reload();
+    }
+}
+
+// Toggle user status
+async function toggleUserStatus(userId, isActive) {
+    try {
+        const response = await fetch(`/api/v1/admin/users/${userId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ is_active: isActive })
+        });
+        
+        if (!response.ok) {
+            showError('Failed to update user status');
+            location.reload();
+        }
+    } catch (error) {
+        showError('An error occurred');
+        location.reload();
+    }
+}
+
+// Export users
+function exportUsers() {
+    window.location.href = '/api/v1/admin/users/export';
+}
+
+// Edit user
+function editUser(userId) {
+    window.location.href = `/admin/users/${userId}/edit`;
+}
+
+// Delete user
+async function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/v1/admin/users/${userId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            showSuccess('User deleted successfully');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showError('Failed to delete user');
+        }
+    } catch (error) {
+        showError('An error occurred');
+    }
+}
+</script>
+{% endblock %}
