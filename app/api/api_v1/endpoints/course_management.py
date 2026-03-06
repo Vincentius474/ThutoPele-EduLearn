@@ -1,0 +1,576 @@
+from typing import Any, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form
+from fastapi.responses import JSONResponse
+import json
+
+from app.core.supabase_client import get_supabase
+from app.services.course_management_service import CourseManagementService
+from app.api.api_v1.dependencies import get_current_instructor
+from app.schemas.course import Course
+
+router = APIRouter()
+
+async def get_management_service(supabase=Depends(get_supabase)) -> CourseManagementService:
+    return CourseManagementService(supabase)
+
+# ==================== COURSE MATERIALS ====================
+
+@router.post("/courses/{course_id}/materials")
+async def create_material(
+    course_id: str,
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(""),
+    material_type: str = Form(...),
+    file: Optional[UploadFile] = File(None),
+    content_url: Optional[str] = Form(None),
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Create a new course material (video, document, link, file)
+    """
+    try:
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", course_id)\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to modify this course"
+            )
+        
+        material_data = {
+            "title": title,
+            "description": description,
+            "material_type": material_type,
+            "course_id": course_id
+        }
+        
+        # Handle file upload
+        if file:
+            file_url = await service.upload_file(course_id, file, "materials")
+            if file_url:
+                material_data["content_url"] = file_url
+                material_data["file_name"] = file.filename
+                material_data["file_size"] = file.size
+        elif content_url:
+            material_data["content_url"] = content_url
+        
+        # Get max order index
+        existing = await service.get_materials(course_id)
+        material_data["order_index"] = len(existing)
+        
+        material = await service.add_material(course_id, material_data)
+        
+        if not material:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create material"
+            )
+        
+        return material
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating material: {str(e)}"
+        )
+
+@router.get("/courses/{course_id}/materials")
+async def get_materials(
+    course_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get all materials for a course
+    """
+    try:
+        materials = await service.get_materials(course_id)
+        return materials
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting materials: {str(e)}"
+        )
+
+@router.put("/courses/materials/{material_id}")
+async def update_material(
+    material_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Update course material
+    """
+    try:
+        data = await request.json()
+        material = await service.update_material(material_id, data)
+        
+        if not material:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        return material
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating material: {str(e)}"
+        )
+
+@router.delete("/courses/materials/{material_id}")
+async def delete_material(
+    material_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Delete course material
+    """
+    try:
+        deleted = await service.delete_material(material_id)
+        
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        return {"message": "Material deleted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting material: {str(e)}"
+        )
+
+# ==================== QUIZZES ====================
+
+@router.post("/courses/{course_id}/quizzes")
+async def create_quiz(
+    course_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Create a new quiz with questions
+    """
+    try:
+        data = await request.json()
+        title = data.get("title")
+        description = data.get("description", "")
+        time_limit = data.get("time_limit", 30)
+        passing_score = data.get("passing_score", 70)
+        questions = data.get("questions", [])
+        
+        if not title or not questions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Title and questions are required"
+            )
+        
+        # First create material entry
+        material_data = {
+            "title": title,
+            "description": description,
+            "material_type": "quiz",
+            "course_id": course_id
+        }
+        
+        existing = await service.get_materials(course_id)
+        material_data["order_index"] = len(existing)
+        
+        material = await service.add_material(course_id, material_data)
+        
+        if not material:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create quiz material"
+            )
+        
+        # Create quiz
+        quiz_data = {
+            "title": title,
+            "description": description,
+            "time_limit": time_limit,
+            "passing_score": passing_score,
+            "material_id": material["id"]
+        }
+        
+        quiz = await service.create_quiz(course_id, quiz_data, questions)
+        
+        if not quiz:
+            # Clean up material if quiz creation fails
+            await service.delete_material(material["id"])
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create quiz"
+            )
+        
+        return quiz
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating quiz: {str(e)}"
+        )
+
+@router.get("/courses/quizzes/{quiz_id}")
+async def get_quiz(
+    quiz_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get quiz details with questions
+    """
+    try:
+        quiz = await service.get_quiz(quiz_id)
+        
+        if not quiz:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quiz not found"
+            )
+        
+        return quiz
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting quiz: {str(e)}"
+        )
+
+# ==================== ASSIGNMENTS ====================
+
+@router.post("/courses/{course_id}/assignments")
+async def create_assignment(
+    course_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Create a new assignment
+    """
+    try:
+        data = await request.json()
+        title = data.get("title")
+        description = data.get("description")
+        due_date = data.get("due_date")
+        total_points = data.get("total_points", 100)
+        submission_type = data.get("submission_type", "file")
+        
+        if not title or not description:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Title and description are required"
+            )
+        
+        # Create material entry
+        material_data = {
+            "title": title,
+            "description": description,
+            "material_type": "assignment",
+            "course_id": course_id
+        }
+        
+        existing = await service.get_materials(course_id)
+        material_data["order_index"] = len(existing)
+        
+        material = await service.add_material(course_id, material_data)
+        
+        if not material:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create assignment material"
+            )
+        
+        # Create assignment
+        assignment_data = {
+            "title": title,
+            "description": description,
+            "due_date": due_date,
+            "total_points": total_points,
+            "submission_type": submission_type,
+            "material_id": material["id"]
+        }
+        
+        assignment = await service.create_assignment(course_id, assignment_data)
+        
+        if not assignment:
+            await service.delete_material(material["id"])
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create assignment"
+            )
+        
+        return assignment
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating assignment: {str(e)}"
+        )
+
+@router.get("/courses/assignments/{assignment_id}/submissions")
+async def get_submissions(
+    assignment_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get all submissions for an assignment
+    """
+    try:
+        submissions = await service.get_submissions(assignment_id)
+        return submissions
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting submissions: {str(e)}"
+        )
+
+@router.post("/courses/submissions/{submission_id}/grade")
+async def grade_submission(
+    submission_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Grade a student submission
+    """
+    try:
+        data = await request.json()
+        score = data.get("score")
+        feedback = data.get("feedback", "")
+        
+        if score is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Score is required"
+            )
+        
+        graded = await service.grade_submission(submission_id, score, feedback)
+        
+        if not graded:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Submission not found"
+            )
+        
+        return {"message": "Submission graded successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error grading submission: {str(e)}"
+        )
+
+# ==================== ANNOUNCEMENTS ====================
+
+@router.post("/courses/{course_id}/announcements")
+async def create_announcement(
+    course_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Create a course announcement
+    """
+    try:
+        data = await request.json()
+        title = data.get("title")
+        content = data.get("content")
+        is_important = data.get("is_important", False)
+        send_email = data.get("send_email", False)
+        
+        if not title or not content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Title and content are required"
+            )
+        
+        announcement_data = {
+            "title": title,
+            "content": content,
+            "is_important": is_important,
+            "send_email": send_email
+        }
+        
+        announcement = await service.create_announcement(
+            course_id, 
+            instructor["id"], 
+            announcement_data
+        )
+        
+        if not announcement:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create announcement"
+            )
+        
+        # If send_email is True, we would trigger email notifications here
+        if send_email:
+            # Get all enrolled students
+            students = service.supabase.table("enrollments")\
+                .select("users(email, full_name)")\
+                .eq("course_id", course_id)\
+                .execute()
+            
+            # TODO: Send emails (implement email service)
+            pass
+        
+        return announcement
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating announcement: {str(e)}"
+        )
+
+@router.get("/courses/{course_id}/announcements")
+async def get_announcements(
+    course_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get all announcements for a course
+    """
+    try:
+        announcements = await service.get_announcements(course_id)
+        return announcements
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting announcements: {str(e)}"
+        )
+
+@router.delete("/courses/announcements/{announcement_id}")
+async def delete_announcement(
+    announcement_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Delete an announcement
+    """
+    try:
+        deleted = await service.delete_announcement(announcement_id)
+        
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Announcement not found"
+            )
+        
+        return {"message": "Announcement deleted successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting announcement: {str(e)}"
+        )
+
+# ==================== COURSE MANAGEMENT PAGE ====================
+
+@router.get("/courses/{course_id}/manage")
+async def get_course_management_data(
+    course_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get all data needed for course management page
+    """
+    try:
+        # Get course details
+        course = service.supabase.table("courses")\
+            .select("*")\
+            .eq("id", course_id)\
+            .execute()
+        
+        if not course.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Course not found"
+            )
+        
+        # Verify ownership
+        if course.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized"
+            )
+        
+        # Get materials
+        materials = await service.get_materials(course_id)
+        
+        # Get quizzes (with question counts)
+        quizzes = service.supabase.table("quizzes")\
+            .select("*")\
+            .eq("course_id", course_id)\
+            .execute()
+        
+        for quiz in quizzes.data:
+            questions = service.supabase.table("quiz_questions")\
+                .select("id", count="exact")\
+                .eq("quiz_id", quiz["id"])\
+                .execute()
+            quiz["questions_count"] = questions.count if hasattr(questions, 'count') else 0
+        
+        # Get assignments (with submission counts)
+        assignments = service.supabase.table("assignments")\
+            .select("*")\
+            .eq("course_id", course_id)\
+            .execute()
+        
+        for assignment in assignments.data:
+            submissions = service.supabase.table("submissions")\
+                .select("id", count="exact")\
+                .eq("assignment_id", assignment["id"])\
+                .execute()
+            assignment["submissions_count"] = submissions.count if hasattr(submissions, 'count') else 0
+        
+        # Get announcements
+        announcements = await service.get_announcements(course_id)
+        
+        # Get enrolled students with progress
+        students = service.supabase.table("enrollments")\
+            .select("*, users(id, email, full_name, avatar_url)")\
+            .eq("course_id", course_id)\
+            .execute()
+        
+        enrolled_students = []
+        for enrollment in students.data:
+            if enrollment.get("users"):
+                student = enrollment["users"]
+                student["enrolled_at"] = enrollment["enrolled_at"]
+                student["progress"] = enrollment["progress"]
+                enrolled_students.append(student)
+        
+        return {
+            "course": course.data[0],
+            "materials": materials,
+            "quizzes": quizzes.data,
+            "assignments": assignments.data,
+            "announcements": announcements,
+            "students": enrolled_students
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting course data: {str(e)}"
+        )

@@ -1,0 +1,732 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="fw-bold text-primary">{{ course.title }}</h1>
+                    <p class="text-muted">Manage your course content and settings</p>
+                </div>
+                <div>
+                    <span class="badge bg-{{ 'success' if course.is_published else 'warning' }} fs-6 me-2">
+                        {{ 'Published' if course.is_published else 'Draft' }}
+                    </span>
+                    <a href="/courses/{{ course.id }}/preview" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-eye"></i> Preview
+                    </a>
+                    <a href="/courses/{{ course.id }}/edit" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Info
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Management Tabs -->
+    <ul class="nav nav-tabs mb-4" id="managementTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#materials">
+                <i class="fas fa-file me-2"></i>Materials
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#quizzes">
+                <i class="fas fa-question-circle me-2"></i>Quizzes
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#assignments">
+                <i class="fas fa-tasks me-2"></i>Assignments
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#announcements">
+                <i class="fas fa-bullhorn me-2"></i>Announcements
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#students">
+                <i class="fas fa-users me-2"></i>Students
+            </a>
+        </li>
+    </ul>
+    
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Materials Tab -->
+        <div class="tab-pane fade show active" id="materials">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Course Materials</h5>
+                    <button class="btn btn-primary btn-sm" onclick="showAddMaterialModal()">
+                        <i class="fas fa-plus"></i> Add Material
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="materialsList">
+                        {% for material in materials %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 border-0 shadow-sm material-card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-{{ 'video' if material.material_type == 'video' else 'file-pdf' if material.material_type == 'document' else 'link' if material.material_type == 'link' else 'file' }} fa-2x text-primary me-2"></i>
+                                        <h6 class="fw-bold mb-0">{{ material.title }}</h6>
+                                    </div>
+                                    <p class="small text-muted">{{ material.description[:80] }}...</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-info">{{ material.material_type }}</span>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editMaterial('{{ material.id }}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteMaterial('{{ material.id }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-file fa-4x text-muted mb-3"></i>
+                            <h5>No Materials Yet</h5>
+                            <p class="text-muted">Add your first course material</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quizzes Tab -->
+        <div class="tab-pane fade" id="quizzes">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Quizzes</h5>
+                    <button class="btn btn-primary btn-sm" onclick="showCreateQuizModal()">
+                        <i class="fas fa-plus"></i> Create Quiz
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="quizzesList">
+                        {% for quiz in quizzes %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="fw-bold">{{ quiz.title }}</h6>
+                                    <p class="small text-muted mb-2">{{ quiz.description[:100] }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small>{{ quiz.questions_count or 0 }} questions</small>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editQuiz('{{ quiz.id }}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info" onclick="viewQuizResults('{{ quiz.id }}')">
+                                                <i class="fas fa-chart-bar"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-question-circle fa-4x text-muted mb-3"></i>
+                            <h5>No Quizzes Yet</h5>
+                            <p class="text-muted">Create quizzes to test student knowledge</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Assignments Tab -->
+        <div class="tab-pane fade" id="assignments">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Assignments</h5>
+                    <button class="btn btn-primary btn-sm" onclick="showCreateAssignmentModal()">
+                        <i class="fas fa-plus"></i> Create Assignment
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="assignmentsList">
+                        {% for assignment in assignments %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="fw-bold">{{ assignment.title }}</h6>
+                                    <p class="small text-muted mb-2">Due: {{ assignment.due_date[:10] if assignment.due_date else 'No due date' }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-warning">{{ assignment.submissions_count or 0 }} submissions</span>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="editAssignment('{{ assignment.id }}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" onclick="gradeAssignment('{{ assignment.id }}')">
+                                                <i class="fas fa-check-circle"></i> Grade
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-tasks fa-4x text-muted mb-3"></i>
+                            <h5>No Assignments Yet</h5>
+                            <p class="text-muted">Create assignments for your students</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Announcements Tab -->
+        <div class="tab-pane fade" id="announcements">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Announcements</h5>
+                    <button class="btn btn-primary btn-sm" onclick="showCreateAnnouncementModal()">
+                        <i class="fas fa-plus"></i> New Announcement
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="list-group" id="announcementsList">
+                        {% for announcement in announcements %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-bold">{{ announcement.title }}</h6>
+                                <small class="text-muted">{{ announcement.created_at[:10] }}</small>
+                            </div>
+                            <p class="mb-2">{{ announcement.content }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">By: {{ announcement.users.full_name }}</small>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteAnnouncement('{{ announcement.id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-bullhorn fa-4x text-muted mb-3"></i>
+                            <h5>No Announcements</h5>
+                            <p class="text-muted">Keep your students updated</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Students Tab -->
+        <div class="tab-pane fade" id="students">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-bold mb-0">Enrolled Students ({{ students|length }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Email</th>
+                                    <th>Enrolled</th>
+                                    <th>Progress</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ student.avatar_url or 'https://ui-avatars.com/api/?name=' + student.full_name|urlencode }}" 
+                                                 class="rounded-circle me-2" width="30" height="30">
+                                            {{ student.full_name }}
+                                        </div>
+                                    </td>
+                                    <td>{{ student.email }}</td>
+                                    <td>{{ student.enrolled_at[:10] }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                                                <div class="progress-bar" style="width: {{ student.progress }}%;"></div>
+                                            </div>
+                                            <small>{{ student.progress }}%</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="messageStudent('{{ student.id }}')">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No students enrolled yet</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Material Modal -->
+<div class="modal fade" id="materialModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add Course Material</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="materialForm">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="materialTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="materialDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" id="materialType" required>
+                            <option value="video">Video</option>
+                            <option value="document">Document</option>
+                            <option value="link">Link</option>
+                            <option value="file">File</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="urlField">
+                        <label class="form-label">URL / Content</label>
+                        <input type="text" class="form-control" id="materialUrl">
+                    </div>
+                    <div class="mb-3" id="fileField" style="display: none;">
+                        <label class="form-label">Upload File</label>
+                        <input type="file" class="form-control" id="materialFile">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveMaterial()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Quiz Modal -->
+<div class="modal fade" id="quizModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Create Quiz</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quizForm">
+                    <div class="mb-3">
+                        <label class="form-label">Quiz Title</label>
+                        <input type="text" class="form-control" id="quizTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="quizDescription" rows="2"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Time Limit (minutes)</label>
+                            <input type="number" class="form-control" id="quizTimeLimit" value="30">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Passing Score (%)</label>
+                            <input type="number" class="form-control" id="quizPassingScore" value="70">
+                        </div>
+                    </div>
+                    
+                    <h6 class="fw-bold mt-4 mb-3">Questions</h6>
+                    <div id="questionsList"></div>
+                    
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addQuestion()">
+                        <i class="fas fa-plus"></i> Add Question
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuiz()">Create Quiz</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Assignment Modal -->
+<div class="modal fade" id="assignmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Create Assignment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="assignmentForm">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="assignmentTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="assignmentDescription" rows="4" required></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="assignmentDueDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Total Points</label>
+                            <input type="number" class="form-control" id="assignmentPoints" value="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Submission Type</label>
+                        <select class="form-select" id="assignmentSubmissionType">
+                            <option value="file">File Upload</option>
+                            <option value="text">Text Entry</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveAssignment()">Create Assignment</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Announcement Modal -->
+<div class="modal fade" id="announcementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">New Announcement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="announcementForm">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="announcementTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-control" id="announcementContent" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="sendEmail">
+                        <label class="form-check-label">Send email notification to students</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="markImportant">
+                        <label class="form-check-label">Mark as important</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendAnnouncement()">Post Announcement</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let questionCount = 0;
+
+function showAddMaterialModal() {
+    new bootstrap.Modal(document.getElementById('materialModal')).show();
+}
+
+function showCreateQuizModal() {
+    questionCount = 0;
+    document.getElementById('questionsList').innerHTML = '';
+    addQuestion(); // Add first question
+    new bootstrap.Modal(document.getElementById('quizModal')).show();
+}
+
+function showCreateAssignmentModal() {
+    new bootstrap.Modal(document.getElementById('assignmentModal')).show();
+}
+
+function showCreateAnnouncementModal() {
+    new bootstrap.Modal(document.getElementById('announcementModal')).show();
+}
+
+// Material type toggle
+document.getElementById('materialType').addEventListener('change', function() {
+    if (this.value === 'file') {
+        document.getElementById('urlField').style.display = 'none';
+        document.getElementById('fileField').style.display = 'block';
+    } else {
+        document.getElementById('urlField').style.display = 'block';
+        document.getElementById('fileField').style.display = 'none';
+    }
+});
+
+// Add question to quiz
+function addQuestion() {
+    const questionHtml = `
+        <div class="card mb-3" id="question_${questionCount}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <h6 class="fw-bold">Question ${questionCount + 1}</h6>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeQuestion(${questionCount})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mb-2">
+                    <input type="text" class="form-control" id="q_${questionCount}_text" placeholder="Question">
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-6">
+                        <select class="form-select" id="q_${questionCount}_type">
+                            <option value="multiple_choice">Multiple Choice</option>
+                            <option value="true_false">True/False</option>
+                            <option value="short_answer">Short Answer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="number" class="form-control" id="q_${questionCount}_points" placeholder="Points" value="1">
+                    </div>
+                </div>
+                <div id="q_${questionCount}_options">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" placeholder="Option A">
+                        <div class="input-group-text">
+                            <input type="radio" name="q_${questionCount}_correct" value="0">
+                        </div>
+                    </div>
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control" placeholder="Option B">
+                        <div class="input-group-text">
+                            <input type="radio" name="q_${questionCount}_correct" value="1">
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="addOption(${questionCount})">
+                        <i class="fas fa-plus"></i> Add Option
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('questionsList').insertAdjacentHTML('beforeend', questionHtml);
+    questionCount++;
+}
+
+function removeQuestion(index) {
+    document.getElementById(`question_${index}`).remove();
+}
+
+function addOption(questionIndex) {
+    const optionsDiv = document.getElementById(`q_${questionIndex}_options`);
+    const optionCount = optionsDiv.children.length - 1; // Subtract the add button
+    
+    const optionHtml = `
+        <div class="input-group mb-2">
+            <input type="text" class="form-control" placeholder="Option ${String.fromCharCode(65 + optionCount)}">
+            <div class="input-group-text">
+                <input type="radio" name="q_${questionIndex}_correct" value="${optionCount}">
+            </div>
+        </div>
+    `;
+    optionsDiv.insertBefore(document.createRange().createContextualFragment(optionHtml), optionsDiv.lastChild);
+}
+
+// Save functions
+async function saveMaterial() {
+    const formData = new FormData();
+    formData.append('title', document.getElementById('materialTitle').value);
+    formData.append('description', document.getElementById('materialDescription').value);
+    formData.append('material_type', document.getElementById('materialType').value);
+    
+    const file = document.getElementById('materialFile').files[0];
+    if (file) {
+        formData.append('file', file);
+    } else {
+        formData.append('content_url', document.getElementById('materialUrl').value);
+    }
+    
+    try {
+        const response = await fetch(`/api/v1/courses/{{ course.id }}/materials`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to add material');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+}
+
+async function saveQuiz() {
+    const questions = [];
+    for (let i = 0; i < questionCount; i++) {
+        const questionEl = document.getElementById(`question_${i}`);
+        if (questionEl) {
+            questions.push({
+                question: document.getElementById(`q_${i}_text`).value,
+                question_type: document.getElementById(`q_${i}_type`).value,
+                points: parseInt(document.getElementById(`q_${i}_points`).value),
+                // Add more fields as needed
+            });
+        }
+    }
+    
+    const quizData = {
+        title: document.getElementById('quizTitle').value,
+        description: document.getElementById('quizDescription').value,
+        time_limit: parseInt(document.getElementById('quizTimeLimit').value),
+        passing_score: parseInt(document.getElementById('quizPassingScore').value),
+        questions: questions
+    };
+    
+    try {
+        const response = await fetch(`/api/v1/courses/{{ course.id }}/quizzes`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(quizData)
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to create quiz');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+}
+
+async function saveAssignment() {
+    const assignmentData = {
+        title: document.getElementById('assignmentTitle').value,
+        description: document.getElementById('assignmentDescription').value,
+        due_date: document.getElementById('assignmentDueDate').value,
+        total_points: parseInt(document.getElementById('assignmentPoints').value),
+        submission_type: document.getElementById('assignmentSubmissionType').value
+    };
+    
+    try {
+        const response = await fetch(`/api/v1/courses/{{ course.id }}/assignments`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(assignmentData)
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to create assignment');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+}
+
+async function sendAnnouncement() {
+    const announcementData = {
+        title: document.getElementById('announcementTitle').value,
+        content: document.getElementById('announcementContent').value,
+        is_important: document.getElementById('markImportant').checked,
+        send_email: document.getElementById('sendEmail').checked
+    };
+    
+    try {
+        const response = await fetch(`/api/v1/courses/{{ course.id }}/announcements`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(announcementData)
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to send announcement');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+}
+
+async function deleteMaterial(materialId) {
+    if (!confirm('Delete this material?')) return;
+    
+    try {
+        const response = await fetch(`/api/v1/courses/{{ course.id }}/materials/${materialId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to delete material');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+}
+
+async function deleteAnnouncement(announcementId) {
+    if (!confirm('Delete this announcement?')) return;
+    
+    try {
+        const response = await fetch(`/api/v1/courses/{{ course.id }}/announcements/${announcementId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to delete announcement');
+        }
+    } catch (error) {
+        alert('An error occurred');
+    }
+}
+
+function messageStudent(studentId) {
+    // Implement messaging functionality
+    alert('Messaging feature coming soon!');
+}
+</script>
+
+<style>
+.material-card {
+    transition: transform 0.3s ease;
+}
+.material-card:hover {
+    transform: translateY(-5px);
+}
+</style>
+{% endblock %}

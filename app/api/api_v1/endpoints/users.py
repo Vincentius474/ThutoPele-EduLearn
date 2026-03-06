@@ -198,6 +198,53 @@ async def delete_user(
             detail=f"Error deleting user: {str(e)}"
         )
     
+# @router.post("/me/avatar")
+# async def upload_avatar(
+#     request: Request,
+#     file: UploadFile = File(...),
+#     supabase=Depends(get_supabase),
+#     current_user: dict = Depends(get_current_active_user)
+# ) -> Any:
+#     """
+#     Upload user avatar.
+#     """
+#     try:
+#         # Validate file type
+#         if not file.content_type.startswith('image/'):
+#             raise HTTPException(
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#                 detail="File must be an image"
+#             )
+        
+#         # Read file content
+#         content = await file.read()
+        
+#         # Upload to Supabase Storage
+#         file_ext = file.filename.split('.')[-1]
+#         file_path = f"avatars/{current_user['id']}.{file_ext}"
+        
+#         storage = supabase.storage.from_("avatars")
+#         storage.upload(file_path, content)
+        
+#         # Get public URL
+#         avatar_url = storage.get_public_url(file_path)
+        
+#         # Update user profile
+#         result = supabase.table("users")\
+#             .update({"avatar_url": avatar_url, "updated_at": "now()"})\
+#             .eq("id", current_user["id"])\
+#             .execute()
+        
+#         return {"avatar_url": avatar_url}
+        
+#     except Exception as e:
+#         print(f"Avatar upload error: {e}")
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail="Failed to upload avatar"
+#         )
+    
+
 @router.post("/me/avatar")
 async def upload_avatar(
     request: Request,
@@ -206,28 +253,21 @@ async def upload_avatar(
     current_user: dict = Depends(get_current_active_user)
 ) -> Any:
     """
-    Upload user avatar.
+    Upload user avatar using StorageService
     """
     try:
-        # Validate file type
-        if not file.content_type.startswith('image/'):
+        from app.services.storage_service import StorageService
+        
+        storage_service = StorageService(supabase)
+        
+        # Upload avatar
+        avatar_url = await storage_service.upload_avatar(current_user["id"], file)
+        
+        if not avatar_url:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="File must be an image"
+                detail="Failed to upload avatar"
             )
-        
-        # Read file content
-        content = await file.read()
-        
-        # Upload to Supabase Storage
-        file_ext = file.filename.split('.')[-1]
-        file_path = f"avatars/{current_user['id']}.{file_ext}"
-        
-        storage = supabase.storage.from_("avatars")
-        storage.upload(file_path, content)
-        
-        # Get public URL
-        avatar_url = storage.get_public_url(file_path)
         
         # Update user profile
         result = supabase.table("users")\
@@ -243,3 +283,5 @@ async def upload_avatar(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to upload avatar"
         )
+
+

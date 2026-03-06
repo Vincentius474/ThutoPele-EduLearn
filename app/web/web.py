@@ -203,7 +203,7 @@ async def dashboard(
         )
 
 # ==================== COURSES PAGES ====================
-# Add these instructor routes BEFORE the course detail route
+
 @web_router.get("/courses/create", response_class=HTMLResponse)
 async def create_course_page(
     request: Request,
@@ -459,6 +459,50 @@ async def courses_list(
         }
     )
 
+# @web_router.get("/courses/{course_id}", response_class=HTMLResponse)
+# async def course_detail(
+#     request: Request,
+#     course_id: str,
+#     templates: Jinja2Templates = Depends(get_templates),
+#     current_user: Optional[dict] = Depends(get_current_user_from_cookie)
+# ):
+#     """Course detail page"""
+#     supabase = get_supabase_client()
+#     course_service = CourseService(supabase)
+    
+#     course = await course_service.get_course_with_details(course_id)
+#     if not course:
+#         return templates.TemplateResponse(
+#             "404.html",
+#             {
+#                 "request": request,
+#                 "current_user": current_user,
+#                 "title": "Course Not Found"
+#             },
+#             status_code=404
+#         )
+    
+#     # Check if user is enrolled
+#     is_enrolled = False
+#     if current_user:
+#         enrollment = supabase.table("enrollments")\
+#             .select("*")\
+#             .eq("user_id", current_user["id"])\
+#             .eq("course_id", course_id)\
+#             .execute()
+#         is_enrolled = len(enrollment.data) > 0 if enrollment.data else False
+    
+#     return templates.TemplateResponse(
+#         "courses/detail.html",
+#         {
+#             "request": request,
+#             "current_user": current_user,
+#             "course": course,
+#             "is_enrolled": is_enrolled,
+#             "title": course["title"]
+#         }
+#     )
+
 @web_router.get("/courses/{course_id}", response_class=HTMLResponse)
 async def course_detail(
     request: Request,
@@ -468,29 +512,98 @@ async def course_detail(
 ):
     """Course detail page"""
     supabase = get_supabase_client()
-    course_service = CourseService(supabase)
     
-    course = await course_service.get_course_with_details(course_id)
-    if not course:
+    # Get course details with instructor info
+    course_result = supabase.table("courses")\
+        .select("*")\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not course_result.data:
         return templates.TemplateResponse(
             "404.html",
-            {
-                "request": request,
-                "current_user": current_user,
-                "title": "Course Not Found"
-            },
+            {"request": request, "title": "Course Not Found"},
             status_code=404
         )
     
-    # Check if user is enrolled
+    course = course_result.data[0]
+    
+    # Get instructor details
+    instructor = supabase.table("users")\
+        .select("id, email, full_name, avatar_url, bio")\
+        .eq("id", course["instructor_id"])\
+        .execute()
+    
+    course["instructor"] = instructor.data[0] if instructor.data else {"full_name": "Unknown"}
+    
+    # Get course materials
+    materials = supabase.table("course_materials")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .order("order_index")\
+        .execute()
+    
+    # Get reviews
+    reviews = supabase.table("reviews")\
+        .select("*, users(full_name, avatar_url)")\
+        .eq("course_id", course_id)\
+        .order("created_at", desc=True)\
+        .execute()
+    
+    # Check enrollment status
     is_enrolled = False
+    progress = 0
+    completed_lessons = 0
+    total_lessons = len(materials.data)
+    has_reviewed = False
+    
     if current_user:
+        # Check enrollment
         enrollment = supabase.table("enrollments")\
             .select("*")\
             .eq("user_id", current_user["id"])\
             .eq("course_id", course_id)\
             .execute()
-        is_enrolled = len(enrollment.data) > 0 if enrollment.data else False
+        
+        if enrollment.data:
+            is_enrolled = True
+            progress = enrollment.data[0].get("progress", 0)
+            
+            # Check if user has reviewed
+            review_check = supabase.table("reviews")\
+                .select("id")\
+                .eq("user_id", current_user["id"])\
+                .eq("course_id", course_id)\
+                .execute()
+            
+            has_reviewed = bool(review_check.data)
+            
+            # Get completed lessons count
+            if materials.data:
+                material_ids = [m["id"] for m in materials.data]
+                completed = supabase.table("lesson_progress")\
+                    .select("id", count="exact")\
+                    .eq("user_id", current_user["id"])\
+                    .in_("lesson_id", material_ids)\
+                    .execute()
+                
+                completed_lessons = completed.count if hasattr(completed, 'count') else 0
+    
+    # Mark materials as completed for enrolled students
+    if is_enrolled and materials.data:
+        for material in materials.data:
+            material["completed"] = False
+        
+        if completed_lessons > 0:
+            completed_ids = supabase.table("lesson_progress")\
+                .select("lesson_id")\
+                .eq("user_id", current_user["id"])\
+                .execute()
+            
+            completed_set = {item["lesson_id"] for item in completed_ids.data}
+            for material in materials.data:
+                if material["id"] in completed_set:
+                    material["completed"] = True
     
     return templates.TemplateResponse(
         "courses/detail.html",
@@ -498,8 +611,105 @@ async def course_detail(
             "request": request,
             "current_user": current_user,
             "course": course,
+            "materials": materials.data or [],
+            "reviews": reviews.data or [],
             "is_enrolled": is_enrolled,
+            "progress": progress,
+            "completed_lessons": completed_lessons,
+            "total_lessons": total_lessons,
+            "has_reviewed": has_reviewed,
             "title": course["title"]
+        }
+    )
+
+
+# =================== For Instructor Purposes =======================
+
+@web_router.get("/courses/{course_id}/manage", response_class=HTMLResponse)
+async def course_management_page(
+    request: Request,
+    course_id: str,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_instructor)
+):
+    """Course management page"""
+    supabase = get_supabase_client()
+    
+    # Fetch all course data
+    result = supabase.table("courses")\
+        .select("*")\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not result.data:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "title": "Course Not Found"},
+            status_code=404
+        )
+    
+    course = result.data[0]
+    
+    # Verify instructor owns this course
+    if course["instructor_id"] != current_user["id"]:
+        return templates.TemplateResponse(
+            "403.html",
+            {"request": request, "title": "Access Denied"},
+            status_code=403
+        )
+    
+    # Fetch materials
+    materials = supabase.table("course_materials")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .order("order_index")\
+        .execute()
+    
+    # Fetch quizzes
+    quizzes = supabase.table("quizzes")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    # Fetch assignments
+    assignments = supabase.table("assignments")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    # Fetch announcements
+    announcements = supabase.table("announcements")\
+        .select("*, users(full_name, avatar_url)")\
+        .eq("course_id", course_id)\
+        .order("created_at", desc=True)\
+        .execute()
+    
+    # Fetch enrolled students
+    students = supabase.table("enrollments")\
+        .select("*, users(id, email, full_name, avatar_url)")\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    enrolled_students = []
+    for enrollment in students.data:
+        if enrollment.get("users"):
+            student = enrollment["users"]
+            student["enrolled_at"] = enrollment["enrolled_at"]
+            student["progress"] = enrollment["progress"]
+            enrolled_students.append(student)
+    
+    return templates.TemplateResponse(
+        "courses/manage.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "course": course,
+            "materials": materials.data or [],
+            "quizzes": quizzes.data or [],
+            "assignments": assignments.data or [],
+            "announcements": announcements.data or [],
+            "students": enrolled_students,
+            "title": f"Manage {course['title']}"
         }
     )
 
