@@ -115,6 +115,8 @@ class StorageService:
             unique_filename = f"{uuid.uuid4()}{file_extension}"
             file_path = f"{course_id}/{unique_filename}"
             
+            print(f"Uploading to path: {file_path}")
+            
             # Read file content
             file_content = await file.read()
             
@@ -122,11 +124,13 @@ class StorageService:
             storage = self.supabase.storage.from_("course-images")
             
             # Upload with explicit content type
-            storage.upload(
+            result = storage.upload(
                 file_path, 
                 file_content,
                 {"content-type": content_type}
             )
+            
+            print(f"Upload result: {result}")
             
             # Get public URL
             public_url = storage.get_public_url(file_path)

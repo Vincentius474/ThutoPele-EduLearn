@@ -61,14 +61,13 @@ async def get_storage_service(supabase=Depends(get_supabase)):
 #                 detail="Title and description are required"
 #             )
         
-#         # First create the course without thumbnail
-#         print(f"Creating course with data: {course_data}")
+#         # Create the course using service role (temporary)
 #         course = await course_service.create_course(course_data)
         
 #         if not course:
 #             raise HTTPException(
 #                 status_code=status.HTTP_400_BAD_REQUEST,
-#                 detail="Failed to create course"
+#                 detail="Failed to create course. Please contact support."
 #             )
         
 #         # Handle thumbnail upload after course is created
@@ -79,9 +78,8 @@ async def get_storage_service(supabase=Depends(get_supabase)):
 #                 from app.services.storage_service import StorageService
 #                 storage_service = StorageService(course_service.supabase)
                 
-#                 # Upload with actual course ID
 #                 thumbnail_url = await storage_service.upload_course_image(
-#                     course["id"],  # Use actual course ID
+#                     course["id"],
 #                     thumbnail
 #                 )
                 
@@ -96,7 +94,6 @@ async def get_storage_service(supabase=Depends(get_supabase)):
 #                         print(f"Thumbnail uploaded and course updated: {thumbnail_url}")
 #             except Exception as e:
 #                 print(f"Thumbnail upload failed (non-critical): {e}")
-#                 # Course already created, just log the error
         
 #         return course
         
@@ -154,13 +151,14 @@ async def create_course(
                 detail="Title and description are required"
             )
         
-        # Create the course using service role (temporary)
+        # Create the course
+        print(f"Creating course with data: {course_data}")
         course = await course_service.create_course(course_data)
         
         if not course:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create course. Please contact support."
+                detail="Failed to create course"
             )
         
         # Handle thumbnail upload after course is created
@@ -171,12 +169,14 @@ async def create_course(
                 from app.services.storage_service import StorageService
                 storage_service = StorageService(course_service.supabase)
                 
+                print(f"Attempting to upload thumbnail for course: {course['id']}")
                 thumbnail_url = await storage_service.upload_course_image(
                     course["id"],
                     thumbnail
                 )
                 
                 if thumbnail_url:
+                    print(f"Thumbnail uploaded successfully: {thumbnail_url}")
                     # Update course with thumbnail URL
                     updated_course = await course_service.update_course(
                         course["id"], 
@@ -184,9 +184,14 @@ async def create_course(
                     )
                     if updated_course:
                         course = updated_course
-                        print(f"Thumbnail uploaded and course updated: {thumbnail_url}")
+                        print(f"Course updated with thumbnail")
+                else:
+                    print("Thumbnail upload failed but course was created")
             except Exception as e:
                 print(f"Thumbnail upload failed (non-critical): {e}")
+                # Course already created, just log the error
+                import traceback
+                traceback.print_exc()
         
         return course
         
@@ -200,6 +205,7 @@ async def create_course(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating course: {str(e)}"
         )
+
 
 @router.get("/{course_id}", response_model=Course)
 async def get_course(
