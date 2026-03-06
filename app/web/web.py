@@ -459,49 +459,6 @@ async def courses_list(
         }
     )
 
-# @web_router.get("/courses/{course_id}", response_class=HTMLResponse)
-# async def course_detail(
-#     request: Request,
-#     course_id: str,
-#     templates: Jinja2Templates = Depends(get_templates),
-#     current_user: Optional[dict] = Depends(get_current_user_from_cookie)
-# ):
-#     """Course detail page"""
-#     supabase = get_supabase_client()
-#     course_service = CourseService(supabase)
-    
-#     course = await course_service.get_course_with_details(course_id)
-#     if not course:
-#         return templates.TemplateResponse(
-#             "404.html",
-#             {
-#                 "request": request,
-#                 "current_user": current_user,
-#                 "title": "Course Not Found"
-#             },
-#             status_code=404
-#         )
-    
-#     # Check if user is enrolled
-#     is_enrolled = False
-#     if current_user:
-#         enrollment = supabase.table("enrollments")\
-#             .select("*")\
-#             .eq("user_id", current_user["id"])\
-#             .eq("course_id", course_id)\
-#             .execute()
-#         is_enrolled = len(enrollment.data) > 0 if enrollment.data else False
-    
-#     return templates.TemplateResponse(
-#         "courses/detail.html",
-#         {
-#             "request": request,
-#             "current_user": current_user,
-#             "course": course,
-#             "is_enrolled": is_enrolled,
-#             "title": course["title"]
-#         }
-#     )
 
 @web_router.get("/courses/{course_id}", response_class=HTMLResponse)
 async def course_detail(
@@ -710,6 +667,49 @@ async def course_management_page(
             "announcements": announcements.data or [],
             "students": enrolled_students,
             "title": f"Manage {course['title']}"
+        }
+    )
+
+@web_router.get("/courses/{course_id}/edit", response_class=HTMLResponse)
+async def edit_course_page(
+    request: Request,
+    course_id: str,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_instructor)
+):
+    """Edit course page (instructors only)"""
+    supabase = get_supabase_client()
+    
+    # Get course details
+    course_result = supabase.table("courses")\
+        .select("*")\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not course_result.data:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "title": "Course Not Found"},
+            status_code=404
+        )
+    
+    course = course_result.data[0]
+    
+    # Check if user owns this course
+    if course["instructor_id"] != current_user["id"]:
+        return templates.TemplateResponse(
+            "403.html",
+            {"request": request, "title": "Access Denied"},
+            status_code=403
+        )
+    
+    return templates.TemplateResponse(
+        "courses/edit.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "course": course,
+            "title": f"Edit {course['title']}"
         }
     )
 

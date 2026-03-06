@@ -168,6 +168,26 @@ class CourseService:
         """Publish a course"""
         return await self.update_course(course_id, {"is_published": True})
     
+    async def update_course_with_service_role(self, course_id: str, course_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Update a course using service role (bypasses RLS)"""
+        try:
+            from app.core.supabase_client import supabase as supabase_client
+            service_client = supabase_client.get_service_client()
+            
+            # Add updated_at timestamp
+            if "updated_at" not in course_data:
+                course_data["updated_at"] = "now()"
+            
+            result = service_client.table("courses")\
+                .update(course_data)\
+                .eq("id", course_id)\
+                .execute()
+            
+            return result.data[0] if result.data else None
+        except Exception as e:
+            logger.error(f"Error updating course {course_id} with service role: {e}")
+            return None
+
     async def unpublish_course(self, course_id: str) -> Optional[Dict[str, Any]]:
         """Unpublish a course"""
         return await self.update_course(course_id, {"is_published": False})

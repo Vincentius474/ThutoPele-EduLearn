@@ -43,13 +43,115 @@ class StorageService:
             logger.error(f"Error uploading file: {e}")
             return None
 
+    # async def upload_course_image(
+    #     self,
+    #     course_id: str,
+    #     file: UploadFile
+    # ) -> Optional[str]:
+    #     """
+    #     Upload a course thumbnail/image with better validation and type detection
+    #     """
+    #     try:
+    #         # Log file info for debugging
+    #         print(f"Uploading file: {file.filename}, Content-Type: {file.content_type}")
+            
+    #         # Determine the correct MIME type
+    #         content_type = file.content_type
+            
+    #         # If content_type is not reliable, try to determine from filename extension
+    #         if not content_type or content_type == 'text/plain' or content_type == 'application/octet-stream':
+    #             import mimetypes
+    #             guessed_type, _ = mimetypes.guess_type(file.filename)
+    #             if guessed_type and guessed_type.startswith('image/'):
+    #                 content_type = guessed_type
+    #                 print(f"Guessed content type from extension: {content_type}")
+            
+    #         # Validate that it's an image
+    #         if not content_type or not content_type.startswith('image/'):
+    #             # List of allowed image extensions
+    #             image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
+    #             file_ext = '.' + file.filename.split('.')[-1].lower() if '.' in file.filename else ''
+                
+    #             if file_ext in image_extensions:
+    #                 # Force image content type based on extension
+    #                 content_type_map = {
+    #                     '.jpg': 'image/jpeg',
+    #                     '.jpeg': 'image/jpeg',
+    #                     '.png': 'image/png',
+    #                     '.gif': 'image/gif',
+    #                     '.webp': 'image/webp',
+    #                     '.svg': 'image/svg+xml'
+    #                 }
+    #                 content_type = content_type_map.get(file_ext, 'image/jpeg')
+    #                 print(f"Forcing content type based on extension: {content_type}")
+    #             else:
+    #                 raise ValueError(f"File must be an image. Detected: {content_type}, Extension: {file_ext}")
+            
+    #         # Validate file size (limit to 5MB)
+    #         file.file.seek(0, 2)  # Seek to end
+    #         file_size = file.file.tell()
+    #         file.file.seek(0)  # Seek back to beginning
+            
+    #         if file_size > 5 * 1024 * 1024:  # 5MB
+    #             raise ValueError(f"Image too large. Maximum size is 5MB. File size: {file_size} bytes")
+            
+    #         # Generate unique filename
+    #         import uuid
+    #         import os
+            
+    #         # Get proper extension
+    #         file_extension = os.path.splitext(file.filename)[1].lower()
+    #         if not file_extension:
+    #             # If no extension, determine from content type
+    #             ext_map = {
+    #                 'image/jpeg': '.jpg',
+    #                 'image/png': '.png',
+    #                 'image/gif': '.gif',
+    #                 'image/webp': '.webp',
+    #                 'image/svg+xml': '.svg'
+    #             }
+    #             file_extension = ext_map.get(content_type, '.jpg')
+            
+    #         unique_filename = f"{uuid.uuid4()}{file_extension}"
+    #         file_path = f"{course_id}/{unique_filename}"
+            
+    #         print(f"Uploading to path: {file_path}")
+            
+    #         # Read file content
+    #         file_content = await file.read()
+    #         print(f"File size: {len(file_content)} bytes")
+            
+    #         # Upload to Supabase Storage
+    #         storage = self.supabase.storage.from_("course-images")
+            
+    #         # Upload with explicit content type
+    #         result = storage.upload(
+    #             file_path, 
+    #             file_content,
+    #             {"content-type": content_type}
+    #         )
+            
+    #         print(f"Upload result: {result}")
+            
+    #         # Get public URL
+    #         public_url = storage.get_public_url(file_path)
+            
+    #         print(f"Image uploaded successfully: {public_url}")
+    #         return public_url
+            
+    #     except Exception as e:
+    #         print(f"Error uploading course image: {e}")
+    #         import traceback
+    #         traceback.print_exc()
+    #         return None
+
     async def upload_course_image(
         self,
         course_id: str,
         file: UploadFile
     ) -> Optional[str]:
         """
-        Upload a course thumbnail/image with better validation and type detection
+        Upload a course thumbnail/image using service role (bypasses RLS)
         """
         try:
             # Log file info for debugging
@@ -93,7 +195,7 @@ class StorageService:
             file.file.seek(0)  # Seek back to beginning
             
             if file_size > 5 * 1024 * 1024:  # 5MB
-                raise ValueError(f"Image too large. Maximum size is 5MB")
+                raise ValueError(f"Image too large. Maximum size is 5MB. File size: {file_size} bytes")
             
             # Generate unique filename
             import uuid
@@ -119,9 +221,14 @@ class StorageService:
             
             # Read file content
             file_content = await file.read()
+            print(f"File size: {len(file_content)} bytes")
             
-            # Upload to Supabase Storage
-            storage = self.supabase.storage.from_("course-images")
+            # Use service client to bypass RLS
+            from app.core.supabase_client import supabase as supabase_client
+            service_client = supabase_client.get_service_client()
+            
+            # Upload to Supabase Storage using service client
+            storage = service_client.storage.from_("course-images")
             
             # Upload with explicit content type
             result = storage.upload(
@@ -223,3 +330,5 @@ class StorageService:
         except Exception as e:
             logger.error(f"Error listing files: {e}")
             return []
+        
+

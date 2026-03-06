@@ -18,96 +18,6 @@ async def get_storage_service(supabase=Depends(get_supabase)):
     from app.services.storage_service import StorageService
     return StorageService(supabase)
 
-# @router.post("/", response_model=Course)
-# async def create_course(
-#     request: Request,
-#     course_service: CourseService = Depends(get_course_service),
-#     current_user: dict = Depends(get_current_instructor)
-# ) -> Any:
-#     """
-#     Create new course with optional thumbnail
-#     """
-#     try:
-#         # Log user info for debugging
-#         print(f"Creating course for instructor: {current_user['id']}")
-#         print(f"Is instructor: {current_user.get('is_instructor')}")
-        
-#         # Parse form data
-#         form = await request.form()
-#         print(f"Received form data keys: {list(form.keys())}")
-        
-#         # Handle price conversion safely
-#         price_str = form.get("price", "0")
-#         try:
-#             price = int(float(price_str))
-#         except (ValueError, TypeError):
-#             price = 0
-        
-#         # Prepare course data
-#         course_data = {
-#             "title": form.get("title"),
-#             "description": form.get("description"),
-#             "category": form.get("category"),
-#             "level": form.get("level"),
-#             "price": price,
-#             "is_published": form.get("is_published", "false").lower() == "true",
-#             "instructor_id": current_user["id"]
-#         }
-        
-#         # Validate required fields
-#         if not course_data["title"] or not course_data["description"]:
-#             raise HTTPException(
-#                 status_code=status.HTTP_400_BAD_REQUEST,
-#                 detail="Title and description are required"
-#             )
-        
-#         # Create the course using service role (temporary)
-#         course = await course_service.create_course(course_data)
-        
-#         if not course:
-#             raise HTTPException(
-#                 status_code=status.HTTP_400_BAD_REQUEST,
-#                 detail="Failed to create course. Please contact support."
-#             )
-        
-#         # Handle thumbnail upload after course is created
-#         thumbnail = form.get("thumbnail")
-        
-#         if thumbnail and hasattr(thumbnail, "filename") and thumbnail.filename:
-#             try:
-#                 from app.services.storage_service import StorageService
-#                 storage_service = StorageService(course_service.supabase)
-                
-#                 thumbnail_url = await storage_service.upload_course_image(
-#                     course["id"],
-#                     thumbnail
-#                 )
-                
-#                 if thumbnail_url:
-#                     # Update course with thumbnail URL
-#                     updated_course = await course_service.update_course(
-#                         course["id"], 
-#                         {"thumbnail_url": thumbnail_url}
-#                     )
-#                     if updated_course:
-#                         course = updated_course
-#                         print(f"Thumbnail uploaded and course updated: {thumbnail_url}")
-#             except Exception as e:
-#                 print(f"Thumbnail upload failed (non-critical): {e}")
-        
-#         return course
-        
-#     except HTTPException:
-#         raise
-#     except Exception as e:
-#         print(f"Error creating course: {str(e)}")
-#         import traceback
-#         traceback.print_exc()
-#         raise HTTPException(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail=f"Error creating course: {str(e)}"
-#         )
-
 @router.post("/", response_model=Course)
 async def create_course(
     request: Request,
@@ -206,7 +116,6 @@ async def create_course(
             detail=f"Error creating course: {str(e)}"
         )
 
-
 @router.get("/{course_id}", response_model=Course)
 async def get_course(
     *,
@@ -236,16 +145,113 @@ async def get_course(
             detail="Error retrieving course"
         )
 
+# @router.put("/{course_id}", response_model=Course)
+# async def update_course(
+#     course_id: str,
+#     request: Request,
+#     course_service: CourseService = Depends(get_course_service),
+#     current_user: dict = Depends(get_current_instructor)
+# ) -> Any:
+#     """
+#     Update a course (instructor only - must own the course)
+#     """
+#     try:
+#         # Check if course exists and user owns it
+#         course = await course_service.get_course(course_id)
+#         if not course:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail="Course not found"
+#             )
+        
+#         if course["instructor_id"] != current_user["id"]:
+#             raise HTTPException(
+#                 status_code=status.HTTP_403_FORBIDDEN,
+#                 detail="Not authorized to update this course"
+#             )
+        
+#         # Parse form data
+#         form = await request.form()
+#         print(f"Updating course {course_id} with data keys: {list(form.keys())}")
+        
+#         # Handle price conversion safely
+#         price_str = form.get("price", "0")
+#         try:
+#             price = int(float(price_str))
+#         except (ValueError, TypeError):
+#             price = 0
+        
+#         # Prepare update data
+#         update_data = {
+#             "title": form.get("title"),
+#             "description": form.get("description"),
+#             "category": form.get("category"),
+#             "level": form.get("level"),
+#             "price": price,
+#             "is_published": form.get("is_published", "false").lower() == "true",
+#             "updated_at": "now()"
+#         }
+        
+#         # Remove None values
+#         update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+#         # Handle thumbnail upload if present
+#         thumbnail = form.get("thumbnail")
+#         thumbnail_uploaded = False
+        
+#         if thumbnail and hasattr(thumbnail, "filename") and thumbnail.filename:
+#             try:
+#                 from app.services.storage_service import StorageService
+#                 storage_service = StorageService(course_service.supabase)
+                
+#                 print(f"Attempting to upload thumbnail: {thumbnail.filename}")
+#                 thumbnail_url = await storage_service.upload_course_image(
+#                     course_id,
+#                     thumbnail
+#                 )
+                
+#                 if thumbnail_url:
+#                     update_data["thumbnail_url"] = thumbnail_url
+#                     thumbnail_uploaded = True
+#                     print(f"New thumbnail uploaded: {thumbnail_url}")
+#                 else:
+#                     print("Thumbnail upload failed but continuing with course update")
+#             except Exception as e:
+#                 print(f"Thumbnail upload error (non-critical): {e}")
+#                 # Continue with update even if thumbnail fails
+        
+#         # Update the course
+#         print(f"Updating course with data: {update_data}")
+#         updated_course = await course_service.update_course(course_id, update_data)
+        
+#         if not updated_course:
+#             raise HTTPException(
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#                 detail="Failed to update course"
+#             )
+        
+#         return updated_course
+        
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         print(f"Error updating course: {e}")
+#         import traceback
+#         traceback.print_exc()
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail=f"Error updating course: {str(e)}"
+#         )
+
 @router.put("/{course_id}", response_model=Course)
 async def update_course(
-    *,
-    course_service: CourseService = Depends(get_course_service),
     course_id: str,
-    course_in: CourseUpdate,
-    current_user: dict = Depends(get_current_instructor)  # Requires instructor
+    request: Request,
+    course_service: CourseService = Depends(get_course_service),
+    current_user: dict = Depends(get_current_instructor)
 ) -> Any:
     """
-    Update a course (instructor only - must own the course).
+    Update a course (instructor only - must own the course)
     """
     try:
         # Check if course exists and user owns it
@@ -262,25 +268,82 @@ async def update_course(
                 detail="Not authorized to update this course"
             )
         
-        # Filter out None values
-        update_data = {k: v for k, v in course_in.dict().items() if v is not None}
+        # Parse form data
+        form = await request.form()
+        print(f"Updating course {course_id} with data keys: {list(form.keys())}")
         
-        if not update_data:
+        # Handle price conversion safely
+        price_str = form.get("price", "0")
+        try:
+            price = int(float(price_str))
+        except (ValueError, TypeError):
+            price = 0
+        
+        # Prepare update data
+        update_data = {
+            "title": form.get("title"),
+            "description": form.get("description"),
+            "category": form.get("category"),
+            "level": form.get("level"),
+            "price": price,
+            "is_published": form.get("is_published", "false").lower() == "true"
+        }
+        
+        # Remove None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        # Handle thumbnail upload if present
+        thumbnail = form.get("thumbnail")
+        thumbnail_uploaded = False
+        
+        if thumbnail and hasattr(thumbnail, "filename") and thumbnail.filename:
+            try:
+                from app.services.storage_service import StorageService
+                storage_service = StorageService(course_service.supabase)
+                
+                print(f"Attempting to upload thumbnail: {thumbnail.filename}")
+                thumbnail_url = await storage_service.upload_course_image(
+                    course_id,
+                    thumbnail
+                )
+                
+                if thumbnail_url:
+                    update_data["thumbnail_url"] = thumbnail_url
+                    thumbnail_uploaded = True
+                    print(f"New thumbnail uploaded: {thumbnail_url}")
+                else:
+                    print("Thumbnail upload failed but continuing with course update")
+            except Exception as e:
+                print(f"Thumbnail upload error (non-critical): {e}")
+                # Continue with update even if thumbnail fails
+        
+        # Update the course using service role to bypass RLS
+        print(f"Updating course with data: {update_data}")
+        
+        # Try regular update first, fall back to service role if needed
+        updated_course = await course_service.update_course(course_id, update_data)
+        
+        if not updated_course:
+            print("Regular update failed, trying with service role")
+            updated_course = await course_service.update_course_with_service_role(course_id, update_data)
+        
+        if not updated_course:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No data to update"
+                detail="Failed to update course"
             )
         
-        updated_course = await course_service.update_course(course_id, update_data)
         return updated_course
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating course {course_id}: {e}")
+        print(f"Error updating course: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error updating course"
+            detail=f"Error updating course: {str(e)}"
         )
 
 @router.delete("/{course_id}")
