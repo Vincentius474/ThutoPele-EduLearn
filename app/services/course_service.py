@@ -37,7 +37,44 @@ class CourseService:
         except Exception as e:
             logger.error(f"Error getting courses: {e}")
             return []
-    
+
+    async def create_course(self, course_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Create a new course using service role (bypasses RLS for testing)"""
+        try:
+            logger.info(f"Attempting to create course: {course_data.get('title')}")
+            logger.info(f"Instructor ID: {course_data.get('instructor_id')}")
+            
+            # Validate required fields
+            required_fields = ['title', 'instructor_id']
+            for field in required_fields:
+                if field not in course_data:
+                    logger.error(f"Missing required field: {field}")
+                    return None
+            
+            # Use service client to bypass RLS
+            from app.core.supabase_client import supabase
+            service_client = supabase.get_service_client()
+            
+            result = service_client.table("courses").insert(course_data).execute()
+            
+            if result.data and len(result.data) > 0:
+                logger.info(f"✅ Created course: {course_data.get('title')} with ID: {result.data[0]['id']}")
+                return result.data[0]
+            else:
+                logger.error("No data returned from insert operation")
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ Error creating course: {str(e)}")
+            if hasattr(e, 'response') and hasattr(e.response, 'json'):
+                try:
+                    error_detail = e.response.json()
+                    logger.error(f"Error details: {error_detail}")
+                except:
+                    pass
+            logger.exception("Full traceback:")
+            return None
+
     async def get_course(self, course_id: str) -> Optional[Dict[str, Any]]:
         """Get a single course by ID"""
         try:
@@ -51,54 +88,19 @@ class CourseService:
         except Exception as e:
             logger.error(f"Error getting course {course_id}: {e}")
             return None
-    
-    # async def create_course(self, course_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    #     """Create a new course"""
-    #     try:
-    #         result = self.supabase.table("courses").insert(course_data).execute()
-    #         logger.info(f"Created course: {course_data.get('title')}")
-    #         return result.data[0] if result.data else None
-            
-    #     except Exception as e:
-    #         logger.error(f"Error creating course: {e}")
-    #         return None
 
-    async def create_course(self, course_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Create a new course"""
-        try:
-            logger.info(f"Attempting to create course: {course_data.get('title')}")
-            
-            # Validate required fields
-            required_fields = ['title', 'instructor_id']
-            for field in required_fields:
-                if field not in course_data:
-                    raise ValueError(f"Missing required field: {field}")
-            
-            # Insert course
-            result = self.supabase.table("courses").insert(course_data).execute()
-            
-            if result.data and len(result.data) > 0:
-                logger.info(f"✅ Created course: {course_data.get('title')} with ID: {result.data[0]['id']}")
-                return result.data[0]
-            else:
-                logger.error("No data returned from insert operation")
-                return None
-                
-        except Exception as e:
-            logger.error(f"❌ Error creating course: {str(e)}")
-            logger.exception("Full traceback:")
-            raise
-    
     async def update_course(self, course_id: str, course_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Update an existing course"""
         try:
+            # Add updated_at timestamp
+            course_data["updated_at"] = "now()"
+            
             result = self.supabase.table("courses")\
                 .update(course_data)\
                 .eq("id", course_id)\
                 .execute()
             
             return result.data[0] if result.data else None
-            
         except Exception as e:
             logger.error(f"Error updating course {course_id}: {e}")
             return None

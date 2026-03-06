@@ -21,12 +21,14 @@
                             <label class="form-label">Course Title *</label>
                             <input type="text" class="form-control" id="title" required 
                                    placeholder="e.g., Python Programming Masterclass">
+                            <div class="form-text">Choose a clear, descriptive title (max 100 characters)</div>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Course Description *</label>
                             <textarea class="form-control" id="description" rows="6" required 
-                                      placeholder="Describe what students will learn..."></textarea>
+                                      placeholder="Describe what students will learn, course objectives, and target audience..."></textarea>
+                            <div class="form-text">Minimum 50 characters recommended</div>
                         </div>
                         
                         <div class="row g-3 mb-4">
@@ -71,7 +73,8 @@
                             </div>
                             <div class="mt-2" id="priceField" style="display: none;">
                                 <label class="form-label">Price ($)</label>
-                                <input type="number" class="form-control" id="price" min="0" step="0.99" value="0">
+                                <input type="number" class="form-control" id="price" name="price" min="0" step="1" value="49">
+                                <small class="text-muted">Enter whole numbers only (e.g., 49, 99, 199)</small>
                             </div>
                         </div>
                         
@@ -82,17 +85,20 @@
                             <div class="border rounded-3 p-4 text-center bg-light" id="thumbnailUploadArea">
                                 <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
                                 <h6 class="fw-bold">Upload Course Image</h6>
-                                <p class="text-muted small mb-3">PNG, JPG or JPEG (Max 2MB)</p>
-                                <input type="file" class="d-none" id="thumbnail" accept="image/*">
+                                <p class="text-muted small mb-3">PNG, JPG, JPEG, GIF, WebP (Max 5MB)</p>
+                                <input type="file" class="d-none" id="thumbnail" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
                                 <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('thumbnail').click()">
-                                    Choose Image
+                                    <i class="fas fa-upload me-2"></i>Choose Image
                                 </button>
                             </div>
                             <div id="thumbnailPreview" class="mt-3 text-center" style="display: none;">
-                                <img src="" class="img-thumbnail" style="max-height: 200px;" alt="Thumbnail preview">
-                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeThumbnail()">
-                                    <i class="fas fa-trash me-2"></i>Remove
-                                </button>
+                                <div class="position-relative d-inline-block">
+                                    <img src="" class="img-thumbnail" style="max-height: 200px;" alt="Thumbnail preview">
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2" onclick="removeThumbnail()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <p class="text-muted small mt-2" id="thumbnailFileName"></p>
                             </div>
                         </div>
                         
@@ -102,13 +108,15 @@
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary px-4" id="saveDraftBtn">
                                 <span class="spinner-border spinner-border-sm d-none" id="saveSpinner"></span>
-                                <span>Save as Draft</span>
+                                <span><i class="fas fa-save me-2"></i>Save as Draft</span>
                             </button>
                             <button type="button" class="btn btn-success px-4" id="publishBtn">
                                 <span class="spinner-border spinner-border-sm d-none" id="publishSpinner"></span>
-                                <span>Publish Now</span>
+                                <span><i class="fas fa-globe me-2"></i>Publish Now</span>
                             </button>
-                            <a href="/dashboard" class="btn btn-outline-secondary px-4">Cancel</a>
+                            <a href="/dashboard" class="btn btn-outline-secondary px-4">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -118,24 +126,111 @@
         <!-- Sidebar Tips -->
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-lightbulb text-warning me-2"></i>Tips for Great Courses</h6>
+                </div>
                 <div class="card-body">
-                    <h6 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i>Tips for Great Courses</h6>
                     <ul class="list-unstyled">
-                        <li class="mb-2">✅ Clear and concise title</li>
-                        <li class="mb-2">✅ Detailed course description</li>
-                        <li class="mb-2">✅ High-quality thumbnail image</li>
-                        <li class="mb-2">✅ Structured curriculum</li>
-                        <li class="mb-2">✅ Practical examples and projects</li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Clear title</strong> - Make it easy to understand what students will learn
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Detailed description</strong> - Explain course structure, prerequisites, and outcomes
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>High-quality thumbnail</strong> - Use an eye-catching image (1280x720px recommended)
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Structured curriculum</strong> - Organize content into logical sections
+                        </li>
+                        <li class="mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Practical examples</strong> - Include real-world projects and exercises
+                        </li>
                     </ul>
                 </div>
             </div>
             
             <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3"><i class="fas fa-question-circle text-primary me-2"></i>Need Help?</h6>
-                    <p class="small text-muted mb-3">Check our instructor guidelines or contact support</p>
-                    <a href="/help" class="btn btn-outline-primary w-100">Instructor Help</a>
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-question-circle text-primary me-2"></i>Need Help?</h6>
                 </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">Check our instructor resources or contact our support team.</p>
+                    <a href="/help" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="fas fa-book me-2"></i>Instructor Guide
+                    </a>
+                    <a href="/contact" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-envelope me-2"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Character Count -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-chart-bar text-info me-2"></i>Content Stats</h6>
+                    <div class="mb-2">
+                        <small class="text-muted">Title length:</small>
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                                <div class="progress-bar" id="titleProgress" style="width: 0%;"></div>
+                            </div>
+                            <small id="titleCount">0/100</small>
+                        </div>
+                    </div>
+                    <div>
+                        <small class="text-muted">Description length:</small>
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-2" style="height: 5px;">
+                                <div class="progress-bar" id="descProgress" style="width: 0%;"></div>
+                            </div>
+                            <small id="descCount">0</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <p id="successMessage" class="mb-0">Course created successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-circle me-2"></i>Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
+                <p id="errorMessage" class="mb-0">An error occurred. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -145,19 +240,45 @@
 // Price field toggle
 document.querySelectorAll('input[name="priceType"]').forEach(radio => {
     radio.addEventListener('change', function() {
-        document.getElementById('priceField').style.display = 
-            this.value === 'paid' ? 'block' : 'none';
+        const priceField = document.getElementById('priceField');
+        const priceInput = document.getElementById('price');
+        
+        if (this.value === 'paid') {
+            priceField.style.display = 'block';
+            priceInput.required = true;
+            priceInput.value = '49';
+        } else {
+            priceField.style.display = 'none';
+            priceInput.required = false;
+            priceInput.value = '0';
+        }
     });
 });
 
-// Thumbnail upload
+// Thumbnail upload and preview
 document.getElementById('thumbnail').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            showError('Please select a valid image file (JPEG, PNG, GIF, WebP)');
+            this.value = '';
+            return;
+        }
+        
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            showError('Image too large. Maximum size is 5MB.');
+            this.value = '';
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('thumbnailPreview').style.display = 'block';
             document.getElementById('thumbnailPreview img').src = e.target.result;
+            document.getElementById('thumbnailFileName').textContent = file.name;
             document.getElementById('thumbnailUploadArea').style.display = 'none';
         };
         reader.readAsDataURL(file);
@@ -170,26 +291,77 @@ function removeThumbnail() {
     document.getElementById('thumbnailUploadArea').style.display = 'block';
 }
 
+// Character count tracking
+const titleInput = document.getElementById('title');
+const descInput = document.getElementById('description');
+const titleProgress = document.getElementById('titleProgress');
+const descProgress = document.getElementById('descProgress');
+const titleCount = document.getElementById('titleCount');
+const descCount = document.getElementById('descCount');
+
+titleInput.addEventListener('input', function() {
+    const length = this.value.length;
+    const percentage = Math.min((length / 100) * 100, 100);
+    titleProgress.style.width = percentage + '%';
+    titleCount.textContent = length + '/100';
+    
+    if (length > 100) {
+        titleProgress.classList.add('bg-danger');
+    } else if (length > 80) {
+        titleProgress.classList.add('bg-warning');
+    } else {
+        titleProgress.classList.remove('bg-danger', 'bg-warning');
+    }
+});
+
+descInput.addEventListener('input', function() {
+    const length = this.value.length;
+    descCount.textContent = length;
+    
+    if (length < 50) {
+        descProgress.style.width = '25%';
+        descProgress.classList.add('bg-warning');
+    } else if (length < 100) {
+        descProgress.style.width = '50%';
+        descProgress.classList.remove('bg-warning');
+    } else {
+        descProgress.style.width = '100%';
+    }
+});
+
 // Form submission
-document.getElementById('saveDraftBtn').addEventListener('click', async function(e) {
-    e.preventDefault();
-    await submitCourse(false);
-});
-
-document.getElementById('publishBtn').addEventListener('click', async function() {
-    await submitCourse(true);
-});
-
 async function submitCourse(publish) {
+    // Validate required fields
+    if (!document.getElementById('title').value.trim()) {
+        showError('Please enter a course title');
+        return;
+    }
+    
+    if (!document.getElementById('description').value.trim()) {
+        showError('Please enter a course description');
+        return;
+    }
+    
+    if (!document.getElementById('category').value) {
+        showError('Please select a category');
+        return;
+    }
+    
+    if (!document.getElementById('level').value) {
+        showError('Please select a level');
+        return;
+    }
+    
     const formData = new FormData();
-    formData.append('title', document.getElementById('title').value);
-    formData.append('description', document.getElementById('description').value);
+    formData.append('title', document.getElementById('title').value.trim());
+    formData.append('description', document.getElementById('description').value.trim());
     formData.append('category', document.getElementById('category').value);
     formData.append('level', document.getElementById('level').value);
     
     const priceType = document.querySelector('input[name="priceType"]:checked').value;
-    formData.append('price', priceType === 'free' ? 0 : document.getElementById('price').value);
-    formData.append('is_published', publish);
+    const priceValue = priceType === 'free' ? 0 : parseInt(document.getElementById('price').value) || 0;
+    formData.append('price', priceValue.toString());
+    formData.append('is_published', publish ? 'true' : 'false');
     
     const thumbnail = document.getElementById('thumbnail').files[0];
     if (thumbnail) {
@@ -199,10 +371,11 @@ async function submitCourse(publish) {
     const btn = publish ? document.getElementById('publishBtn') : document.getElementById('saveDraftBtn');
     const spinner = btn.querySelector('.spinner-border');
     const btnText = btn.querySelector('span:last-child');
+    const originalText = btnText.innerHTML;
     
     btn.disabled = true;
     spinner.classList.remove('d-none');
-    btnText.textContent = publish ? 'Publishing...' : 'Saving...';
+    btnText.innerHTML = publish ? ' Publishing...' : ' Saving...';
     
     try {
         const response = await fetch('/api/v1/courses/', {
@@ -210,23 +383,53 @@ async function submitCourse(publish) {
             body: formData
         });
         
+        const data = await response.json();
+        
         if (response.ok) {
-            const data = await response.json();
             showSuccess(publish ? 'Course published successfully!' : 'Course saved as draft');
             setTimeout(() => {
                 window.location.href = `/courses/${data.id}`;
-            }, 1500);
+            }, 2000);
         } else {
-            const error = await response.json();
-            showError(error.detail || 'Failed to create course');
+            showError(data.detail || 'Failed to create course');
         }
     } catch (error) {
-        showError('An error occurred');
+        console.error('Error:', error);
+        showError('Network error. Please check your connection and try again.');
     } finally {
         btn.disabled = false;
         spinner.classList.add('d-none');
-        btnText.textContent = publish ? 'Publish Now' : 'Save as Draft';
+        btnText.innerHTML = originalText;
     }
 }
+
+document.getElementById('saveDraftBtn').addEventListener('click', async function(e) {
+    e.preventDefault();
+    await submitCourse(false);
+});
+
+document.getElementById('publishBtn').addEventListener('click', async function() {
+    await submitCourse(true);
+});
+
+// Modal helper functions
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('successModal'));
+    modal.show();
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    modal.show();
+}
+
+// Prevent form submission on Enter key
+document.getElementById('courseForm').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+    }
+});
 </script>
 {% endblock %}

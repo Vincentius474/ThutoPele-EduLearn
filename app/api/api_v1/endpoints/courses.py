@@ -18,137 +18,188 @@ async def get_storage_service(supabase=Depends(get_supabase)):
     from app.services.storage_service import StorageService
     return StorageService(supabase)
 
-@router.get("/", response_model=List[Course])
-async def get_courses(
-    *,
-    course_service: CourseService = Depends(get_course_service),
-    skip: int = 0,
-    limit: int = 100,
-    category: Optional[str] = None,
-    level: Optional[str] = None,
-    current_user: Optional[dict] = Depends(get_current_user)  # Optional - can be None
-) -> Any:
-    """
-    Retrieve courses with optional filters.
-    """
-    try:
-        # If user is instructor, show all courses, otherwise only published
-        is_published = None
-        if not current_user or not current_user.get("is_instructor"):
-            is_published = True
-        
-        courses = await course_service.get_courses(
-            skip=skip,
-            limit=limit,
-            category=category,
-            level=level,
-            is_published=is_published
-        )
-        
-        # Get instructor details for each course
-        for course in courses:
-            supabase = course_service.supabase
-            instructor = supabase.table("users")\
-                .select("id, email, full_name, username, avatar_url")\
-                .eq("id", course["instructor_id"])\
-                .execute()
-            if instructor.data:
-                course["instructor"] = instructor.data[0]
-            else:
-                course["instructor"] = {
-                    "full_name": "Unknown Instructor",
-                    "avatar_url": None
-                }
-        
-        return courses
-        
-    except Exception as e:
-        logger.error(f"Error getting courses: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error retrieving courses"
-        )
-
 # @router.post("/", response_model=Course)
 # async def create_course(
-#     *,
+#     request: Request,
 #     course_service: CourseService = Depends(get_course_service),
-#     course_in: CourseCreate,
-#     current_user: dict = Depends(get_current_instructor)  # Requires instructor
+#     current_user: dict = Depends(get_current_instructor)
 # ) -> Any:
 #     """
-#     Create new course (instructors only).
+#     Create new course with optional thumbnail
 #     """
 #     try:
-#         course_data = course_in.dict()
-#         course_data["instructor_id"] = current_user["id"]
+#         # Log user info for debugging
+#         print(f"Creating course for instructor: {current_user['id']}")
+#         print(f"Is instructor: {current_user.get('is_instructor')}")
         
+#         # Parse form data
+#         form = await request.form()
+#         print(f"Received form data keys: {list(form.keys())}")
+        
+#         # Handle price conversion safely
+#         price_str = form.get("price", "0")
+#         try:
+#             price = int(float(price_str))
+#         except (ValueError, TypeError):
+#             price = 0
+        
+#         # Prepare course data
+#         course_data = {
+#             "title": form.get("title"),
+#             "description": form.get("description"),
+#             "category": form.get("category"),
+#             "level": form.get("level"),
+#             "price": price,
+#             "is_published": form.get("is_published", "false").lower() == "true",
+#             "instructor_id": current_user["id"]
+#         }
+        
+#         # Validate required fields
+#         if not course_data["title"] or not course_data["description"]:
+#             raise HTTPException(
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#                 detail="Title and description are required"
+#             )
+        
+#         # First create the course without thumbnail
+#         print(f"Creating course with data: {course_data}")
 #         course = await course_service.create_course(course_data)
+        
 #         if not course:
 #             raise HTTPException(
 #                 status_code=status.HTTP_400_BAD_REQUEST,
-#                 detail="Course creation failed"
+#                 detail="Failed to create course"
 #             )
+        
+#         # Handle thumbnail upload after course is created
+#         thumbnail = form.get("thumbnail")
+        
+#         if thumbnail and hasattr(thumbnail, "filename") and thumbnail.filename:
+#             try:
+#                 from app.services.storage_service import StorageService
+#                 storage_service = StorageService(course_service.supabase)
+                
+#                 # Upload with actual course ID
+#                 thumbnail_url = await storage_service.upload_course_image(
+#                     course["id"],  # Use actual course ID
+#                     thumbnail
+#                 )
+                
+#                 if thumbnail_url:
+#                     # Update course with thumbnail URL
+#                     updated_course = await course_service.update_course(
+#                         course["id"], 
+#                         {"thumbnail_url": thumbnail_url}
+#                     )
+#                     if updated_course:
+#                         course = updated_course
+#                         print(f"Thumbnail uploaded and course updated: {thumbnail_url}")
+#             except Exception as e:
+#                 print(f"Thumbnail upload failed (non-critical): {e}")
+#                 # Course already created, just log the error
         
 #         return course
         
 #     except HTTPException:
 #         raise
 #     except Exception as e:
-#         logger.error(f"Error creating course: {e}")
+#         print(f"Error creating course: {str(e)}")
+#         import traceback
+#         traceback.print_exc()
 #         raise HTTPException(
 #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             detail="Error creating course"
+#             detail=f"Error creating course: {str(e)}"
 #         )
 
 @router.post("/", response_model=Course)
 async def create_course(
     request: Request,
     course_service: CourseService = Depends(get_course_service),
-    storage_service: StorageService = Depends(get_storage_service),
     current_user: dict = Depends(get_current_instructor)
 ) -> Any:
     """
     Create new course with optional thumbnail
     """
     try:
+        # Log user info for debugging
+        print(f"Creating course for instructor: {current_user['id']}")
+        print(f"Is instructor: {current_user.get('is_instructor')}")
+        
+        # Parse form data
         form = await request.form()
+        print(f"Received form data keys: {list(form.keys())}")
+        
+        # Handle price conversion safely
+        price_str = form.get("price", "0")
+        try:
+            price = int(float(price_str))
+        except (ValueError, TypeError):
+            price = 0
+        
+        # Prepare course data
         course_data = {
             "title": form.get("title"),
             "description": form.get("description"),
             "category": form.get("category"),
             "level": form.get("level"),
-            "price": float(form.get("price", 0)),
+            "price": price,
             "is_published": form.get("is_published", "false").lower() == "true",
             "instructor_id": current_user["id"]
         }
         
-        # Handle thumbnail upload
-        thumbnail = form.get("thumbnail")
-        if thumbnail and hasattr(thumbnail, "filename") and thumbnail.filename:
-            thumbnail_url = await storage_service.upload_course_image(
-                "temp",  # We don't have course_id yet
-                thumbnail
+        # Validate required fields
+        if not course_data["title"] or not course_data["description"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Title and description are required"
             )
-            if thumbnail_url:
-                course_data["thumbnail_url"] = thumbnail_url
         
+        # Create the course using service role (temporary)
         course = await course_service.create_course(course_data)
         
-        # If we have a thumbnail uploaded before course creation, move it to correct folder
-        if thumbnail_url and course:
-            # Move file to correct course folder (you'd need to implement this)
-            pass
+        if not course:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create course. Please contact support."
+            )
+        
+        # Handle thumbnail upload after course is created
+        thumbnail = form.get("thumbnail")
+        
+        if thumbnail and hasattr(thumbnail, "filename") and thumbnail.filename:
+            try:
+                from app.services.storage_service import StorageService
+                storage_service = StorageService(course_service.supabase)
+                
+                thumbnail_url = await storage_service.upload_course_image(
+                    course["id"],
+                    thumbnail
+                )
+                
+                if thumbnail_url:
+                    # Update course with thumbnail URL
+                    updated_course = await course_service.update_course(
+                        course["id"], 
+                        {"thumbnail_url": thumbnail_url}
+                    )
+                    if updated_course:
+                        course = updated_course
+                        print(f"Thumbnail uploaded and course updated: {thumbnail_url}")
+            except Exception as e:
+                print(f"Thumbnail upload failed (non-critical): {e}")
         
         return course
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error creating course: {e}")
+        print(f"Error creating course: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error creating course"
+            detail=f"Error creating course: {str(e)}"
         )
-
 
 @router.get("/{course_id}", response_model=Course)
 async def get_course(
@@ -637,4 +688,66 @@ async def get_reviews(
             detail=f"Error getting reviews: {str(e)}"
         )
 
+@router.get("/test-permissions")
+async def test_permissions(
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_active_user)
+) -> Any:
+    """
+    Test endpoint to check user permissions
+    """
+    try:
+        # Check if user is instructor in database
+        user_check = supabase.table("users")\
+            .select("is_instructor, is_admin")\
+            .eq("id", current_user["id"])\
+            .execute()
+        
+        return {
+            "user_id": current_user["id"],
+            "email": current_user["email"],
+            "is_instructor_from_token": current_user.get("is_instructor", False),
+            "is_instructor_from_db": user_check.data[0]["is_instructor"] if user_check.data else False,
+            "is_admin_from_token": current_user.get("is_admin", False),
+            "is_admin_from_db": user_check.data[0]["is_admin"] if user_check.data else False,
+            "can_create_course": user_check.data[0]["is_instructor"] if user_check.data else False
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/debug-auth")
+async def debug_auth(
+    request: Request,
+    supabase=Depends(get_supabase)
+) -> Any:
+    """Debug endpoint to check authentication"""
+    try:
+        # Get token from cookie
+        token = request.cookies.get("access_token")
+        
+        if not token:
+            return {"error": "No token found"}
+        
+        # Get user from token
+        user = supabase.auth.get_user(token)
+        
+        if not user:
+            return {"error": "Invalid token"}
+        
+        # Get user from database
+        db_user = supabase.table("users")\
+            .select("*")\
+            .eq("id", user.user.id)\
+            .execute()
+        
+        return {
+            "token_valid": True,
+            "user_id": user.user.id,
+            "user_email": user.user.email,
+            "user_metadata": user.user.user_metadata,
+            "db_user": db_user.data[0] if db_user.data else None,
+            "token": token[:20] + "..."  # Show first 20 chars only
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
