@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold text-primary"><i class="fas fa-comment me-2"></i>Message Students</h1>
+            <p class="lead text-muted">Send announcements and messages to your students</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Course Selection and Message Form -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">New Message</h5>
+                    
+                    <form id="messageForm">
+                        <div class="mb-3">
+                            <label class="form-label">Select Course *</label>
+                            <select class="form-select" id="messageCourse" required>
+                                <option value="">Choose a course...</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}" data-students="{{ course.student_count }}">
+                                    {{ course.title }} ({{ course.student_count }} students)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Message Type</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="messageType" id="typeAnnouncement" value="announcement" checked>
+                                    <label class="form-check-label" for="typeAnnouncement">
+                                        Announcement
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="messageType" id="typeReminder" value="reminder">
+                                    <label class="form-check-label" for="typeReminder">
+                                        Reminder
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="messageType" id="typeAlert" value="alert">
+                                    <label class="form-check-label" for="typeAlert">
+                                        Alert
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Subject *</label>
+                            <input type="text" class="form-control" id="messageSubject" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Message *</label>
+                            <textarea class="form-control" id="messageContent" rows="6" required></textarea>
+                            <div class="form-text">
+                                <span id="charCount">0</span> characters
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="sendEmail">
+                                <label class="form-check-label">
+                                    Send email notification to students
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="markImportant">
+                                <label class="form-check-label">
+                                    Mark as important
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info" id="recipientInfo" style="display: none;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This message will be sent to <span id="studentCount">0</span> students.
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm d-none" id="messageSpinner"></span>
+                            <span>Send Message</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Messages -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent pt-3">
+                    <h5 class="fw-bold mb-0">Recent Messages</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recentMessages">
+                        <!-- Messages will be loaded here -->
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-envelope-open-text fa-3x mb-3 opacity-50"></i>
+                            <p>No recent messages</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Message History Modal -->
+<div class="modal fade" id="messageHistoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Message History</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="messageHistory"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('messageCourse').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const studentCount = selected.dataset.students || 0;
+    
+    if (this.value) {
+        document.getElementById('recipientInfo').style.display = 'block';
+        document.getElementById('studentCount').textContent = studentCount;
+    } else {
+        document.getElementById('recipientInfo').style.display = 'none';
+    }
+});
+
+document.getElementById('messageContent').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = this.value.length;
+});
+
+document.getElementById('messageForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const courseId = document.getElementById('messageCourse').value;
+    if (!courseId) {
+        alert('Please select a course');
+        return;
+    }
+    
+    const btn = this.querySelector('button[type="submit"]');
+    const spinner = document.getElementById('messageSpinner');
+    const btnText = btn.querySelector('span:last-child');
+    
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    btnText.textContent = 'Sending...';
+    
+    try {
+        const response = await fetch('/api/v1/instructor/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                course_id: courseId,
+                type: document.querySelector('input[name="messageType"]:checked').value,
+                subject: document.getElementById('messageSubject').value,
+                content: document.getElementById('messageContent').value,
+                send_email: document.getElementById('sendEmail').checked,
+                is_important: document.getElementById('markImportant').checked
+            })
+        });
+        
+        if (response.ok) {
+            alert('Message sent successfully!');
+            this.reset();
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('recipientInfo').style.display = 'none';
+            loadRecentMessages();
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'Failed to send message');
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('An error occurred');
+    } finally {
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+        btnText.textContent = 'Send Message';
+    }
+});
+
+async function loadRecentMessages() {
+    try {
+        const response = await fetch('/api/v1/instructor/messages/recent');
+        const messages = await response.json();
+        
+        const container = document.getElementById('recentMessages');
+        
+        if (!messages || messages.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-envelope-open-text fa-3x mb-3 opacity-50"></i>
+                    <p>No recent messages</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        messages.forEach(msg => {
+            const date = new Date(msg.created_at).toLocaleDateString();
+            const icon = msg.type === 'announcement' ? 'fa-bullhorn' : 
+                        msg.type === 'reminder' ? 'fa-bell' : 'fa-exclamation-circle';
+            const color = msg.type === 'alert' ? 'danger' : 
+                         msg.type === 'reminder' ? 'warning' : 'info';
+            
+            html += `
+                <div class="message-item mb-3 p-3 border rounded">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="fw-bold mb-2">
+                            <i class="fas ${icon} text-${color} me-2"></i>
+                            ${msg.subject}
+                        </h6>
+                        <small class="text-muted">${date}</small>
+                    </div>
+                    <p class="small text-muted mb-2">${msg.content.substring(0, 100)}...</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">${msg.course_title}</small>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewMessage('${msg.id}')">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
+}
+
+async function viewMessage(messageId) {
+    try {
+        const response = await fetch(`/api/v1/instructor/messages/${messageId}`);
+        const message = await response.json();
+        
+        const container = document.getElementById('messageHistory');
+        container.innerHTML = `
+            <div class="message-detail">
+                <div class="mb-3">
+                    <strong>Course:</strong> ${message.course_title}
+                </div>
+                <div class="mb-3">
+                    <strong>Type:</strong> 
+                    <span class="badge bg-${message.type === 'alert' ? 'danger' : message.type === 'reminder' ? 'warning' : 'info'}">
+                        ${message.type}
+                    </span>
+                </div>
+                <div class="mb-3">
+                    <strong>Subject:</strong> ${message.subject}
+                </div>
+                <div class="mb-3">
+                    <strong>Message:</strong>
+                    <p class="mt-2">${message.content}</p>
+                </div>
+                <div class="mb-3">
+                    <strong>Sent:</strong> ${new Date(message.created_at).toLocaleString()}
+                </div>
+                <div class="mb-3">
+                    <strong>Recipients:</strong> ${message.recipient_count || 0} students
+                </div>
+            </div>
+        `;
+        
+        new bootstrap.Modal(document.getElementById('messageHistoryModal')).show();
+    } catch (error) {
+        console.error('Error loading message:', error);
+    }
+}
+
+// Load recent messages on page load
+document.addEventListener('DOMContentLoaded', loadRecentMessages);
+</script>
+
+<style>
+.message-item {
+    transition: background-color 0.3s ease;
+}
+
+.message-item:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+</style>
+{% endblock %}

@@ -91,7 +91,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="text-muted"><i class="fas fa-book me-2"></i>Lessons</span>
-                                    <span class="fw-bold">{{ course.lesson_count or 0 }}</span>
+                                    <span class="fw-bold">{{ materials|length }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span class="text-muted"><i class="fas fa-clock me-2"></i>Duration</span>
@@ -149,83 +149,98 @@
                                             {{ progress }}%
                                         </div>
                                     </div>
-                                    <small class="text-muted">{{ completed_lessons }} of {{ total_lessons }} lessons completed</small>
+                                    <small class="text-muted">{{ completed_lessons }} of {{ materials|length }} lessons completed</small>
                                 </div>
                             {% endif %}
                             
+                            <!-- Materials List -->
                             <div class="accordion" id="curriculumAccordion">
-                                {% for material in materials %}
-                                <div class="accordion-item mb-3 border-0 shadow-sm">
-                                    <h2 class="accordion-header" id="heading{{ material.id }}">
-                                        <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" 
-                                                type="button" data-bs-toggle="collapse" 
-                                                data-bs-target="#collapse{{ material.id }}">
-                                            <div class="d-flex align-items-center w-100">
-                                                <i class="fas fa-{{ 'video' if material.material_type == 'video' else 'file-pdf' if material.material_type == 'document' else 'link' if material.material_type == 'link' else 'question-circle' if material.material_type == 'quiz' else 'tasks' if material.material_type == 'assignment' else 'file' }} fa-lg me-3 text-primary"></i>
-                                                <span class="fw-bold">{{ material.title }}</span>
-                                                {% if material.material_type == 'video' and material.duration %}
-                                                <span class="badge bg-light text-dark ms-3">{{ material.duration }} min</span>
+                                {% if materials and materials|length > 0 %}
+                                    {% for material in materials %}
+                                    <div class="accordion-item mb-3 border-0 shadow-sm">
+                                        <h2 class="accordion-header" id="heading{{ material.id }}">
+                                            <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" 
+                                                    type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#collapse{{ material.id }}">
+                                                <div class="d-flex align-items-center w-100">
+                                                    <i class="fas 
+                                                        {% if material.material_type == 'video' %}fa-video
+                                                        {% elif material.material_type == 'document' %}fa-file-pdf
+                                                        {% elif material.material_type == 'link' %}fa-link
+                                                        {% elif material.material_type == 'file' %}fa-file
+                                                        {% elif material.material_type == 'quiz' %}fa-question-circle
+                                                        {% elif material.material_type == 'assignment' %}fa-tasks
+                                                        {% else %}fa-file{% endif %} 
+                                                        fa-lg me-3 text-primary"></i>
+                                                    <span class="fw-bold">{{ material.title }}</span>
+                                                    {% if material.material_type == 'video' and material.duration %}
+                                                    <span class="badge bg-light text-dark ms-3">{{ material.duration }} min</span>
+                                                    {% endif %}
+                                                    {% if material.file_size %}
+                                                    <span class="badge bg-light text-dark ms-3">{{ (material.file_size / 1024 / 1024)|round(2) }} MB</span>
+                                                    {% endif %}
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ material.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+                                             data-bs-parent="#curriculumAccordion">
+                                            <div class="accordion-body">
+                                                <p class="text-muted mb-3">{{ material.description or 'No description available' }}</p>
+                                                
+                                                {% if is_enrolled %}
+                                                    <!-- Content for enrolled students -->
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        {% if material.material_type == 'video' %}
+                                                        <a href="#" class="btn btn-primary" onclick="playVideo('{{ material.content_url }}')">
+                                                            <i class="fas fa-play me-2"></i>Watch Video
+                                                        </a>
+                                                        {% elif material.material_type == 'document' or material.material_type == 'file' %}
+                                                        <a href="{{ material.content_url }}" target="_blank" class="btn btn-primary">
+                                                            <i class="fas fa-download me-2"></i>Download
+                                                        </a>
+                                                        {% elif material.material_type == 'link' %}
+                                                        <a href="{{ material.content_url }}" target="_blank" class="btn btn-primary">
+                                                            <i class="fas fa-external-link-alt me-2"></i>Open Link
+                                                        </a>
+                                                        {% elif material.material_type == 'quiz' %}
+                                                        <a href="/courses/{{ course.id }}/quiz/{{ material.id }}" class="btn btn-primary">
+                                                            <i class="fas fa-pencil-alt me-2"></i>Take Quiz
+                                                        </a>
+                                                        {% elif material.material_type == 'assignment' %}
+                                                        <a href="/courses/{{ course.id }}/assignment/{{ material.id }}" class="btn btn-primary">
+                                                            <i class="fas fa-upload me-2"></i>Submit Assignment
+                                                        </a>
+                                                        {% endif %}
+                                                        
+                                                        {% if material.completed %}
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check-circle me-1"></i>Completed
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% else %}
+                                                    <!-- Preview for non-enrolled students -->
+                                                    <div class="alert alert-info">
+                                                        <i class="fas fa-lock me-2"></i>
+                                                        Enroll in this course to access this content.
+                                                    </div>
+                                                    {% if loop.first and material.material_type == 'video' %}
+                                                    <a href="#" class="btn btn-outline-primary" onclick="playVideo('{{ material.content_url }}')">
+                                                        <i class="fas fa-play me-2"></i>Preview
+                                                    </a>
+                                                    {% endif %}
                                                 {% endif %}
                                             </div>
-                                        </button>
-                                    </h2>
-                                    <div id="collapse{{ material.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
-                                         data-bs-parent="#curriculumAccordion">
-                                        <div class="accordion-body">
-                                            <p class="text-muted mb-3">{{ material.description }}</p>
-                                            
-                                            {% if is_enrolled %}
-                                                <!-- Content for enrolled students -->
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    {% if material.material_type == 'video' %}
-                                                    <a href="#" class="btn btn-primary" onclick="playVideo('{{ material.content_url }}')">
-                                                        <i class="fas fa-play me-2"></i>Watch Video
-                                                    </a>
-                                                    {% elif material.material_type == 'document' %}
-                                                    <a href="{{ material.content_url }}" target="_blank" class="btn btn-primary">
-                                                        <i class="fas fa-download me-2"></i>Download
-                                                    </a>
-                                                    {% elif material.material_type == 'link' %}
-                                                    <a href="{{ material.content_url }}" target="_blank" class="btn btn-primary">
-                                                        <i class="fas fa-external-link-alt me-2"></i>Open Link
-                                                    </a>
-                                                    {% elif material.material_type == 'quiz' %}
-                                                    <a href="/courses/{{ course.id }}/quiz/{{ material.id }}" class="btn btn-primary">
-                                                        <i class="fas fa-pencil-alt me-2"></i>Take Quiz
-                                                    </a>
-                                                    {% elif material.material_type == 'assignment' %}
-                                                    <a href="/courses/{{ course.id }}/assignment/{{ material.id }}" class="btn btn-primary">
-                                                        <i class="fas fa-upload me-2"></i>Submit Assignment
-                                                    </a>
-                                                    {% endif %}
-                                                    
-                                                    {% if material.completed %}
-                                                    <span class="badge bg-success">
-                                                        <i class="fas fa-check-circle me-1"></i>Completed
-                                                    </span>
-                                                    {% endif %}
-                                                </div>
-                                            {% else %}
-                                                <!-- Preview for non-enrolled students -->
-                                                <div class="alert alert-info">
-                                                    <i class="fas fa-lock me-2"></i>
-                                                    Enroll in this course to access this content.
-                                                </div>
-                                                {% if loop.first %}
-                                                <!-- Preview first lesson -->
-                                                <a href="#" class="btn btn-outline-primary">Preview</a>
-                                                {% endif %}
-                                            {% endif %}
                                         </div>
                                     </div>
-                                </div>
+                                    {% endfor %}
                                 {% else %}
-                                <div class="text-center py-5">
-                                    <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
-                                    <h5>No course materials yet</h5>
-                                    <p class="text-muted">Check back soon for updates!</p>
-                                </div>
-                                {% endfor %}
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+                                        <h5>No course materials yet</h5>
+                                        <p class="text-muted">Check back soon for updates!</p>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -374,11 +389,50 @@
     </div>
 </div>
 
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <p id="successMessage" class="mb-0">Operation completed successfully!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-circle me-2"></i>Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
+                <p id="errorMessage" class="mb-0">An error occurred. Please try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 let currentRating = 0;
 let courseId = "{{ course.id }}";
 let currentUser = {% if current_user %}true{% else %}false{% endif %};
 
+// Enrollment function
 function enrollInCourse() {
     if (!currentUser) {
         window.location.href = '/auth?redirect=/courses/' + courseId;
@@ -393,17 +447,17 @@ function enrollInCourse() {
     })
     .then(response => {
         if (response.ok) {
-            alert('Successfully enrolled!');
-            location.reload();
+            showSuccess('Successfully enrolled!');
+            setTimeout(() => location.reload(), 1500);
         } else {
             return response.json().then(data => {
-                alert(data.detail || 'Failed to enroll. Please try again.');
+                showError(data.detail || 'Failed to enroll');
             });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        showError('An error occurred');
     });
 }
 
@@ -412,16 +466,25 @@ function checkout() {
         window.location.href = '/auth?redirect=/courses/' + courseId;
         return;
     }
-    
-    // Redirect to payment page
     window.location.href = '/checkout/' + courseId;
 }
 
+// Video functions
 function playVideo(url) {
-    document.getElementById('videoPlayer').src = url;
-    new bootstrap.Modal(document.getElementById('videoModal')).show();
+    if (url) {
+        document.getElementById('videoPlayer').src = url;
+        new bootstrap.Modal(document.getElementById('videoModal')).show();
+    } else {
+        showError('Video URL not available');
+    }
 }
 
+// Close video modal when video ends
+document.getElementById('videoPlayer').addEventListener('ended', function() {
+    bootstrap.Modal.getInstance(document.getElementById('videoModal')).hide();
+});
+
+// Review functions
 function showReviewModal() {
     new bootstrap.Modal(document.getElementById('reviewModal')).show();
 }
@@ -430,7 +493,6 @@ function setRating(rating) {
     currentRating = rating;
     document.getElementById('rating').value = rating;
     
-    // Update star display
     document.querySelectorAll('.rating-star').forEach((star, index) => {
         if (index < rating) {
             star.classList.remove('far');
@@ -447,7 +509,7 @@ function submitReview() {
     const comment = document.getElementById('reviewComment').value;
     
     if (rating == 0) {
-        alert('Please select a rating');
+        showError('Please select a rating');
         return;
     }
     
@@ -463,24 +525,32 @@ function submitReview() {
     })
     .then(response => {
         if (response.ok) {
-            alert('Review submitted successfully!');
-            location.reload();
+            showSuccess('Review submitted successfully!');
+            setTimeout(() => location.reload(), 1500);
         } else {
             return response.json().then(data => {
-                alert(data.detail || 'Failed to submit review');
+                showError(data.detail || 'Failed to submit review');
             });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        showError('An error occurred');
     });
 }
 
-// Close video modal when video ends
-document.getElementById('videoPlayer').addEventListener('ended', function() {
-    bootstrap.Modal.getInstance(document.getElementById('videoModal')).hide();
-});
+// Modal helper functions
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('successModal'));
+    modal.show();
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    modal.show();
+}
 </script>
 
 <style>
