@@ -67,6 +67,19 @@ async def get_current_active_user(
 
 # In app/api/api_v1/dependencies.py
 
+async def get_current_admin_or_instructor(
+    current_user: dict = Depends(get_current_active_user)
+) -> dict:
+    """
+    Get current user and verify they are an admin or instructor.
+    """
+    if not (current_user.get("is_admin") or current_user.get("is_instructor")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin or instructor privileges required"
+        )
+    return current_user
+
 async def get_current_instructor(
     current_user: dict = Depends(get_current_active_user)
 ) -> dict:

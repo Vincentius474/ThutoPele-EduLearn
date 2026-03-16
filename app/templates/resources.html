@@ -1,12 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- Hidden user data for JavaScript -->
+<script id="user-data" type="application/json">
+    {% if current_user %}
+    {{ {
+        'id': current_user.id,
+        'is_admin': current_user.is_admin,
+        'is_instructor': current_user.is_instructor
+    } | tojson | safe }}
+    {% else %}
+    null
+    {% endif %}
+</script>
+
 <div class="container py-4">
     <!-- Header -->
     <div class="row mb-5">
         <div class="col-12 text-center">
             <h1 class="display-4 fw-bold text-primary">Free Learning Resources</h1>
             <p class="lead text-muted">Download ebooks, cheatsheets, templates, and more - all for free!</p>
+            {% if current_user and (current_user.is_admin or current_user.is_instructor) %}
+            <button class="btn btn-primary mt-3" onclick="showUploadModal()">
+                <i class="fas fa-upload me-2"></i>Upload Resource
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -15,28 +33,33 @@
         <div class="col-12">
             <ul class="nav nav-pills nav-justified flex-column flex-md-row gap-2" id="resourceTabs">
                 <li class="nav-item">
-                    <a class="nav-link active" data-bs-toggle="tab" href="#all">
+                    <a class="nav-link active" data-category="all" onclick="filterResources('all')">
                         <i class="fas fa-th-large me-2"></i>All Resources
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#ebooks">
+                    <a class="nav-link" data-category="ebook" onclick="filterResources('ebook')">
                         <i class="fas fa-book me-2"></i>Ebooks
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#cheatsheets">
+                    <a class="nav-link" data-category="cheatsheet" onclick="filterResources('cheatsheet')">
                         <i class="fas fa-file-alt me-2"></i>Cheatsheets
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#templates">
+                    <a class="nav-link" data-category="template" onclick="filterResources('template')">
                         <i class="fas fa-puzzle-piece me-2"></i>Templates
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-bs-toggle="tab" href="#tools">
+                    <a class="nav-link" data-category="tool" onclick="filterResources('tool')">
                         <i class="fas fa-tools me-2"></i>Tools
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-category="other" onclick="filterResources('other')">
+                        <i class="fas fa-folder me-2"></i>Other
                     </a>
                 </li>
             </ul>
@@ -44,203 +67,11 @@
     </div>
 
     <!-- Resources Grid -->
-    <div class="tab-content">
-        <!-- All Resources Tab -->
-        <div class="tab-pane fade show active" id="all">
-            <div class="row g-4">
-                <!-- Python Cheatsheet -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="resource-icon bg-primary bg-opacity-10 p-3 rounded-3 me-3">
-                                    <i class="fas fa-file-code fa-2x text-primary"></i>
-                                </div>
-                                <div>
-                                    <span class="badge bg-success">Free</span>
-                                    <span class="badge bg-primary ms-2">PDF</span>
-                                </div>
-                            </div>
-                            <h5 class="card-title fw-bold">Python Cheatsheet</h5>
-                            <p class="card-text text-muted small">Complete Python syntax reference with examples.</p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted"><i class="fas fa-download me-1"></i>5.2k downloads</small>
-                                <small class="text-muted"><i class="fas fa-file-pdf me-1"></i>2.5 MB</small>
-                            </div>
-                            <a href="#" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-download me-2"></i>Download
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- JavaScript Cheatsheet -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="resource-icon bg-warning bg-opacity-10 p-3 rounded-3 me-3">
-                                    <i class="fab fa-js fa-2x text-warning"></i>
-                                </div>
-                                <div>
-                                    <span class="badge bg-success">Free</span>
-                                    <span class="badge bg-primary ms-2">PDF</span>
-                                </div>
-                            </div>
-                            <h5 class="card-title fw-bold">JavaScript Cheatsheet</h5>
-                            <p class="card-text text-muted small">ES6+ features, DOM manipulation, and more.</p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted"><i class="fas fa-download me-1"></i>4.8k downloads</small>
-                                <small class="text-muted"><i class="fas fa-file-pdf me-1"></i>1.8 MB</small>
-                            </div>
-                            <a href="#" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-download me-2"></i>Download
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Python Ebook -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="resource-icon bg-info bg-opacity-10 p-3 rounded-3 me-3">
-                                    <i class="fas fa-book fa-2x text-info"></i>
-                                </div>
-                                <div>
-                                    <span class="badge bg-success">Free</span>
-                                    <span class="badge bg-primary ms-2">eBook</span>
-                                </div>
-                            </div>
-                            <h5 class="card-title fw-bold">Python for Beginners</h5>
-                            <p class="card-text text-muted small">A complete guide to Python programming (150 pages).</p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted"><i class="fas fa-download me-1"></i>3.1k downloads</small>
-                                <small class="text-muted"><i class="fas fa-file-pdf me-1"></i>5.2 MB</small>
-                            </div>
-                            <a href="#" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-download me-2"></i>Download
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- HTML Template -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="resource-icon bg-danger bg-opacity-10 p-3 rounded-3 me-3">
-                                    <i class="fab fa-html5 fa-2x text-danger"></i>
-                                </div>
-                                <div>
-                                    <span class="badge bg-success">Free</span>
-                                    <span class="badge bg-primary ms-2">Template</span>
-                                </div>
-                            </div>
-                            <h5 class="card-title fw-bold">Portfolio Template</h5>
-                            <p class="card-text text-muted small">Modern responsive portfolio website template.</p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted"><i class="fas fa-download me-1"></i>2.3k downloads</small>
-                                <small class="text-muted"><i class="fas fa-file-archive me-1"></i>450 KB</small>
-                            </div>
-                            <a href="#" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-download me-2"></i>Download
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Git Cheatsheet -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="resource-icon bg-secondary bg-opacity-10 p-3 rounded-3 me-3">
-                                    <i class="fab fa-git-alt fa-2x text-secondary"></i>
-                                </div>
-                                <div>
-                                    <span class="badge bg-success">Free</span>
-                                    <span class="badge bg-primary ms-2">PDF</span>
-                                </div>
-                            </div>
-                            <h5 class="card-title fw-bold">Git Commands Cheatsheet</h5>
-                            <p class="card-text text-muted small">Essential Git commands for version control.</p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted"><i class="fas fa-download me-1"></i>6.7k downloads</small>
-                                <small class="text-muted"><i class="fas fa-file-pdf me-1"></i>1.1 MB</small>
-                            </div>
-                            <a href="#" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-download me-2"></i>Download
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SQL Cheatsheet -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm hover-lift">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="resource-icon bg-primary bg-opacity-10 p-3 rounded-3 me-3">
-                                    <i class="fas fa-database fa-2x text-primary"></i>
-                                </div>
-                                <div>
-                                    <span class="badge bg-success">Free</span>
-                                    <span class="badge bg-primary ms-2">PDF</span>
-                                </div>
-                            </div>
-                            <h5 class="card-title fw-bold">SQL Cheatsheet</h5>
-                            <p class="card-text text-muted small">Common SQL queries, joins, and functions.</p>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <small class="text-muted"><i class="fas fa-download me-1"></i>3.9k downloads</small>
-                                <small class="text-muted"><i class="fas fa-file-pdf me-1"></i>1.3 MB</small>
-                            </div>
-                            <a href="#" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-download me-2"></i>Download
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Ebooks Tab -->
-        <div class="tab-pane fade" id="ebooks">
-            <div class="row g-4">
-                <!-- Similar structure for ebooks -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Python Programming</h5>
-                            <p class="card-text">Complete guide to Python programming.</p>
-                            <a href="#" class="btn btn-primary">Download</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Add more ebook items -->
-            </div>
-        </div>
-
-        <!-- Cheatsheets Tab -->
-        <div class="tab-pane fade" id="cheatsheets">
-            <div class="row g-4">
-                <!-- Cheatsheet items -->
-            </div>
-        </div>
-
-        <!-- Templates Tab -->
-        <div class="tab-pane fade" id="templates">
-            <div class="row g-4">
-                <!-- Template items -->
-            </div>
-        </div>
-
-        <!-- Tools Tab -->
-        <div class="tab-pane fade" id="tools">
-            <div class="row g-4">
-                <!-- Tools items -->
+    <div class="row g-4" id="resourcesGrid">
+        <!-- Resources will be loaded here dynamically -->
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
     </div>
@@ -250,39 +81,11 @@
         <div class="col-12">
             <h3 class="fw-bold mb-4">Most Downloaded</h3>
         </div>
-        <div class="col-md-3 col-6 mb-3">
-            <div class="card border-0 shadow-sm text-center">
-                <div class="card-body p-3">
-                    <i class="fas fa-file-code fa-2x text-primary mb-2"></i>
-                    <h6 class="small fw-bold">Python Cheatsheet</h6>
-                    <small class="text-muted">5.2k downloads</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <div class="card border-0 shadow-sm text-center">
-                <div class="card-body p-3">
-                    <i class="fab fa-js fa-2x text-warning mb-2"></i>
-                    <h6 class="small fw-bold">JavaScript Cheatsheet</h6>
-                    <small class="text-muted">4.8k downloads</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <div class="card border-0 shadow-sm text-center">
-                <div class="card-body p-3">
-                    <i class="fab fa-git-alt fa-2x text-secondary mb-2"></i>
-                    <h6 class="small fw-bold">Git Cheatsheet</h6>
-                    <small class="text-muted">6.7k downloads</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <div class="card border-0 shadow-sm text-center">
-                <div class="card-body p-3">
-                    <i class="fas fa-database fa-2x text-primary mb-2"></i>
-                    <h6 class="small fw-bold">SQL Cheatsheet</h6>
-                    <small class="text-muted">3.9k downloads</small>
+        <div class="row g-3" id="popularResources">
+            <!-- Popular resources will be loaded here -->
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
         </div>
@@ -295,14 +98,103 @@
                 <div class="card-body p-5 text-center">
                     <h3 class="mb-3">Share Your Resources</h3>
                     <p class="mb-4">Have a useful cheatsheet or template? Share it with the community!</p>
-                    <a href="/contact" class="btn btn-light btn-lg">
-                        <i class="fas fa-upload me-2"></i>Contribute Resource
+                    {% if current_user and (current_user.is_admin or current_user.is_instructor) %}
+                    <button class="btn btn-light btn-lg" onclick="showUploadModal()">
+                        <i class="fas fa-upload me-2"></i>Upload Resource
+                    </button>
+                    {% else %}
+                    <a href="#" class="btn btn-light btn-lg">
+                        <i class="fas fa-upload me-2"></i>Only Instructors & Admins can upload resources.
                     </a>
+                    <p class="mb-4">Have a useful cheatsheet or template? Share it with your Instructor!</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Upload Resource</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <input type="text" class="form-control" id="resourceTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="resourceDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" id="resourceCategory" required>
+                            <option value="">Select category...</option>
+                            <option value="ebook">Ebook</option>
+                            <option value="cheatsheet">Cheatsheet</option>
+                            <option value="template">Template</option>
+                            <option value="tool">Tool</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">File *</label>
+                        <input type="file" class="form-control" id="resourceFile" required>
+                        <small class="text-muted">Max file size: 100MB</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadResource()">
+                    <span class="spinner-border spinner-border-sm d-none" id="uploadSpinner"></span>
+                    <span>Upload</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <p id="successMessage" class="mb-0">Resource uploaded successfully!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-circle me-2"></i>Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
+                <p id="errorMessage" class="mb-0">An error occurred. Please try again.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Link to external JavaScript -->
+<script src="{{ url_for('static', path='/js/resources.js') }}"></script>
 
 <style>
 .hover-lift {
@@ -318,6 +210,7 @@
     color: #495057;
     border-radius: 8px;
     padding: 12px;
+    cursor: pointer;
 }
 
 .nav-pills .nav-link.active {
@@ -331,6 +224,10 @@
 
 .hover-lift:hover .resource-icon {
     transform: scale(1.1);
+}
+
+[onclick] {
+    cursor: pointer;
 }
 </style>
 {% endblock %}
