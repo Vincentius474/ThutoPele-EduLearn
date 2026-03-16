@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Blog Post Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/blog">Blog</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ post.category }}</li>
+                </ol>
+            </nav>
+            
+            <h1 class="display-4 fw-bold text-primary mb-3">{{ post.title }}</h1>
+            
+            <div class="d-flex flex-wrap align-items-center text-muted mb-4">
+                <span class="me-3">
+                    <i class="far fa-calendar me-1"></i>{{ post.published_at[:10] }}
+                </span>
+                <span class="me-3">
+                    <i class="far fa-clock me-1"></i>{{ post.read_time }} min read
+                </span>
+                <span class="me-3">
+                    <i class="far fa-eye me-1"></i>{{ post.view_count }} views
+                </span>
+                <span class="badge bg-primary">{{ post.category }}</span>
+            </div>
+            
+            <div class="d-flex align-items-center mb-4">
+                <img src="{{ post.users.avatar_url or 'https://ui-avatars.com/api/?name=' + post.users.full_name|urlencode }}" 
+                     class="rounded-circle me-3" width="60" height="60" alt="{{ post.users.full_name }}">
+                <div>
+                    <h5 class="fw-bold mb-1">{{ post.users.full_name }}</h5>
+                    <p class="text-muted mb-0">{{ post.users.bio or 'Contributor' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Featured Image -->
+    {% if post.featured_image %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <img src="{{ post.featured_image }}" class="img-fluid rounded-4 shadow" alt="{{ post.title }}">
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Blog Content -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="blog-content">
+                {{ post.content|safe }}
+            </div>
+            
+            <hr class="my-5">
+            
+            <!-- Share Buttons -->
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0">Share this article:</h5>
+                <div class="d-flex gap-2">
+                    <a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ post.title }}" 
+                       target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.url }}" 
+                       target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" 
+                       target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Comments Section -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- <h3 class="fw-bold mb-4">Comments ({{ post.comments|length }})</h3> -->
+            
+            <!-- Comment Form -->
+            {% if current_user %}
+            <!-- <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form id="commentForm" data-post-id="{{ post.id }}" data-post-slug="{{ post.slug }}">
+                        <div class="mb-3">
+                            <textarea class="form-control" id="commentContent" rows="3" 
+                                    placeholder="Leave a comment..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Post Comment</button>
+                    </form>
+                </div>
+            </div> -->
+            {% else %}
+            <div class="alert alert-info mb-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <a href="/login" class="alert-link">Login</a> to leave a comment.
+            </div>
+            {% endif %}
+            
+            <!-- Comments List -->
+            <div class="comments-list">
+                {% for comment in post.comments %}
+                <div class="d-flex mb-4">
+                    <img src="{{ comment.users.avatar_url or 'https://ui-avatars.com/api/?name=' + comment.users.full_name|urlencode }}" 
+                        class="rounded-circle me-3" width="50" height="50" alt="{{ comment.users.full_name }}">
+                    <div class="flex-grow-1">
+                        <div class="bg-light p-3 rounded-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <h6 class="fw-bold mb-0">{{ comment.users.full_name }}</h6>
+                                <small class="text-muted">{{ comment.created_at[:10] }}</small>
+                            </div>
+                            <!-- <p class="mb-0">{{ comment.content }}</p> -->
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- <p class="text-muted text-center py-4">No comments yet. Be the first to comment!</p> -->
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- At the bottom of blog_detail.html -->
+<script src="{{ url_for('static', path='/js/blog_detail.js') }}"></script>
+
+<script>
+document.getElementById('commentForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const content = document.getElementById('commentContent').value;
+    const postId = "{{ post.id }}";
+    
+    try {
+        const response = await fetch(`/api/v1/blog/${postId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content })
+        });
+        
+        if (response.ok) {
+            alert('Comment submitted for approval!');
+            document.getElementById('commentContent').value = '';
+        } else {
+            alert('Failed to post comment. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error posting comment:', error);
+        alert('An error occurred');
+    }
+});
+</script>
+
+<style>
+.blog-content {
+    font-size: 1.2rem;
+    line-height: 1.8;
+}
+
+.blog-content h1,
+.blog-content h2,
+.blog-content h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+}
+
+.blog-content p {
+    margin-bottom: 1.5rem;
+}
+
+.blog-content pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.blog-content code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.blog-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+}
+
+.blog-content blockquote {
+    border-left: 4px solid var(--bs-primary);
+    padding-left: 1rem;
+    margin-left: 0;
+    font-style: italic;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

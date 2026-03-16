@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional
 import logging
 
-from app.api.api_v1.dependencies import get_current_active_user, get_current_instructor
+from app.api.api_v1.dependencies import get_current_active_user, get_current_admin_or_instructor, get_current_instructor
 from app.web.dependencies import get_templates, get_current_user_from_cookie, get_supabase_client
 from app.services.course_service import CourseService
 from app.services.blog_service import BlogService
@@ -971,48 +971,53 @@ async def blog_page(
 ):
     """Blog listing page"""
     supabase = get_supabase_client()
-    blog_service = BlogService(supabase)
-    
-    # Get posts with filters
-    posts_per_page = 9
-    offset = (page - 1) * posts_per_page
-    
-    posts = await blog_service.get_posts(
-        category=category,
-        limit=posts_per_page,
-        offset=offset
-    )
-    
-    # Get total count
-    all_posts = await blog_service.get_posts(category=category)
-    total_posts = len(all_posts)
-    total_pages = (total_posts + posts_per_page - 1) // posts_per_page if total_posts > 0 else 1
     
     # Get featured post
-    featured = await blog_service.get_featured_posts(limit=1)
-    featured_post = featured[0] if featured else None
+    featured = supabase.table("blog_posts")\
+        .select("*, users(full_name, avatar_url)")\
+        .eq("is_published", True)\
+        .eq("is_featured", True)\
+        .order("published_at", desc=True)\
+        .limit(1)\
+        .execute()
     
-    # Get categories with counts
-    categories = await blog_service.get_categories()
+    featured_post = featured.data[0] if featured.data else None
     
-    # Get recent posts for sidebar
-    recent_posts = await blog_service.get_recent_posts(limit=5)
+    # Get posts with pagination
+    limit = 9
+    offset = (page - 1) * limit
+    
+    query = supabase.table("blog_posts")\
+        .select("*, users(full_name, avatar_url)", count="exact")\
+        .eq("is_published", True)
+    
+    if category:
+        query = query.eq("category", category)
+    
+    if search:
+        query = query.or_(f"title.ilike.%{search}%,excerpt.ilike.%{search}%")
+    
+    count_result = query.execute()
+    total = count_result.count if hasattr(count_result, 'count') else 0
+    
+    posts = query.order("published_at", desc=True)\
+        .range(offset, offset + limit - 1)\
+        .execute()
+    
+    total_pages = (total + limit - 1) // limit if total > 0 else 1
     
     return templates.TemplateResponse(
         "blog.html",
         {
             "request": request,
             "current_user": current_user,
-            "posts": posts,
             "featured_post": featured_post,
-            "categories": categories,
-            "recent_posts": recent_posts,
+            "posts": posts.data,
             "selected_category": category,
             "search_query": search,
             "page": page,
             "total_pages": total_pages,
-            "total_posts": total_posts,
-            "title": "Blog" + (f" - {category}" if category else "")
+            "title": "Blog"
         }
     )
 
@@ -1023,39 +1028,58 @@ async def blog_post_detail(
     templates: Jinja2Templates = Depends(get_templates),
     current_user: Optional[dict] = Depends(get_current_user_from_cookie)
 ):
-    """Individual blog post page"""
+    """Blog post detail page"""
     supabase = get_supabase_client()
-    blog_service = BlogService(supabase)
     
-    post = await blog_service.get_post_by_slug(slug)
+    # Fetch the post
+    result = supabase.table("blog_posts")\
+        .select("*, users(full_name, avatar_url)")\
+        .eq("slug", slug)\
+        .eq("is_published", True)\
+        .execute()
     
-    if not post:
+    if not result.data:
         return templates.TemplateResponse(
             "404.html",
-            {
-                "request": request,
-                "current_user": current_user,
-                "title": "Post Not Found"
-            },
+            {"request": request, "title": "Post Not Found"},
             status_code=404
         )
     
-    # Get related posts (same category)
-    related = await blog_service.get_posts(
-        category=post.get("category"),
-        limit=3
-    )
-    # Remove current post from related
-    related = [p for p in related if p["slug"] != slug][:3]
+    post = result.data[0]
+    
+    # Get comments
+    comments = supabase.table("blog_comments")\
+        .select("*, users(full_name, avatar_url)")\
+        .eq("post_id", post["id"])\
+        .eq("is_approved", True)\
+        .order("created_at", desc=True)\
+        .execute()
+    
+    post["comments"] = comments.data
     
     return templates.TemplateResponse(
-        "blog_post.html",
+        "blog_detail.html",
         {
             "request": request,
             "current_user": current_user,
             "post": post,
-            "related_posts": related,
             "title": post["title"]
+        }
+    )
+
+@web_router.get("/admin/blog/create", response_class=HTMLResponse)
+async def create_blog_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_admin_or_instructor)
+):
+    """Create blog post page (admin/instructor only)"""
+    return templates.TemplateResponse(
+        "admin/create_blog.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Create Blog Post"
         }
     )
 
