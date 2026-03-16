@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Tutorial Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                {% if tutorial.thumbnail_url %}
+                <img src="{{ tutorial.thumbnail_url }}" class="card-img-top" alt="{{ tutorial.title }}" style="height: 400px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h1 class="display-5 fw-bold text-primary mb-3">{{ tutorial.title }}</h1>
+                            <p class="lead text-muted mb-4">{{ tutorial.description }}</p>
+                            
+                            <div class="d-flex flex-wrap gap-3 mb-4">
+                                <span class="badge bg-primary py-2 px-3">
+                                    <i class="fas fa-tag me-2"></i>{{ tutorial.topic }}
+                                </span>
+                                <span class="badge bg-info py-2 px-3">
+                                    <i class="fas fa-signal me-2"></i>{{ tutorial.difficulty|capitalize }}
+                                </span>
+                                <span class="badge bg-success py-2 px-3">
+                                    <i class="fas fa-clock me-2"></i>{{ tutorial.duration }} min
+                                </span>
+                                <span class="badge bg-warning py-2 px-3">
+                                    <i class="fas fa-eye me-2"></i>{{ tutorial.view_count }} views
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ tutorial.users.avatar_url or 'https://ui-avatars.com/api/?name=' + tutorial.users.full_name|urlencode }}" 
+                                     class="rounded-circle me-3" width="50" height="50" alt="{{ tutorial.users.full_name }}">
+                                <div>
+                                    <h6 class="fw-bold mb-1">Instructor: {{ tutorial.users.full_name }}</h6>
+                                    <p class="text-muted small mb-0">{{ tutorial.users.bio or 'Instructor' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body p-4">
+                                    <h5 class="fw-bold mb-3">Start Learning</h5>
+                                    
+                                    {% if tutorial.video_url %}
+                                    <a href="{{ tutorial.video_url }}" target="_blank" class="btn btn-primary w-100 mb-3">
+                                        <i class="fas fa-play-circle me-2"></i>Watch Video
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if tutorial.file_url %}
+                                    <a href="{{ tutorial.file_url }}" class="btn btn-success w-100 mb-3" download>
+                                        <i class="fas fa-download me-2"></i>Download Materials
+                                    </a>
+                                    {% endif %}
+                                    
+                                    <hr>
+                                    
+                                    <div class="text-center">
+                                        <p class="text-muted small mb-0">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Published: {{ tutorial.created_at[:10] }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tutorial Content -->
+    {% if tutorial.content %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-4">Tutorial Content</h4>
+                    <div class="tutorial-content">
+                        {{ tutorial.content|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+<!-- Video Player with platform detection -->
+{% if tutorial.video_url %}
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent">
+                <h4 class="fw-bold mb-0">Video Tutorial</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="ratio ratio-16x9">
+                    {% if 'youtube.com' in tutorial.video_url or 'youtu.be' in tutorial.video_url %}
+                        <!-- YouTube embed -->
+                        {% set video_id = tutorial.video_url.split('v=')[1] if 'v=' in tutorial.video_url else tutorial.video_url.split('/')[-1] %}
+                        <iframe src="https://www.youtube.com/embed/{{ video_id }}" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                        </iframe>
+                    {% elif 'vimeo.com' in tutorial.video_url %}
+                        <!-- Vimeo embed -->
+                        {% set video_id = tutorial.video_url.split('/')[-1] %}
+                        <iframe src="https://player.vimeo.com/video/{{ video_id }}" 
+                                frameborder="0" 
+                                allow="autoplay; fullscreen; picture-in-picture" 
+                                allowfullscreen>
+                        </iframe>
+                    {% else %}
+                        <!-- Direct video file -->
+                        <video controls class="w-100">
+                            <source src="{{ tutorial.video_url }}" type="video/mp4">
+                            <source src="{{ tutorial.video_url }}" type="video/webm">
+                            <source src="{{ tutorial.video_url }}" type="video/ogg">
+                            Your browser does not support the video tag.
+                            <a href="{{ tutorial.video_url }}" target="_blank">Download video</a>
+                        </video>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent text-center">
+                <a href="{{ tutorial.video_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-2"></i>Open Video in New Tab
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+    
+    <!-- Related Tutorials -->
+    {% if related_tutorials %}
+    <div class="row">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4">Related Tutorials</h3>
+        </div>
+        {% for related in related_tutorials %}
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm hover-lift">
+                <div class="position-relative">
+                    <img src="{{ related.thumbnail_url or 'https://images.unsplash.com/photo-1526379095098-400a3a1c9e9b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' }}" 
+                         class="card-img-top" alt="{{ related.title }}" style="height: 150px; object-fit: cover;">
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ related.title }}</h5>
+                    <p class="card-text small text-muted">{{ related.description[:100] }}...</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-{{ 'success' if related.difficulty == 'beginner' else 'warning' if related.difficulty == 'intermediate' else 'danger' }}">
+                            {{ related.difficulty|capitalize }}
+                        </span>
+                        <a href="/tutorials/{{ related.id }}" class="btn btn-sm btn-outline-primary">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.tutorial-content {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.tutorial-content h1,
+.tutorial-content h2,
+.tutorial-content h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.tutorial-content p {
+    margin-bottom: 1.5rem;
+}
+
+.tutorial-content pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+}
+
+.tutorial-content code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.tutorial-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+}
+
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+</style>
+{% endblock %}

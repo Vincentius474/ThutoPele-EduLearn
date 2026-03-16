@@ -1374,6 +1374,58 @@ async def settings_page(
         }
     )
 
+# ==================== Tutorials =========================
+
+@web_router.get("/tutorials/{tutorial_id}", response_class=HTMLResponse)
+async def tutorial_detail(
+    request: Request,
+    tutorial_id: str,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_from_cookie)
+):
+    """Tutorial detail page"""
+    supabase = get_supabase_client()
+    
+    # Get tutorial details
+    tutorial_result = supabase.table("tutorials")\
+        .select("*, users(full_name, avatar_url, bio)")\
+        .eq("id", tutorial_id)\
+        .execute()
+    
+    if not tutorial_result.data:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "title": "Tutorial Not Found"},
+            status_code=404
+        )
+    
+    tutorial = tutorial_result.data[0]
+    
+    # Increment view count
+    supabase.table("tutorials")\
+        .update({"view_count": tutorial["view_count"] + 1})\
+        .eq("id", tutorial_id)\
+        .execute()
+    
+    # Get related tutorials (same category/difficulty)
+    related = supabase.table("tutorials")\
+        .select("*")\
+        .eq("category", tutorial["category"])\
+        .neq("id", tutorial_id)\
+        .limit(3)\
+        .execute()
+    
+    return templates.TemplateResponse(
+        "tutorial_detail.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "tutorial": tutorial,
+            "related_tutorials": related.data or [],
+            "title": tutorial["title"]
+        }
+    )
+
 # ==================== ERROR HANDLERS ====================
 
 @web_router.get("/404", response_class=HTMLResponse)
