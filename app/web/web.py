@@ -459,126 +459,6 @@ async def courses_list(
         }
     )
 
-
-# @web_router.get("/courses/{course_id}", response_class=HTMLResponse)
-# async def course_detail(
-#     request: Request,
-#     course_id: str,
-#     templates: Jinja2Templates = Depends(get_templates),
-#     current_user: Optional[dict] = Depends(get_current_user_from_cookie)
-# ):
-#     """Course detail page"""
-#     supabase = get_supabase_client()
-    
-#     # Get course details with instructor info
-#     course_result = supabase.table("courses")\
-#         .select("*")\
-#         .eq("id", course_id)\
-#         .execute()
-    
-#     if not course_result.data:
-#         return templates.TemplateResponse(
-#             "404.html",
-#             {"request": request, "title": "Course Not Found"},
-#             status_code=404
-#         )
-    
-#     course = course_result.data[0]
-    
-#     # Get instructor details
-#     instructor = supabase.table("users")\
-#         .select("id, email, full_name, avatar_url, bio")\
-#         .eq("id", course["instructor_id"])\
-#         .execute()
-    
-#     course["instructor"] = instructor.data[0] if instructor.data else {"full_name": "Unknown"}
-    
-#     # Get course materials
-#     materials = supabase.table("course_materials")\
-#         .select("*")\
-#         .eq("course_id", course_id)\
-#         .order("order_index")\
-#         .execute()
-    
-#     # Get reviews
-#     reviews = supabase.table("reviews")\
-#         .select("*, users(full_name, avatar_url)")\
-#         .eq("course_id", course_id)\
-#         .order("created_at", desc=True)\
-#         .execute()
-    
-#     # Check enrollment status
-#     is_enrolled = False
-#     progress = 0
-#     completed_lessons = 0
-#     total_lessons = len(materials.data)
-#     has_reviewed = False
-    
-#     if current_user:
-#         # Check enrollment
-#         enrollment = supabase.table("enrollments")\
-#             .select("*")\
-#             .eq("user_id", current_user["id"])\
-#             .eq("course_id", course_id)\
-#             .execute()
-        
-#         if enrollment.data:
-#             is_enrolled = True
-#             progress = enrollment.data[0].get("progress", 0)
-            
-#             # Check if user has reviewed
-#             review_check = supabase.table("reviews")\
-#                 .select("id")\
-#                 .eq("user_id", current_user["id"])\
-#                 .eq("course_id", course_id)\
-#                 .execute()
-            
-#             has_reviewed = bool(review_check.data)
-            
-#             # Get completed lessons count
-#             if materials.data:
-#                 material_ids = [m["id"] for m in materials.data]
-#                 completed = supabase.table("lesson_progress")\
-#                     .select("id", count="exact")\
-#                     .eq("user_id", current_user["id"])\
-#                     .in_("lesson_id", material_ids)\
-#                     .execute()
-                
-#                 completed_lessons = completed.count if hasattr(completed, 'count') else 0
-    
-#     # Mark materials as completed for enrolled students
-#     if is_enrolled and materials.data:
-#         for material in materials.data:
-#             material["completed"] = False
-        
-#         if completed_lessons > 0:
-#             completed_ids = supabase.table("lesson_progress")\
-#                 .select("lesson_id")\
-#                 .eq("user_id", current_user["id"])\
-#                 .execute()
-            
-#             completed_set = {item["lesson_id"] for item in completed_ids.data}
-#             for material in materials.data:
-#                 if material["id"] in completed_set:
-#                     material["completed"] = True
-    
-#     return templates.TemplateResponse(
-#         "courses/detail.html",
-#         {
-#             "request": request,
-#             "current_user": current_user,
-#             "course": course,
-#             "materials": materials.data or [],
-#             "reviews": reviews.data or [],
-#             "is_enrolled": is_enrolled,
-#             "progress": progress,
-#             "completed_lessons": completed_lessons,
-#             "total_lessons": total_lessons,
-#             "has_reviewed": has_reviewed,
-#             "title": course["title"]
-#         }
-#     )
-
 @web_router.get("/courses/{course_id}", response_class=HTMLResponse)
 async def course_detail(
     request: Request,
@@ -1447,6 +1327,24 @@ async def tutorial_detail(
             "tutorial": tutorial,
             "related_tutorials": related.data or [],
             "title": tutorial["title"]
+        }
+    )
+
+# =================== Events =============================
+
+@web_router.get("/events", response_class=HTMLResponse)
+async def events_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: Optional[dict] = Depends(get_current_user_from_cookie)
+):
+    """Events page"""
+    return templates.TemplateResponse(
+        "events.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Events & Webinars"
         }
     )
 
