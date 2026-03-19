@@ -1,4 +1,4 @@
-// contact.js - Contact form functionality (simplified version)
+// contact.js - Contact form functionality
 
 console.log('contact.js loaded successfully');
 
@@ -10,21 +10,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
-            console.log('Form submitted');
+            console.log('Form submitted - event fired');
             e.preventDefault();
             
             // Get form data
-            const formData = {
-                name: document.getElementById('name')?.value || '',
-                email: document.getElementById('email')?.value || '',
-                subject: document.getElementById('subject')?.value || '',
-                message: document.getElementById('message')?.value || ''
-            };
+            const name = document.getElementById('name')?.value || '';
+            const email = document.getElementById('email')?.value || '';
+            const subject = document.getElementById('subject')?.value || '';
+            const message = document.getElementById('message')?.value || '';
             
+            const formData = { name, email, subject, message };
             console.log('Form data:', formData);
             
             // Simple validation
-            if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+            if (!name || !email || !subject || !message) {
                 alert('Please fill in all fields');
                 return;
             }
@@ -53,24 +52,55 @@ document.addEventListener('DOMContentLoaded', function() {
             if (successAlert) successAlert.classList.add('d-none');
             if (errorAlert) errorAlert.classList.add('d-none');
             
-            // Simulate API call with timeout
-            setTimeout(() => {
-                // Show success message (for testing)
-                if (successAlert) {
-                    document.getElementById('successMessage').textContent = 'Test: Form would submit successfully!';
-                    successAlert.classList.remove('d-none');
-                }
+            // Determine the correct URL
+            const apiUrl = '/api/v1/contact';
+            console.log('Fetching URL:', apiUrl);
+            
+            // Make the API call
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
                 
+                if (data.success) {
+                    // Show success message
+                    if (successAlert) {
+                        document.getElementById('successMessage').textContent = data.message || 'Thank you for your message!';
+                        successAlert.classList.remove('d-none');
+                    }
+                    
+                    // Reset form
+                    document.getElementById('contactForm').reset();
+                } else {
+                    // Show error message
+                    if (errorAlert) {
+                        document.getElementById('errorMessage').textContent = data.detail || 'An error occurred';
+                        errorAlert.classList.remove('d-none');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                if (errorAlert) {
+                    document.getElementById('errorMessage').textContent = 'Network error. Please try again.';
+                    errorAlert.classList.remove('d-none');
+                }
+            })
+            .finally(() => {
                 // Reset button
                 submitBtn.disabled = false;
                 spinner.classList.add('d-none');
                 submitText.innerHTML = originalText;
-                
-                // Reset form
-                document.getElementById('contactForm').reset();
-                
-                console.log('Form test complete');
-            }, 2000);
+            });
         });
     } else {
         console.error('Contact form not found in the DOM');
