@@ -1,9 +1,21 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom border-2 border-primary shadow-sm">
   <div class="container-fluid">
     <!-- Brand -->
-    <a class="navbar-brand custom-brand-font fw-bold text-primary" href="/">
+    <!-- <a class="navbar-brand custom-brand-font fw-bold text-primary" href="/">
       <i class="fas fa-graduation-cap me-2"></i>ThutoPele EduLearn
-    </a>
+    </a> -->
+<a class="navbar-brand" href="/">
+    <!-- Desktop logo -->
+    <img src="{{ url_for('static', path='/images/tp_logo.png') }}" 
+         alt="ThutoPele EduLearn" 
+         height="50" 
+         class="d-none d-md-inline-block align-top">
+    <!-- Mobile logo (smaller) -->
+    <img src="{{ url_for('static', path='/images/tp_logo.png') }}" 
+         alt="ThutoPele EduLearn" 
+         height="40" 
+         class="d-inline-block d-md-none align-top">
+</a>
     
     <!-- Toggler -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
