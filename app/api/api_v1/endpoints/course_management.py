@@ -83,6 +83,53 @@ async def create_material(
             detail=f"Error creating material: {str(e)}"
         )
 
+
+@router.get("/courses/materials/{material_id}")
+async def get_material(
+    material_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get a single material by ID
+    """
+    try:
+        result = service.supabase.table("course_materials")\
+            .select("*")\
+            .eq("id", material_id)\
+            .execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Material not found"
+            )
+        
+        material = result.data[0]
+        
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", material["course_id"])\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to view this material"
+            )
+        
+        return material
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting material: {str(e)}"
+        )
+
+
 @router.get("/courses/{course_id}/materials")
 async def get_materials(
     course_id: str,
@@ -128,16 +175,29 @@ async def update_material(
             detail=f"Error updating material: {str(e)}"
         )
 
-@router.delete("/courses/materials/{material_id}")
+@router.delete("/courses/{course_id}/materials/{material_id}")
 async def delete_material(
+    course_id: str,
     material_id: str,
     service: CourseManagementService = Depends(get_management_service),
     instructor: dict = Depends(get_current_instructor)
 ) -> Any:
     """
-    Delete course material
+    Delete a course material
     """
     try:
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", course_id)\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete materials from this course"
+            )
+        
         deleted = await service.delete_material(material_id)
         
         if not deleted:
@@ -147,6 +207,9 @@ async def delete_material(
             )
         
         return {"message": "Material deleted successfully"}
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -236,6 +299,205 @@ async def get_quiz(
             detail=f"Error getting quiz: {str(e)}"
         )
 
+@router.get("/courses/quizzes/{quiz_id}/edit")
+async def get_quiz_for_edit(
+    quiz_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get quiz details for editing
+    """
+    try:
+        # Get quiz with questions
+        quiz = await service.get_quiz(quiz_id)
+        
+        if not quiz:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quiz not found"
+            )
+        
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", quiz["course_id"])\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to edit this quiz"
+            )
+        
+        return quiz
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting quiz: {str(e)}"
+        )
+
+@router.put("/courses/quizzes/{quiz_id}")
+async def update_quiz(
+    quiz_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Update a quiz
+    """
+    try:
+        data = await request.json()
+        
+        # Get existing quiz to verify ownership
+        existing = service.supabase.table("quizzes")\
+            .select("course_id, material_id")\
+            .eq("id", quiz_id)\
+            .execute()
+        
+        if not existing.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quiz not found"
+            )
+        
+        course_id = existing.data[0]["course_id"]
+        material_id = existing.data[0].get("material_id")
+        
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", course_id)\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this quiz"
+            )
+        
+        # Update quiz
+        update_data = {
+            "title": data.get("title"),
+            "description": data.get("description", ""),
+            "time_limit": data.get("time_limit", 30),
+            "passing_score": data.get("passing_score", 70),
+            "updated_at": "now()"
+        }
+        
+        # Remove None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        result = service.supabase.table("quizzes")\
+            .update(update_data)\
+            .eq("id", quiz_id)\
+            .execute()
+        
+        # Update associated material
+        if material_id:
+            service.supabase.table("course_materials")\
+                .update({
+                    "title": data.get("title"),
+                    "description": data.get("description", ""),
+                    "updated_at": "now()"
+                })\
+                .eq("id", material_id)\
+                .execute()
+        
+        # Update questions if provided
+        questions = data.get("questions", [])
+        if questions:
+            # Delete existing questions
+            service.supabase.table("quiz_questions")\
+                .delete()\
+                .eq("quiz_id", quiz_id)\
+                .execute()
+            
+            # Insert updated questions
+            for idx, q in enumerate(questions):
+                question_data = {
+                    "quiz_id": quiz_id,
+                    "question": q.get("question"),
+                    "question_type": q.get("question_type", "multiple_choice"),
+                    "options": q.get("options", []),
+                    "correct_answer": q.get("correct_answer"),
+                    "points": q.get("points", 1),
+                    "order_index": idx
+                }
+                service.supabase.table("quiz_questions").insert(question_data).execute()
+        
+        return result.data[0] if result.data else None
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating quiz: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating quiz: {str(e)}"
+        )
+
+@router.delete("/courses/quizzes/{quiz_id}")
+async def delete_quiz(
+    quiz_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Delete a quiz
+    """
+    try:
+        # Get quiz to get course_id for verification
+        quiz = service.supabase.table("quizzes")\
+            .select("course_id, material_id")\
+            .eq("id", quiz_id)\
+            .execute()
+        
+        if not quiz.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quiz not found"
+            )
+        
+        course_id = quiz.data[0]["course_id"]
+        material_id = quiz.data[0].get("material_id")
+        
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", course_id)\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this quiz"
+            )
+        
+        # Delete associated material first
+        if material_id:
+            await service.delete_material(material_id)
+        
+        # Delete quiz (questions will cascade delete)
+        result = service.supabase.table("quizzes")\
+            .delete()\
+            .eq("id", quiz_id)\
+            .execute()
+        
+        return {"message": "Quiz deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting quiz: {str(e)}"
+        )
+
 # ==================== ASSIGNMENTS ====================
 
 @router.post("/courses/{course_id}/assignments")
@@ -310,6 +572,186 @@ async def get_submissions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting submissions: {str(e)}"
+        )
+
+@router.get("/courses/assignments/{assignment_id}/edit")
+async def get_assignment_for_edit(
+    assignment_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Get assignment details for editing
+    """
+    try:
+        result = service.supabase.table("assignments")\
+            .select("*")\
+            .eq("id", assignment_id)\
+            .execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Assignment not found"
+            )
+        
+        assignment = result.data[0]
+        
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", assignment["course_id"])\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to edit this assignment"
+            )
+        
+        return assignment
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting assignment: {str(e)}"
+        )
+
+@router.put("/courses/assignments/{assignment_id}")
+async def update_assignment(
+    assignment_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Update an assignment
+    """
+    try:
+        data = await request.json()
+        
+        # Get existing assignment to verify ownership
+        existing = service.supabase.table("assignments")\
+            .select("course_id, material_id")\
+            .eq("id", assignment_id)\
+            .execute()
+        
+        if not existing.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Assignment not found"
+            )
+        
+        course_id = existing.data[0]["course_id"]
+        material_id = existing.data[0].get("material_id")
+        
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", course_id)\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this assignment"
+            )
+        
+        # Update assignment
+        update_data = {
+            "title": data.get("title"),
+            "description": data.get("description"),
+            "due_date": data.get("due_date"),
+            "total_points": data.get("total_points", 100),
+            "submission_type": data.get("submission_type", "file"),
+            "updated_at": "now()"
+        }
+        
+        # Remove None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        result = service.supabase.table("assignments")\
+            .update(update_data)\
+            .eq("id", assignment_id)\
+            .execute()
+        
+        # Update associated material
+        if material_id:
+            service.supabase.table("course_materials")\
+                .update({
+                    "title": data.get("title"),
+                    "description": data.get("description"),
+                    "updated_at": "now()"
+                })\
+                .eq("id", material_id)\
+                .execute()
+        
+        return result.data[0] if result.data else None
+        
+    except Exception as e:
+        print(f"Error updating assignment: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating assignment: {str(e)}"
+        )
+
+@router.delete("/courses/assignments/{assignment_id}")
+async def delete_assignment(
+    assignment_id: str,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Delete an assignment
+    """
+    try:
+        # Get assignment to get course_id for verification
+        assignment = service.supabase.table("assignments")\
+            .select("course_id, material_id")\
+            .eq("id", assignment_id)\
+            .execute()
+        
+        if not assignment.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Assignment not found"
+            )
+        
+        course_id = assignment.data[0]["course_id"]
+        material_id = assignment.data[0].get("material_id")
+        
+        # Verify instructor owns this course
+        course_check = service.supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", course_id)\
+            .execute()
+        
+        if not course_check.data or course_check.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this assignment"
+            )
+        
+        # Delete associated material first
+        if material_id:
+            await service.delete_material(material_id)
+        
+        # Delete assignment
+        result = service.supabase.table("assignments")\
+            .delete()\
+            .eq("id", assignment_id)\
+            .execute()
+        
+        return {"message": "Assignment deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting assignment: {str(e)}"
         )
 
 @router.post("/courses/submissions/{submission_id}/grade")
@@ -425,6 +867,69 @@ async def get_announcements(
             detail=f"Error getting announcements: {str(e)}"
         )
 
+@router.put("/courses/announcements/{announcement_id}")
+async def update_announcement(
+    announcement_id: str,
+    request: Request,
+    service: CourseManagementService = Depends(get_management_service),
+    instructor: dict = Depends(get_current_instructor)
+) -> Any:
+    """
+    Update an announcement
+    """
+    try:
+        data = await request.json()
+        
+        # Get existing announcement to verify ownership
+        existing = service.supabase.table("announcements")\
+            .select("instructor_id")\
+            .eq("id", announcement_id)\
+            .execute()
+        
+        if not existing.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Announcement not found"
+            )
+        
+        if existing.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this announcement"
+            )
+        
+        update_data = {
+            "title": data.get("title"),
+            "content": data.get("content"),
+            "is_important": data.get("is_important", False),
+            "updated_at": "now()"
+        }
+        
+        # Remove None values
+        update_data = {k: v for k, v in update_data.items() if v is not None}
+        
+        result = service.supabase.table("announcements")\
+            .update(update_data)\
+            .eq("id", announcement_id)\
+            .execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Announcement not found"
+            )
+        
+        return result.data[0]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating announcement: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating announcement: {str(e)}"
+        )
+
 @router.delete("/courses/announcements/{announcement_id}")
 async def delete_announcement(
     announcement_id: str,
@@ -435,15 +940,33 @@ async def delete_announcement(
     Delete an announcement
     """
     try:
-        deleted = await service.delete_announcement(announcement_id)
+        # Get announcement to verify ownership
+        existing = service.supabase.table("announcements")\
+            .select("instructor_id")\
+            .eq("id", announcement_id)\
+            .execute()
         
-        if not deleted:
+        if not existing.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Announcement not found"
             )
         
+        if existing.data[0]["instructor_id"] != instructor["id"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this announcement"
+            )
+        
+        result = service.supabase.table("announcements")\
+            .delete()\
+            .eq("id", announcement_id)\
+            .execute()
+        
         return {"message": "Announcement deleted successfully"}
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

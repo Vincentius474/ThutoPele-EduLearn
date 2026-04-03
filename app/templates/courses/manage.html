@@ -74,33 +74,35 @@
                 <div class="card-body">
                     <div class="row" id="materialsList">
                         {% for material in materials %}
-                        <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="card h-100 border-0 shadow-sm material-card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <i class="fas fa-{{ 'video' if material.material_type == 'video' else 'file-pdf' if material.material_type == 'document' else 'link' if material.material_type == 'link' else 'file' }} fa-2x text-primary me-2"></i>
-                                        <h6 class="fw-bold mb-0">{{ material.title }}</h6>
-                                    </div>
-                                    <p class="small text-muted">{{ material.description[:80] if material.description else 'No description' }}...</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-info">{{ material.material_type }}</span>
-                                        <div>
-                                            <button class="btn btn-sm btn-outline-primary" onclick="editMaterial('{{ material.id }}')">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteMaterial('{{ material.id }}')">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                            {% if material.material_type not in ['quiz', 'assignment'] %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-0 shadow-sm material-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-{{ 'video' if material.material_type == 'video' else 'file-pdf' if material.material_type == 'document' else 'link' if material.material_type == 'link' else 'file' }} fa-2x text-primary me-2"></i>
+                                            <h6 class="fw-bold mb-0">{{ material.title }}</h6>
+                                        </div>
+                                        <p class="small text-muted">{{ material.description[:80] if material.description else 'No description' }}...</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-info">{{ material.material_type }}</span>
+                                            <div>
+                                                <button class="btn btn-sm btn-outline-primary" onclick="editMaterial('{{ material.id }}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteMaterial('{{ material.id }}')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                            {% endif %}
                         {% else %}
                         <div class="col-12 text-center py-5">
                             <i class="fas fa-file fa-4x text-muted mb-3"></i>
                             <h5>No Materials Yet</h5>
-                            <p class="text-muted">Add your first course material</p>
+                            <p class="text-muted">Add your first course material (videos, documents, links, or files)</p>
                         </div>
                         {% endfor %}
                     </div>
@@ -130,6 +132,9 @@
                                         <div>
                                             <button class="btn btn-sm btn-outline-primary" onclick="editQuiz('{{ quiz.id }}')">
                                                 <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteQuiz('{{ quiz.id }}')">
+                                                <i class="fas fa-trash"></i>
                                             </button>
                                             <button class="btn btn-sm btn-outline-info" onclick="viewQuizResults('{{ quiz.id }}')">
                                                 <i class="fas fa-chart-bar"></i>
@@ -174,6 +179,9 @@
                                             <button class="btn btn-sm btn-outline-primary" onclick="editAssignment('{{ assignment.id }}')">
                                                 <i class="fas fa-edit"></i>
                                             </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteAssignment('{{ assignment.id }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                             <button class="btn btn-sm btn-outline-success" onclick="gradeAssignment('{{ assignment.id }}')">
                                                 <i class="fas fa-check-circle"></i> Grade
                                             </button>
@@ -206,17 +214,22 @@
                 <div class="card-body">
                     <div class="list-group" id="announcementsList">
                         {% for announcement in announcements %}
-                        <div class="list-group-item list-group-item-action">
+                        <div class="list-group-item list-group-item-action" id="announcement-{{ announcement.id }}">
                             <div class="d-flex justify-content-between">
-                                <h6 class="fw-bold">{{ announcement.title }}</h6>
+                                <h6 class="fw-bold announcement-title">{{ announcement.title }}</h6>
                                 <small class="text-muted">{{ announcement.created_at[:10] }}</small>
                             </div>
-                            <p class="mb-2">{{ announcement.content }}</p>
+                            <p class="mb-2 announcement-content">{{ announcement.content }}</p>
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">By: {{ announcement.users.full_name if announcement.users else 'Instructor' }}</small>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteAnnouncement('{{ announcement.id }}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editAnnouncement('{{ announcement.id }}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteAnnouncement('{{ announcement.id }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         {% else %}
@@ -459,6 +472,127 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="sendAnnouncement()">Post Announcement</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Quiz Modal -->
+<div class="modal fade" id="editQuizModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Edit Quiz</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editQuizForm">
+                    <input type="hidden" id="editQuizId">
+                    <div class="mb-3">
+                        <label class="form-label">Quiz Title</label>
+                        <input type="text" class="form-control" id="editQuizTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="editQuizDescription" rows="2"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Time Limit (minutes)</label>
+                            <input type="number" class="form-control" id="editQuizTimeLimit" value="30">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Passing Score (%)</label>
+                            <input type="number" class="form-control" id="editQuizPassingScore" value="70">
+                        </div>
+                    </div>
+                    <h6 class="fw-bold">Questions</h6>
+                    <div id="editQuestionsList"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuizEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Assignment Modal -->
+<div class="modal fade" id="editAssignmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Edit Assignment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAssignmentForm">
+                    <input type="hidden" id="editAssignmentId">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="editAssignmentTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="editAssignmentDescription" rows="4" required></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="editAssignmentDueDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Total Points</label>
+                            <input type="number" class="form-control" id="editAssignmentPoints" value="100">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Submission Type</label>
+                        <select class="form-select" id="editAssignmentSubmissionType">
+                            <option value="file">File Upload</option>
+                            <option value="text">Text Entry</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveAssignmentEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Announcement Modal -->
+<div class="modal fade" id="editAnnouncementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Edit Announcement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAnnouncementForm">
+                    <input type="hidden" id="editAnnouncementId">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="editAnnouncementTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-control" id="editAnnouncementContent" rows="4" required></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="editMarkImportant">
+                        <label class="form-check-label">Mark as important</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveAnnouncementEdit()">Save Changes</button>
             </div>
         </div>
     </div>
