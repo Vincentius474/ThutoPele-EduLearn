@@ -65,24 +65,69 @@ class CourseManagementService:
     async def create_quiz(self, course_id: str, quiz_data: Dict[str, Any], questions: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Create a quiz with questions"""
         try:
-            # First create the quiz
-            quiz_data["course_id"] = course_id
-            quiz_result = self.supabase.table("quizzes").insert(quiz_data).execute()
+            logger.info(f"Creating quiz for course: {course_id}")
+            
+            # First create a material entry for the quiz
+            material_data = {
+                "title": quiz_data.get("title"),
+                "description": quiz_data.get("description", ""),
+                "material_type": "quiz",
+                "course_id": course_id,
+                "is_published": True,
+                "order_index": 0
+            }
+            
+            material_result = self.supabase.table("course_materials").insert(material_data).execute()
+            
+            if not material_result.data:
+                logger.error("Failed to create material for quiz")
+                return None
+            
+            material = material_result.data[0]
+            logger.info(f"Material created: {material['id']}")
+            
+            # Now create the quiz
+            quiz_insert_data = {
+                "course_id": course_id,
+                "material_id": material["id"],
+                "title": quiz_data.get("title"),
+                "description": quiz_data.get("description", ""),
+                "time_limit": quiz_data.get("time_limit", 30),
+                "passing_score": quiz_data.get("passing_score", 70),
+                "attempts_allowed": quiz_data.get("attempts_allowed", 1)
+            }
+            
+            quiz_result = self.supabase.table("quizzes").insert(quiz_insert_data).execute()
             
             if not quiz_result.data:
+                logger.error("Failed to create quiz")
+                # Clean up the material
+                self.supabase.table("course_materials").delete().eq("id", material["id"]).execute()
                 return None
             
             quiz = quiz_result.data[0]
+            logger.info(f"Quiz created: {quiz['id']}")
             
             # Add questions
             for idx, q in enumerate(questions):
-                q["quiz_id"] = quiz["id"]
-                q["order_index"] = idx
-                self.supabase.table("quiz_questions").insert(q).execute()
+                question_data = {
+                    "quiz_id": quiz["id"],
+                    "question": q.get("question"),
+                    "question_type": q.get("question_type", "multiple_choice"),
+                    "options": q.get("options", []),
+                    "correct_answer": q.get("correct_answer"),
+                    "points": q.get("points", 1),
+                    "order_index": idx
+                }
+                self.supabase.table("quiz_questions").insert(question_data).execute()
+                logger.info(f"Question {idx + 1} added")
             
             return quiz
+            
         except Exception as e:
             logger.error(f"Error creating quiz: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     async def get_quiz(self, quiz_id: str) -> Optional[Dict[str, Any]]:
@@ -116,11 +161,53 @@ class CourseManagementService:
     async def create_assignment(self, course_id: str, assignment_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Create a new assignment"""
         try:
-            assignment_data["course_id"] = course_id
-            result = self.supabase.table("assignments").insert(assignment_data).execute()
-            return result.data[0] if result.data else None
+            logger.info(f"Creating assignment for course: {course_id}")
+            
+            # First create a material entry for the assignment
+            material_data = {
+                "title": assignment_data.get("title"),
+                "description": assignment_data.get("description", ""),
+                "material_type": "assignment",
+                "course_id": course_id,
+                "is_published": True,
+                "order_index": 0
+            }
+            
+            material_result = self.supabase.table("course_materials").insert(material_data).execute()
+            
+            if not material_result.data:
+                logger.error("Failed to create material for assignment")
+                return None
+            
+            material = material_result.data[0]
+            logger.info(f"Material created: {material['id']}")
+            
+            # Now create the assignment
+            assignment_insert_data = {
+                "course_id": course_id,
+                "material_id": material["id"],
+                "title": assignment_data.get("title"),
+                "description": assignment_data.get("description", ""),
+                "due_date": assignment_data.get("due_date"),
+                "total_points": assignment_data.get("total_points", 100),
+                "submission_type": assignment_data.get("submission_type", "file")
+            }
+            
+            result = self.supabase.table("assignments").insert(assignment_insert_data).execute()
+            
+            if not result.data:
+                logger.error("Failed to create assignment")
+                # Clean up the material
+                self.supabase.table("course_materials").delete().eq("id", material["id"]).execute()
+                return None
+            
+            logger.info(f"Assignment created: {result.data[0]['id']}")
+            return result.data[0]
+            
         except Exception as e:
             logger.error(f"Error creating assignment: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     async def get_submissions(self, assignment_id: str) -> List[Dict[str, Any]]:
@@ -157,12 +244,30 @@ class CourseManagementService:
     async def create_announcement(self, course_id: str, instructor_id: str, announcement_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Create a course announcement"""
         try:
-            announcement_data["course_id"] = course_id
-            announcement_data["instructor_id"] = instructor_id
-            result = self.supabase.table("announcements").insert(announcement_data).execute()
-            return result.data[0] if result.data else None
+            logger.info(f"Creating announcement for course: {course_id}")
+            
+            announcement_insert_data = {
+                "course_id": course_id,
+                "instructor_id": instructor_id,
+                "title": announcement_data.get("title"),
+                "content": announcement_data.get("content"),
+                "is_important": announcement_data.get("is_important", False),
+                "send_email": announcement_data.get("send_email", False)
+            }
+            
+            result = self.supabase.table("announcements").insert(announcement_insert_data).execute()
+            
+            if not result.data:
+                logger.error("Failed to create announcement")
+                return None
+            
+            logger.info(f"Announcement created: {result.data[0]['id']}")
+            return result.data[0]
+            
         except Exception as e:
             logger.error(f"Error creating announcement: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     async def get_announcements(self, course_id: str) -> List[Dict[str, Any]]:
@@ -192,25 +297,13 @@ class CourseManagementService:
     
     # ==================== FILE UPLOAD ====================
     
-    # async def upload_file(self, course_id: str, file, file_type: str) -> Optional[str]:
-    #     """Upload a file to course materials storage"""
-    #     try:
-    #         file_content = await file.read()
-    #         file_path = f"{course_id}/{file_type}/{file.filename}"
-            
-    #         storage = self.supabase.storage.from_("course-materials")
-    #         storage.upload(file_path, file_content)
-            
-    #         return storage.get_public_url(file_path)
-    #     except Exception as e:
-    #         logger.error(f"Error uploading file: {e}")
-    #         return None
-
-    # In app/services/course_management_service.py, update the upload_file method:
-
     async def upload_file(self, course_id: str, file: UploadFile, file_type: str) -> Optional[str]:
-        """Upload a file to course materials storage using StorageService"""
-        from app.services.storage_service import StorageService
-        
-        storage_service = StorageService(self.supabase)
-        return await storage_service.upload_course_material(course_id, file, file_type)
+        """Upload a file to course materials storage"""
+        try:
+            from app.services.storage_service import StorageService
+            
+            storage_service = StorageService(self.supabase)
+            return await storage_service.upload_course_material(course_id, file, file_type)
+        except Exception as e:
+            logger.error(f"Error uploading file: {e}")
+            return None

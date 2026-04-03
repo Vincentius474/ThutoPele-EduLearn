@@ -77,6 +77,7 @@ async def create_material(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error creating material: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating material: {str(e)}"
@@ -166,6 +167,8 @@ async def create_quiz(
     """
     try:
         data = await request.json()
+        print(f"Received quiz data: {data}")
+        
         title = data.get("title")
         description = data.get("description", "")
         time_limit = data.get("time_limit", 30)
@@ -178,39 +181,18 @@ async def create_quiz(
                 detail="Title and questions are required"
             )
         
-        # First create material entry
-        material_data = {
-            "title": title,
-            "description": description,
-            "material_type": "quiz",
-            "course_id": course_id
-        }
-        
-        existing = await service.get_materials(course_id)
-        material_data["order_index"] = len(existing)
-        
-        material = await service.add_material(course_id, material_data)
-        
-        if not material:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create quiz material"
-            )
-        
-        # Create quiz
+        # Prepare quiz data for service (without material - service will create it)
         quiz_data = {
             "title": title,
             "description": description,
             "time_limit": time_limit,
-            "passing_score": passing_score,
-            "material_id": material["id"]
+            "passing_score": passing_score
         }
         
+        # Let the service handle both material and quiz creation
         quiz = await service.create_quiz(course_id, quiz_data, questions)
         
         if not quiz:
-            # Clean up material if quiz creation fails
-            await service.delete_material(material["id"])
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create quiz"
@@ -218,7 +200,12 @@ async def create_quiz(
         
         return quiz
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Error creating quiz: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating quiz: {str(e)}"
@@ -263,6 +250,8 @@ async def create_assignment(
     """
     try:
         data = await request.json()
+        print(f"Received assignment data: {data}")
+        
         title = data.get("title")
         description = data.get("description")
         due_date = data.get("due_date")
@@ -275,39 +264,18 @@ async def create_assignment(
                 detail="Title and description are required"
             )
         
-        # Create material entry
-        material_data = {
-            "title": title,
-            "description": description,
-            "material_type": "assignment",
-            "course_id": course_id
-        }
-        
-        existing = await service.get_materials(course_id)
-        material_data["order_index"] = len(existing)
-        
-        material = await service.add_material(course_id, material_data)
-        
-        if not material:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create assignment material"
-            )
-        
-        # Create assignment
+        # Prepare assignment data (service will create material)
         assignment_data = {
             "title": title,
             "description": description,
             "due_date": due_date,
             "total_points": total_points,
-            "submission_type": submission_type,
-            "material_id": material["id"]
+            "submission_type": submission_type
         }
         
         assignment = await service.create_assignment(course_id, assignment_data)
         
         if not assignment:
-            await service.delete_material(material["id"])
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create assignment"
@@ -315,7 +283,12 @@ async def create_assignment(
         
         return assignment
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Error creating assignment: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating assignment: {str(e)}"
@@ -389,6 +362,8 @@ async def create_announcement(
     """
     try:
         data = await request.json()
+        print(f"Received announcement data: {data}")
+        
         title = data.get("title")
         content = data.get("content")
         is_important = data.get("is_important", False)
@@ -419,20 +394,14 @@ async def create_announcement(
                 detail="Failed to create announcement"
             )
         
-        # If send_email is True, we would trigger email notifications here
-        if send_email:
-            # Get all enrolled students
-            students = service.supabase.table("enrollments")\
-                .select("users(email, full_name)")\
-                .eq("course_id", course_id)\
-                .execute()
-            
-            # TODO: Send emails (implement email service)
-            pass
-        
         return announcement
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Error creating announcement: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating announcement: {str(e)}"
@@ -570,6 +539,7 @@ async def get_course_management_data(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error getting course data: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting course data: {str(e)}"
