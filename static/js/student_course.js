@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = JSON.parse(courseData.textContent);
             courseId = data.course_id;
             userId = data.user_id;
+            console.log('Course ID:', courseId, 'User ID:', userId);
         } catch (e) {
             console.error('Error parsing course data:', e);
         }
@@ -39,6 +40,8 @@ function playVideo(videoUrl) {
 // ==================== MATERIAL FUNCTIONS ====================
 
 async function markMaterialComplete(materialId) {
+    console.log('Marking material complete:', materialId);
+    
     try {
         const response = await fetch(`/api/v1/courses/${courseId}/progress/${materialId}`, {
             method: 'POST',
@@ -47,12 +50,13 @@ async function markMaterialComplete(materialId) {
             }
         });
         
+        const data = await response.json();
+        
         if (response.ok) {
             showSuccess('Material marked as complete!');
             setTimeout(() => location.reload(), 1500);
         } else {
-            const error = await response.json();
-            showError(error.detail || 'Failed to mark material as complete');
+            showError(data.detail || 'Failed to mark material as complete');
         }
     } catch (error) {
         console.error('Error:', error);
@@ -85,13 +89,14 @@ async function submitAssignment() {
             body: formData
         });
         
+        const data = await response.json();
+        
         if (response.ok) {
             bootstrap.Modal.getInstance(document.getElementById('assignmentModal')).hide();
             showSuccess('Assignment submitted successfully!');
             setTimeout(() => location.reload(), 1500);
         } else {
-            const error = await response.json();
-            showError(error.detail || 'Failed to submit assignment');
+            showError(data.detail || 'Failed to submit assignment');
         }
     } catch (error) {
         console.error('Error:', error);
@@ -115,13 +120,13 @@ async function startQuiz(quizId) {
             questionsHtml += `
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h6 class="fw-bold mb-3">Question ${idx + 1}: ${q.question}</h6>
+                        <h6 class="fw-bold mb-3">Question ${idx + 1}: ${escapeHtml(q.question)}</h6>
                         <div class="ms-3">
                             ${q.question_type === 'multiple_choice' ? `
                                 ${q.options.map((opt, optIdx) => `
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="q_${q.id}" value="${opt}">
-                                        <label class="form-check-label">${opt}</label>
+                                        <input class="form-check-input" type="radio" name="q_${q.id}" value="${escapeHtml(opt)}">
+                                        <label class="form-check-label">${escapeHtml(opt)}</label>
                                     </div>
                                 `).join('')}
                             ` : q.question_type === 'true_false' ? `
@@ -179,15 +184,17 @@ async function submitQuiz() {
     
     // Collect answers
     const answers = [];
-    currentQuiz.questions.forEach(q => {
-        const selected = document.querySelector(`input[name="q_${q.id}"]:checked, textarea[name="q_${q.id}"]`);
-        if (selected) {
-            answers.push({
-                question_id: q.id,
-                answer: selected.value
-            });
-        }
-    });
+    if (currentQuiz && currentQuiz.questions) {
+        currentQuiz.questions.forEach(q => {
+            const selected = document.querySelector(`input[name="q_${q.id}"]:checked, textarea[name="q_${q.id}"]`);
+            if (selected) {
+                answers.push({
+                    question_id: q.id,
+                    answer: selected.value
+                });
+            }
+        });
+    }
     
     try {
         const response = await fetch(`/api/v1/courses/${courseId}/quizzes/${currentQuiz.id}/submit`, {
@@ -238,14 +245,15 @@ async function sendMessage(e) {
             })
         });
         
+        const data = await response.json();
+        
         if (response.ok) {
             document.getElementById('messageSubject').value = '';
             document.getElementById('messageContent').value = '';
             showSuccess('Message sent successfully!');
             setTimeout(() => location.reload(), 1500);
         } else {
-            const error = await response.json();
-            showError(error.detail || 'Failed to send message');
+            showError(data.detail || 'Failed to send message');
         }
     } catch (error) {
         console.error('Error sending message:', error);
@@ -255,12 +263,23 @@ async function sendMessage(e) {
 
 // ==================== HELPER FUNCTIONS ====================
 
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 function showSuccess(message) {
-    document.getElementById('successMessage').textContent = message;
-    new bootstrap.Modal(document.getElementById('successModal')).show();
+    const successModal = document.getElementById('successModal');
+    const successMessage = document.getElementById('successMessage');
+    if (successMessage) successMessage.textContent = message;
+    if (successModal) new bootstrap.Modal(successModal).show();
 }
 
 function showError(message) {
-    document.getElementById('errorMessage').textContent = message;
-    new bootstrap.Modal(document.getElementById('errorModal')).show();
+    const errorModal = document.getElementById('errorModal');
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) errorMessage.textContent = message;
+    if (errorModal) new bootstrap.Modal(errorModal).show();
 }

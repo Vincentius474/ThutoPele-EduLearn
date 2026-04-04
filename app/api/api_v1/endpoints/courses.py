@@ -884,3 +884,310 @@ async def debug_auth(
     except Exception as e:
         return {"error": str(e)}
 
+# ======================= PROGRESS & SUBMISSIONS =======================
+
+@router.post("/{course_id}/progress/{material_id}")
+async def mark_material_complete(
+    course_id: str,
+    material_id: str,
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_active_user)
+) -> Any:
+    """
+    Mark a course material as complete
+    """
+    try:
+        # Check if already marked
+        existing = supabase.table("lesson_progress")\
+            .select("*")\
+            .eq("user_id", current_user["id"])\
+            .eq("lesson_id", material_id)\
+            .execute()
+        
+        if existing.data:
+            return {"message": "Already marked as complete"}
+        
+        # Mark as complete
+        result = supabase.table("lesson_progress").insert({
+            "user_id": current_user["id"],
+            "lesson_id": material_id,
+            "completed": True,
+            "completed_at": "now()"
+        }).execute()
+        
+        # Update overall course progress
+        # Get total materials for this course
+        materials = supabase.table("course_materials")\
+            .select("id")\
+            .eq("course_id", course_id)\
+            .execute()
+        
+        total_materials = len(materials.data)
+        
+        # Get completed materials
+        completed = supabase.table("lesson_progress")\
+            .select("lesson_id")\
+            .eq("user_id", current_user["id"])\
+            .execute()
+        
+        completed_ids = [item["lesson_id"] for item in completed.data]
+        completed_count = len([m for m in materials.data if m["id"] in completed_ids])
+        
+        progress = int((completed_count / total_materials) * 100) if total_materials > 0 else 0
+        
+        # Update enrollment progress
+        supabase.table("enrollments")\
+            .update({"progress": progress})\
+            .eq("user_id", current_user["id"])\
+            .eq("course_id", course_id)\
+            .execute()
+        
+        return {"message": "Material marked as complete", "progress": progress}
+        
+    except Exception as e:
+        print(f"Error marking material complete: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error marking material complete: {str(e)}"
+        )
+
+@router.post("/{course_id}/assignments/{assignment_id}/submit")
+async def submit_assignment(
+    course_id: str,
+    assignment_id: str,
+    request: Request,
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_active_user)
+) -> Any:
+    """
+    Submit an assignment
+    """
+    try:
+        form = await request.form()
+        text = form.get("text", "")
+        file = form.get("file")
+        
+        submission_data = {
+            "assignment_id": assignment_id,
+            "user_id": current_user["id"],
+            "submitted_at": "now()"
+        }
+        
+        if text:
+            submission_data["submission_text"] = text
+        
+        if file and hasattr(file, "filename") and file.filename:
+            # Upload file to storage
+            from app.services.storage_service import StorageService
+            storage_service = StorageService(supabase)
+            file_url = await storage_service.upload_file(course_id, file, "submissions")
+            if file_url:
+                submission_data["file_url"] = file_url
+        
+        # Check if already submitted
+        existing = supabase.table("submissions")\
+            .select("*")\
+            .eq("assignment_id", assignment_id)\
+            .eq("user_id", current_user["id"])\
+            .execute()
+        
+        if existing.data:
+            # Update existing submission
+            result = supabase.table("submissions")\
+                .update(submission_data)\
+                .eq("id", existing.data[0]["id"])\
+                .execute()
+        else:
+            # Create new submission
+            result = supabase.table("submissions").insert(submission_data).execute()
+        
+        return {"message": "Assignment submitted successfully"}
+        
+    except Exception as e:
+        print(f"Error submitting assignment: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error submitting assignment: {str(e)}"
+        )
+
+@router.post("/{course_id}/quizzes/{quiz_id}/submit")
+async def submit_quiz(
+    course_id: str,
+    quiz_id: str,
+    request: Request,
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_active_user)
+) -> Any:
+    """
+    Submit a quiz and calculate score
+    """
+    try:
+        data = await request.json()
+        answers = data.get("answers", [])
+        
+        # Get quiz questions with correct answers
+        questions = supabase.table("quiz_questions")\
+            .select("*")\
+            .eq("quiz_id", quiz_id)\
+            .execute()
+        
+        # Calculate score
+        total_points = 0
+        earned_points = 0
+        
+        for q in questions.data:
+            total_points += q.get("points", 1)
+            # Find student's answer for this question
+            student_answer = next((a for a in answers if a["question_id"] == q["id"]), None)
+            if student_answer and student_answer["answer"].lower().strip() == q["correct_answer"].lower().strip():
+                earned_points += q.get("points", 1)
+        
+        score = int((earned_points / total_points) * 100) if total_points > 0 else 0
+        
+        # Save quiz attempt
+        attempt_data = {
+            "quiz_id": quiz_id,
+            "user_id": current_user["id"],
+            "score": score,
+            "answers": answers,
+            "completed_at": "now()"
+        }
+        
+        result = supabase.table("quiz_attempts").insert(attempt_data).execute()
+        
+        return {"score": score, "message": "Quiz submitted successfully"}
+        
+    except Exception as e:
+        print(f"Error submitting quiz: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error submitting quiz: {str(e)}"
+        )
+
+@router.get("/courses/quizzes/{quiz_id}")
+async def get_quiz(
+    quiz_id: str,
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_active_user)
+) -> Any:
+    """
+    Get quiz details with questions (for enrolled students only)
+    """
+    try:
+        print(f"Fetching quiz: {quiz_id} for user: {current_user['id']}")
+        
+        # Get quiz with course info
+        quiz = supabase.table("quizzes")\
+            .select("*, courses!inner(*)")\
+            .eq("id", quiz_id)\
+            .execute()
+        
+        if not quiz.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Quiz not found"
+            )
+        
+        quiz_data = quiz.data[0]
+        course_id = quiz_data.get("course_id")
+        
+        print(f"Quiz belongs to course: {course_id}")
+        
+        # Check if user is the instructor
+        is_instructor = supabase.table("courses")\
+            .select("instructor_id")\
+            .eq("id", course_id)\
+            .eq("instructor_id", current_user["id"])\
+            .execute()
+        
+        if is_instructor.data:
+            print("User is the instructor - granting access")
+            # Get questions
+            questions = supabase.table("quiz_questions")\
+                .select("*")\
+                .eq("quiz_id", quiz_id)\
+                .order("order_index")\
+                .execute()
+            quiz_data["questions"] = questions.data
+            return quiz_data
+        
+        # Check if student is enrolled
+        enrollment = supabase.table("enrollments")\
+            .select("*")\
+            .eq("user_id", current_user["id"])\
+            .eq("course_id", course_id)\
+            .execute()
+        
+        print(f"Enrollment check result: {bool(enrollment.data)}")
+        
+        if not enrollment.data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be enrolled in this course to access the quiz"
+            )
+        
+        # Get questions (without correct answers for students - optional)
+        questions = supabase.table("quiz_questions")\
+            .select("*")\
+            .eq("quiz_id", quiz_id)\
+            .order("order_index")\
+            .execute()
+        
+        # For students, you might want to hide correct answers until after submission
+        # For now, we'll include them for scoring
+        quiz_data["questions"] = questions.data
+        
+        return quiz_data
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting quiz: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting quiz: {str(e)}"
+        )
+
+@router.post("/{course_id}/messages")
+async def send_course_message(
+    course_id: str,
+    request: Request,
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_active_user)
+) -> Any:
+    """
+    Send a message to the instructor
+    """
+    try:
+        data = await request.json()
+        subject = data.get("subject")
+        content = data.get("content")
+        
+        if not subject or not content:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Subject and content are required"
+            )
+        
+        message_data = {
+            "course_id": course_id,
+            "user_id": current_user["id"],
+            "subject": subject,
+            "content": content,
+            "is_read": False
+        }
+        
+        result = supabase.table("course_messages").insert(message_data).execute()
+        
+        return {"message": "Message sent successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error sending message: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error sending message: {str(e)}"
+        )
