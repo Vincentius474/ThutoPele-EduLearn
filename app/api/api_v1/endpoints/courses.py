@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File
 from app.core.supabase_client import get_supabase
@@ -520,6 +521,68 @@ async def upload_course_thumbnail(
             detail="Error uploading thumbnail"
         )
     
+# @router.post("/{course_id}/enroll")
+# async def enroll_in_course(
+#     course_id: str,
+#     supabase=Depends(get_supabase),
+#     current_user: dict = Depends(get_current_active_user)
+# ) -> Any:
+#     """
+#     Enroll a student in a course
+#     """
+#     try:
+#         # Check if course exists and is published
+#         course = supabase.table("courses")\
+#             .select("*")\
+#             .eq("id", course_id)\
+#             .eq("is_published", True)\
+#             .execute()
+        
+#         if not course.data:
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail="Course not found or not published"
+#             )
+        
+#         # Check if already enrolled
+#         existing = supabase.table("enrollments")\
+#             .select("*")\
+#             .eq("user_id", current_user["id"])\
+#             .eq("course_id", course_id)\
+#             .execute()
+        
+#         if existing.data:
+#             raise HTTPException(
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#                 detail="Already enrolled in this course"
+#             )
+        
+#         # Create enrollment
+#         enrollment_data = {
+#             "user_id": current_user["id"],
+#             "course_id": course_id,
+#             "progress": 0,
+#             "enrolled_at": "now()"
+#         }
+        
+#         result = supabase.table("enrollments").insert(enrollment_data).execute()
+        
+#         if not result.data:
+#             raise HTTPException(
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#                 detail="Failed to enroll"
+#             )
+        
+#         return {"message": "Successfully enrolled in course"}
+        
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail=f"Error enrolling in course: {str(e)}"
+#         )
+
 @router.post("/{course_id}/enroll")
 async def enroll_in_course(
     course_id: str,
@@ -561,7 +624,7 @@ async def enroll_in_course(
             "user_id": current_user["id"],
             "course_id": course_id,
             "progress": 0,
-            "enrolled_at": "now()"
+            "enrolled_at": datetime.now().isoformat()
         }
         
         result = supabase.table("enrollments").insert(enrollment_data).execute()
@@ -577,6 +640,7 @@ async def enroll_in_course(
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error enrolling in course: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error enrolling in course: {str(e)}"
