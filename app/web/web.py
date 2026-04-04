@@ -48,111 +48,197 @@ async def home(
 
 # ==================== DASHBOARD ====================
 
+# @web_router.get("/dashboard", response_class=HTMLResponse)
+# async def dashboard(
+#     request: Request,
+#     templates: Jinja2Templates = Depends(get_templates),
+#     current_user: dict = Depends(get_current_user_from_cookie)
+# ):
+#     """User dashboard"""
+#     if not current_user:
+#         return RedirectResponse(url="/auth", status_code=302)
+    
+#     supabase = get_supabase_client()
+#     user_service = UserService(supabase)
+    
+#     # Route to appropriate dashboard based on role
+#     if current_user.get("is_admin"):
+#         # Admin dashboard data
+#         total_users = supabase.table("users").select("*", count="exact").execute()
+#         total_instructors = supabase.table("users").select("*", count="exact").eq("is_instructor", True).execute()
+#         total_students = total_users.count - total_instructors.count if hasattr(total_users, 'count') else 0
+#         total_courses = supabase.table("courses").select("*", count="exact").execute()
+        
+#         # Get pending instructor applications
+#         pending_instructors = supabase.table("instructor_applications")\
+#             .select("*")\
+#             .eq("status", "pending")\
+#             .execute()
+        
+#         # Get pending course reviews
+#         pending_courses = supabase.table("courses")\
+#             .select("*, users(full_name)")\
+#             .eq("is_published", False)\
+#             .execute()
+        
+#         # Get recent users
+#         recent_users = supabase.table("users")\
+#             .select("*")\
+#             .order("created_at", desc=True)\
+#             .limit(5)\
+#             .execute()
+        
+#         return templates.TemplateResponse(
+#             "dashboard/admin.html",
+#             {
+#                 "request": request,
+#                 "current_user": current_user,
+#                 "total_users": total_users.count if hasattr(total_users, 'count') else 0,
+#                 "total_instructors": total_instructors.count if hasattr(total_instructors, 'count') else 0,
+#                 "total_students": total_students,
+#                 "total_courses": total_courses.count if hasattr(total_courses, 'count') else 0,
+#                 "pending_instructors": pending_instructors.data or [],
+#                 "pending_courses": pending_courses.data or [],
+#                 "recent_users": recent_users.data or [],
+#                 "title": "Admin Dashboard"
+#             }
+#         )
+        
+#     elif current_user.get("is_instructor"):
+#         # Instructor dashboard data
+#         courses = supabase.table("courses")\
+#             .select("*")\
+#             .eq("instructor_id", current_user["id"])\
+#             .execute()
+        
+#         published_courses = [c for c in courses.data if c.get("is_published")] if courses.data else []
+#         draft_courses = [c for c in courses.data if not c.get("is_published")] if courses.data else []
+        
+#         # Get total students across all courses
+#         total_students = 0
+#         if courses.data:
+#             for course in courses.data:
+#                 enrollments = supabase.table("enrollments")\
+#                     .select("*", count="exact")\
+#                     .eq("course_id", course["id"])\
+#                     .execute()
+#                 total_students += enrollments.count if hasattr(enrollments, 'count') else 0
+        
+#         # Get recent reviews
+#         course_ids = [c["id"] for c in courses.data] if courses.data else []
+#         recent_reviews = []
+#         if course_ids:
+#             recent_reviews = supabase.table("reviews")\
+#                 .select("*, users(full_name), courses(title)")\
+#                 .in_("course_id", course_ids)\
+#                 .order("created_at", desc=True)\
+#                 .limit(5)\
+#                 .execute()
+        
+#         return templates.TemplateResponse(
+#             "dashboard/instructor.html",
+#             {
+#                 "request": request,
+#                 "current_user": current_user,
+#                 "total_courses": len(courses.data) if courses.data else 0,
+#                 "published_courses": published_courses,
+#                 "draft_courses": draft_courses,
+#                 "total_students": total_students,
+#                 "avg_rating": "4.5",
+#                 "total_earnings": "0",
+#                 "recent_reviews": recent_reviews.data if hasattr(recent_reviews, 'data') else [],
+#                 "title": "Instructor Dashboard"
+#             }
+#         )
+        
+#     else:
+#         # Student dashboard data
+#         enrollments = supabase.table("enrollments")\
+#             .select("*, courses(*)")\
+#             .eq("user_id", current_user["id"])\
+#             .execute()
+        
+#         enrolled_courses = []
+#         in_progress_courses = []
+#         completed_courses = 0
+        
+#         if enrollments.data:
+#             for enrollment in enrollments.data:
+#                 if enrollment.get("courses"):
+#                     course = enrollment["courses"]
+#                     course["progress"] = enrollment.get("progress", 0)
+#                     course["enrollment"] = enrollment
+#                     enrolled_courses.append(course)
+                    
+#                     if enrollment.get("progress", 0) == 100:
+#                         completed_courses += 1
+#                     elif enrollment.get("progress", 0) > 0:
+#                         in_progress_courses.append(course)
+        
+#         # Get recommended courses (based on categories of enrolled courses)
+#         categories = list(set([c.get("category") for c in enrolled_courses if c.get("category")]))
+#         recommended = []
+#         if categories:
+#             recommended_query = supabase.table("courses")\
+#                 .select("*")\
+#                 .eq("is_published", True)\
+#                 .in_("category", categories)\
+#                 .limit(5)\
+#                 .execute()
+#             recommended = recommended_query.data or []
+        
+#         return templates.TemplateResponse(
+#             "dashboard/student.html",
+#             {
+#                 "request": request,
+#                 "current_user": current_user,
+#                 "enrolled_courses": enrolled_courses,
+#                 "in_progress_courses": in_progress_courses[:3],
+#                 "completed_courses": completed_courses,
+#                 "certificates": completed_courses,
+#                 "total_hours": "24",
+#                 "recommended_courses": recommended,
+#                 "title": "My Dashboard"
+#             }
+#         )
+
 @web_router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request,
     templates: Jinja2Templates = Depends(get_templates),
     current_user: dict = Depends(get_current_user_from_cookie)
 ):
-    """User dashboard"""
+    """Role-based dashboard"""
     if not current_user:
-        return RedirectResponse(url="/auth", status_code=302)
+        return RedirectResponse(url="/login", status_code=302)
     
     supabase = get_supabase_client()
-    user_service = UserService(supabase)
     
     # Route to appropriate dashboard based on role
     if current_user.get("is_admin"):
-        # Admin dashboard data
-        total_users = supabase.table("users").select("*", count="exact").execute()
-        total_instructors = supabase.table("users").select("*", count="exact").eq("is_instructor", True).execute()
-        total_students = total_users.count - total_instructors.count if hasattr(total_users, 'count') else 0
-        total_courses = supabase.table("courses").select("*", count="exact").execute()
-        
-        # Get pending instructor applications
-        pending_instructors = supabase.table("instructor_applications")\
-            .select("*")\
-            .eq("status", "pending")\
-            .execute()
-        
-        # Get pending course reviews
-        pending_courses = supabase.table("courses")\
-            .select("*, users(full_name)")\
-            .eq("is_published", False)\
-            .execute()
-        
-        # Get recent users
-        recent_users = supabase.table("users")\
-            .select("*")\
-            .order("created_at", desc=True)\
-            .limit(5)\
-            .execute()
-        
+        # Admin dashboard (keep existing code)
         return templates.TemplateResponse(
             "dashboard/admin.html",
             {
                 "request": request,
                 "current_user": current_user,
-                "total_users": total_users.count if hasattr(total_users, 'count') else 0,
-                "total_instructors": total_instructors.count if hasattr(total_instructors, 'count') else 0,
-                "total_students": total_students,
-                "total_courses": total_courses.count if hasattr(total_courses, 'count') else 0,
-                "pending_instructors": pending_instructors.data or [],
-                "pending_courses": pending_courses.data or [],
-                "recent_users": recent_users.data or [],
                 "title": "Admin Dashboard"
             }
         )
         
     elif current_user.get("is_instructor"):
-        # Instructor dashboard data
-        courses = supabase.table("courses")\
-            .select("*")\
-            .eq("instructor_id", current_user["id"])\
-            .execute()
-        
-        published_courses = [c for c in courses.data if c.get("is_published")] if courses.data else []
-        draft_courses = [c for c in courses.data if not c.get("is_published")] if courses.data else []
-        
-        # Get total students across all courses
-        total_students = 0
-        if courses.data:
-            for course in courses.data:
-                enrollments = supabase.table("enrollments")\
-                    .select("*", count="exact")\
-                    .eq("course_id", course["id"])\
-                    .execute()
-                total_students += enrollments.count if hasattr(enrollments, 'count') else 0
-        
-        # Get recent reviews
-        course_ids = [c["id"] for c in courses.data] if courses.data else []
-        recent_reviews = []
-        if course_ids:
-            recent_reviews = supabase.table("reviews")\
-                .select("*, users(full_name), courses(title)")\
-                .in_("course_id", course_ids)\
-                .order("created_at", desc=True)\
-                .limit(5)\
-                .execute()
-        
+        # Instructor dashboard (keep existing code)
         return templates.TemplateResponse(
             "dashboard/instructor.html",
             {
                 "request": request,
                 "current_user": current_user,
-                "total_courses": len(courses.data) if courses.data else 0,
-                "published_courses": published_courses,
-                "draft_courses": draft_courses,
-                "total_students": total_students,
-                "avg_rating": "4.5",
-                "total_earnings": "0",
-                "recent_reviews": recent_reviews.data if hasattr(recent_reviews, 'data') else [],
                 "title": "Instructor Dashboard"
             }
         )
         
     else:
-        # Student dashboard data
+        # Student dashboard with enhanced data
         enrollments = supabase.table("enrollments")\
             .select("*, courses(*)")\
             .eq("user_id", current_user["id"])\
@@ -161,19 +247,32 @@ async def dashboard(
         enrolled_courses = []
         in_progress_courses = []
         completed_courses = 0
+        total_hours = 0
         
-        if enrollments.data:
-            for enrollment in enrollments.data:
-                if enrollment.get("courses"):
-                    course = enrollment["courses"]
-                    course["progress"] = enrollment.get("progress", 0)
-                    course["enrollment"] = enrollment
-                    enrolled_courses.append(course)
-                    
-                    if enrollment.get("progress", 0) == 100:
-                        completed_courses += 1
-                    elif enrollment.get("progress", 0) > 0:
-                        in_progress_courses.append(course)
+        for enrollment in enrollments.data:
+            if enrollment.get("courses"):
+                course = enrollment["courses"]
+                course["progress"] = enrollment.get("progress", 0)
+                course["enrolled_at"] = enrollment.get("enrolled_at")
+                
+                # Get instructor details
+                instructor = supabase.table("users")\
+                    .select("full_name")\
+                    .eq("id", course["instructor_id"])\
+                    .execute()
+                
+                if instructor.data:
+                    course["instructor"] = instructor.data[0]
+                
+                enrolled_courses.append(course)
+                
+                if enrollment.get("progress", 0) == 100:
+                    completed_courses += 1
+                elif enrollment.get("progress", 0) > 0:
+                    in_progress_courses.append(course)
+                
+                # Calculate total hours (simplified - you can calculate from course duration)
+                total_hours += 15  # Placeholder
         
         # Get recommended courses (based on categories of enrolled courses)
         categories = list(set([c.get("category") for c in enrolled_courses if c.get("category")]))
@@ -187,6 +286,42 @@ async def dashboard(
                 .execute()
             recommended = recommended_query.data or []
         
+        # Get recent activities (quiz attempts, assignment submissions, etc.)
+        recent_activities = []
+        
+        # Get recent quiz attempts
+        quiz_attempts = supabase.table("quiz_attempts")\
+            .select("*, quizzes(title)")\
+            .eq("user_id", current_user["id"])\
+            .order("created_at", desc=True)\
+            .limit(5)\
+            .execute()
+        
+        for attempt in quiz_attempts.data:
+            recent_activities.append({
+                "icon": "question-circle",
+                "message": f"Completed quiz: {attempt.get('quizzes', {}).get('title', 'Unknown')} - Score: {attempt.get('score', 0)}%",
+                "created_at": attempt.get("created_at", "")[:10]
+            })
+        
+        # Get recent assignment submissions
+        submissions = supabase.table("submissions")\
+            .select("*, assignments(title)")\
+            .eq("user_id", current_user["id"])\
+            .order("submitted_at", desc=True)\
+            .limit(5)\
+            .execute()
+        
+        for submission in submissions.data:
+            recent_activities.append({
+                "icon": "tasks",
+                "message": f"Submitted assignment: {submission.get('assignments', {}).get('title', 'Unknown')}",
+                "created_at": submission.get("submitted_at", "")[:10]
+            })
+        
+        # Sort and limit activities
+        recent_activities = recent_activities[:10]
+        
         return templates.TemplateResponse(
             "dashboard/student.html",
             {
@@ -196,8 +331,9 @@ async def dashboard(
                 "in_progress_courses": in_progress_courses[:3],
                 "completed_courses": completed_courses,
                 "certificates": completed_courses,
-                "total_hours": "24",
+                "total_hours": total_hours,
                 "recommended_courses": recommended,
+                "recent_activities": recent_activities,
                 "title": "My Dashboard"
             }
         )
@@ -837,6 +973,142 @@ async def settings_page(
             "title": "Settings"
         }
     )
+
+@web_router.get("/courses/{course_id}/learn", response_class=HTMLResponse)
+async def student_course_view(
+    request: Request,
+    course_id: str,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Student course view page"""
+    supabase = get_supabase_client()
+    
+    # Check if student is enrolled
+    enrollment = supabase.table("enrollments")\
+        .select("*")\
+        .eq("user_id", current_user["id"])\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    if not enrollment.data:
+        return RedirectResponse(url=f"/courses/{course_id}", status_code=302)
+    
+    # Get course details
+    course = supabase.table("courses")\
+        .select("*")\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not course.data:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "title": "Course Not Found"},
+            status_code=404
+        )
+    
+    # Get instructor
+    instructor = supabase.table("users")\
+        .select("id, full_name, avatar_url")\
+        .eq("id", course.data[0]["instructor_id"])\
+        .execute()
+    
+    # Get materials with completion status
+    materials = supabase.table("course_materials")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .order("order_index")\
+        .execute()
+    
+    # Get completed materials
+    completed = supabase.table("lesson_progress")\
+        .select("lesson_id")\
+        .eq("user_id", current_user["id"])\
+        .execute()
+    
+    completed_ids = {item["lesson_id"] for item in completed.data}
+    for material in materials.data:
+        material["completed"] = material["id"] in completed_ids
+    
+    # Get quizzes with attempts
+    quizzes = supabase.table("quizzes")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    for quiz in quizzes.data:
+        questions = supabase.table("quiz_questions")\
+            .select("*")\
+            .eq("quiz_id", quiz["id"])\
+            .execute()
+        quiz["questions"] = questions.data
+        
+        # Get student's attempt
+        attempt = supabase.table("quiz_attempts")\
+            .select("*")\
+            .eq("quiz_id", quiz["id"])\
+            .eq("user_id", current_user["id"])\
+            .order("created_at", desc=True)\
+            .limit(1)\
+            .execute()
+        if attempt.data:
+            quiz["attempt"] = attempt.data[0]
+    
+    # Get assignments with submissions
+    assignments = supabase.table("assignments")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    for assignment in assignments.data:
+        submission = supabase.table("submissions")\
+            .select("*")\
+            .eq("assignment_id", assignment["id"])\
+            .eq("user_id", current_user["id"])\
+            .execute()
+        if submission.data:
+            assignment["submission"] = submission.data[0]
+    
+    # Get announcements
+    announcements = supabase.table("announcements")\
+        .select("*, users(full_name)")\
+        .eq("course_id", course_id)\
+        .order("created_at", desc=True)\
+        .execute()
+    
+    # Get messages
+    messages = supabase.table("course_messages")\
+        .select("*")\
+        .eq("course_id", course_id)\
+        .eq("user_id", current_user["id"])\
+        .order("created_at", asc=True)\
+        .execute()
+    
+    # Calculate progress
+    total_materials = len(materials.data)
+    completed_materials = len(completed_ids)
+    progress = int((completed_materials / total_materials) * 100) if total_materials > 0 else 0
+    
+    return templates.TemplateResponse(
+        "courses/student_view.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "course": course.data[0],
+            "instructor": instructor.data[0] if instructor.data else {},
+            "materials": materials.data,
+            "quizzes": quizzes.data,
+            "assignments": assignments.data,
+            "announcements": announcements.data,
+            "messages": messages.data,
+            "progress": progress,
+            "completed_materials": completed_materials,
+            "total_materials": total_materials,
+            "enrollment_date": enrollment.data[0]["enrolled_at"][:10],
+            "title": course.data[0]["title"]
+        }
+    )
+
 
 # ==================== BLOG PAGES ====================
 
