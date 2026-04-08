@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.api_v1.endpoints import auth_simple, blog, contact, events, tutorials, users, courses, admin, course_management, messages, resources
+from app.api.api_v1.endpoints import auth_simple, blog, contact, events, tutorials, users, courses, admin, course_management, messages, resources, vpl
 
 api_router = APIRouter()
 
@@ -14,3 +14,4 @@ api_router.include_router(blog.router, prefix="", tags=["blog"])
 api_router.include_router(events.router, prefix="", tags=["events"])
 api_router.include_router(contact.router, prefix="", tags=["contact"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(vpl.router, prefix="/vpl", tags=["vpl"])

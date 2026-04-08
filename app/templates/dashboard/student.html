@@ -93,6 +93,27 @@
         </div>
     </div>
 
+    <!-- Quick Access to Playground -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-dark text-white border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold mb-2">
+                                <i class="fas fa-laptop-code me-2"></i>Practice Coding
+                            </h3>
+                            <p class="mb-0 opacity-75">Try out code in our safe sandbox environment</p>
+                        </div>
+                        <a href="/playground" class="btn btn-light btn-lg">
+                            <i class="fas fa-play-circle me-2"></i>Open Playground
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Continue Learning -->
     <div class="row mb-4">
         <div class="col-12">
@@ -141,6 +162,90 @@
             </div>
         </div>
         {% endfor %}
+    </div>
+
+    <!-- Programming Assignments -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">
+                <i class="fas fa-code text-primary me-2"></i>Programming Assignments
+            </h4>
+        </div>
+        
+        {% if programming_assignments %}
+            {% for assignment in programming_assignments %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100 border-0 shadow-sm assignment-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title fw-bold mb-0">{{ assignment.title }}</h5>
+                            {% if assignment.submission %}
+                                {% if assignment.submission.score >= 70 %}
+                                <span class="badge bg-success">Completed</span>
+                                {% elif assignment.submission.score %}
+                                <span class="badge bg-warning">Graded</span>
+                                {% else %}
+                                <span class="badge bg-info">Submitted</span>
+                                {% endif %}
+                            {% else %}
+                            <span class="badge bg-danger">Pending</span>
+                            {% endif %}
+                        </div>
+                        <p class="card-text text-muted small mb-2">{{ assignment.description[:100] }}...</p>
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-code me-1"></i>{{ assignment.programming_language|upper }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-star me-1"></i>{{ assignment.total_points }} points
+                            </small>
+                            {% if assignment.due_date %}
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>Due: {{ assignment.due_date[:10] }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        {% if assignment.submission and assignment.submission.score %}
+                        <div class="progress mb-2" style="height: 5px;">
+                            <div class="progress-bar bg-{{ 'success' if assignment.submission.score >= 70 else 'warning' }}" 
+                                style="width: {{ assignment.submission.score }}%;"></div>
+                        </div>
+                        <small class="text-muted">Score: {{ assignment.submission.score }}%</small>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                        {% if assignment.submission and assignment.submission.score %}
+                            {% if assignment.submission.score >= 70 %}
+                            <a href="/vpl/assignment/{{ assignment.id }}/review" class="btn btn-outline-success w-100">
+                                <i class="fas fa-check-circle me-2"></i>Review Submission
+                            </a>
+                            {% else %}
+                            <a href="/vpl/assignment/{{ assignment.id }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-redo me-2"></i>Retry Assignment
+                            </a>
+                            {% endif %}
+                        {% else %}
+                        <a href="/vpl/assignment/{{ assignment.id }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-play-circle me-2"></i>Start Assignment
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center p-4">
+                    <i class="fas fa-code fa-4x text-primary opacity-50 mb-3"></i>
+                    <h5>No Programming Assignments Yet</h5>
+                    <p class="text-muted mb-3">Check back later for coding exercises!</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Enrolled Courses -->

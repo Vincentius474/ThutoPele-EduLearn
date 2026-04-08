@@ -338,6 +338,170 @@ async def home(
 #             }
 #         )
 
+# @web_router.get("/dashboard", response_class=HTMLResponse)
+# async def dashboard(
+#     request: Request,
+#     templates: Jinja2Templates = Depends(get_templates),
+#     current_user: dict = Depends(get_current_user_from_cookie)
+# ):
+#     """Role-based dashboard"""
+#     if not current_user:
+#         return RedirectResponse(url="/login", status_code=302)
+    
+#     supabase = get_supabase_client()
+    
+#     # Route to appropriate dashboard based on role
+#     if current_user.get("is_admin"):
+#         # Admin dashboard
+#         return templates.TemplateResponse(
+#             "dashboard/admin.html",
+#             {
+#                 "request": request,
+#                 "current_user": current_user,
+#                 "title": "Admin Dashboard"
+#             }
+#         )
+        
+#     elif current_user.get("is_instructor"):
+#         # Instructor dashboard
+#         return templates.TemplateResponse(
+#             "dashboard/instructor.html",
+#             {
+#                 "request": request,
+#                 "current_user": current_user,
+#                 "title": "Instructor Dashboard"
+#             }
+#         )
+        
+#     else:
+#         # Student dashboard
+#         try:
+#             enrollments = supabase.table("enrollments")\
+#                 .select("*, courses(*)")\
+#                 .eq("user_id", current_user["id"])\
+#                 .execute()
+            
+#             enrolled_courses = []
+#             in_progress_courses = []
+#             completed_courses = 0
+#             total_hours = 0
+            
+#             for enrollment in enrollments.data:
+#                 if enrollment.get("courses"):
+#                     course = enrollment["courses"]
+#                     course["progress"] = enrollment.get("progress", 0)
+#                     course["enrolled_at"] = enrollment.get("enrolled_at")
+                    
+#                     # Get instructor details
+#                     instructor = supabase.table("users")\
+#                         .select("full_name")\
+#                         .eq("id", course["instructor_id"])\
+#                         .execute()
+                    
+#                     if instructor.data:
+#                         course["instructor"] = instructor.data[0]
+                    
+#                     enrolled_courses.append(course)
+                    
+#                     if enrollment.get("progress", 0) == 100:
+#                         completed_courses += 1
+#                     elif enrollment.get("progress", 0) > 0:
+#                         in_progress_courses.append(course)
+                    
+#                     # Calculate total hours (simplified)
+#                     total_hours += 15
+            
+#             # Get recommended courses
+#             categories = list(set([c.get("category") for c in enrolled_courses if c.get("category")]))
+#             recommended = []
+#             if categories:
+#                 recommended_query = supabase.table("courses")\
+#                     .select("*")\
+#                     .eq("is_published", True)\
+#                     .in_("category", categories)\
+#                     .limit(5)\
+#                     .execute()
+#                 recommended = recommended_query.data or []
+            
+#             # Get recent activities with error handling
+#             recent_activities = []
+            
+#             try:
+#                 # Get recent quiz attempts
+#                 quiz_attempts = supabase.table("quiz_attempts")\
+#                     .select("*, quizzes(title)")\
+#                     .eq("user_id", current_user["id"])\
+#                     .order("created_at", desc=True)\
+#                     .limit(5)\
+#                     .execute()
+                
+#                 for attempt in quiz_attempts.data:
+#                     recent_activities.append({
+#                         "icon": "question-circle",
+#                         "message": f"Completed quiz: {attempt.get('quizzes', {}).get('title', 'Unknown')} - Score: {attempt.get('score', 0)}%",
+#                         "created_at": attempt.get("created_at", "")[:10] if attempt.get("created_at") else "Recently"
+#                     })
+#             except Exception as e:
+#                 print(f"Error fetching quiz attempts: {e}")
+            
+#             try:
+#                 # Get recent assignment submissions
+#                 submissions = supabase.table("submissions")\
+#                     .select("*, assignments(title)")\
+#                     .eq("user_id", current_user["id"])\
+#                     .order("submitted_at", desc=True)\
+#                     .limit(5)\
+#                     .execute()
+                
+#                 for submission in submissions.data:
+#                     recent_activities.append({
+#                         "icon": "tasks",
+#                         "message": f"Submitted assignment: {submission.get('assignments', {}).get('title', 'Unknown')}",
+#                         "created_at": submission.get("submitted_at", "")[:10] if submission.get("submitted_at") else "Recently"
+#                     })
+#             except Exception as e:
+#                 print(f"Error fetching submissions: {e}")
+            
+#             # Sort and limit activities
+#             recent_activities = recent_activities[:10]
+            
+#             return templates.TemplateResponse(
+#                 "dashboard/student.html",
+#                 {
+#                     "request": request,
+#                     "current_user": current_user,
+#                     "enrolled_courses": enrolled_courses,
+#                     "in_progress_courses": in_progress_courses[:3],
+#                     "completed_courses": completed_courses,
+#                     "certificates": completed_courses,
+#                     "total_hours": total_hours,
+#                     "recommended_courses": recommended,
+#                     "recent_activities": recent_activities,
+#                     "title": "My Dashboard"
+#                 }
+#             )
+#         except Exception as e:
+#             print(f"Dashboard error: {e}")
+#             import traceback
+#             traceback.print_exc()
+            
+#             # Return basic dashboard if there's an error
+#             return templates.TemplateResponse(
+#                 "dashboard/student.html",
+#                 {
+#                     "request": request,
+#                     "current_user": current_user,
+#                     "enrolled_courses": [],
+#                     "in_progress_courses": [],
+#                     "completed_courses": 0,
+#                     "certificates": 0,
+#                     "total_hours": 0,
+#                     "recommended_courses": [],
+#                     "recent_activities": [],
+#                     "title": "My Dashboard"
+#                 }
+#             )
+
 @web_router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(
     request: Request,
@@ -423,7 +587,35 @@ async def dashboard(
                     .execute()
                 recommended = recommended_query.data or []
             
-            # Get recent activities with error handling
+            # ==================== PROGRAMMING ASSIGNMENTS ====================
+            # Get programming assignments for enrolled courses
+            programming_assignments = []
+            
+            for course in enrolled_courses:
+                course_assignments = supabase.table("programming_assignments")\
+                    .select("*")\
+                    .eq("course_id", course["id"])\
+                    .execute()
+                
+                for assignment in course_assignments.data:
+                    # Check if student has submitted this assignment
+                    submission = supabase.table("code_submissions")\
+                        .select("*")\
+                        .eq("assignment_id", assignment["id"])\
+                        .eq("user_id", current_user["id"])\
+                        .order("submitted_at", desc=True)\
+                        .limit(1)\
+                        .execute()
+                    
+                    if submission.data:
+                        assignment["submission"] = submission.data[0]
+                    
+                    programming_assignments.append(assignment)
+            
+            # Sort by due date (if exists) or creation date
+            programming_assignments.sort(key=lambda x: x.get("due_date", x.get("created_at", "")), reverse=False)
+            
+            # ==================== RECENT ACTIVITIES ====================
             recent_activities = []
             
             try:
@@ -462,7 +654,27 @@ async def dashboard(
             except Exception as e:
                 print(f"Error fetching submissions: {e}")
             
+            try:
+                # Get recent programming assignment submissions
+                code_submissions = supabase.table("code_submissions")\
+                    .select("*, programming_assignments(title)")\
+                    .eq("user_id", current_user["id"])\
+                    .order("submitted_at", desc=True)\
+                    .limit(5)\
+                    .execute()
+                
+                for submission in code_submissions.data:
+                    score = submission.get("score", 0)
+                    recent_activities.append({
+                        "icon": "code",
+                        "message": f"Submitted coding assignment: {submission.get('programming_assignments', {}).get('title', 'Unknown')} - Score: {score}%",
+                        "created_at": submission.get("submitted_at", "")[:10] if submission.get("submitted_at") else "Recently"
+                    })
+            except Exception as e:
+                print(f"Error fetching code submissions: {e}")
+            
             # Sort and limit activities
+            recent_activities.sort(key=lambda x: x.get("created_at", ""), reverse=True)
             recent_activities = recent_activities[:10]
             
             return templates.TemplateResponse(
@@ -476,6 +688,7 @@ async def dashboard(
                     "certificates": completed_courses,
                     "total_hours": total_hours,
                     "recommended_courses": recommended,
+                    "programming_assignments": programming_assignments,  # Add this
                     "recent_activities": recent_activities,
                     "title": "My Dashboard"
                 }
@@ -497,6 +710,7 @@ async def dashboard(
                     "certificates": 0,
                     "total_hours": 0,
                     "recommended_courses": [],
+                    "programming_assignments": [],  # Add this
                     "recent_activities": [],
                     "title": "My Dashboard"
                 }
@@ -1965,3 +2179,149 @@ async def server_error_page(
         },
         status_code=500
     )
+
+
+# =================== VPL ===============================
+
+@web_router.get("/vpl/assignment/{assignment_id}", response_class=HTMLResponse)
+async def vpl_assignment_page(
+    request: Request,
+    assignment_id: str,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_active_user)
+):
+    """VPL assignment page for students"""
+    supabase = get_supabase_client()
+    
+    # Get assignment details
+    assignment = supabase.table("programming_assignments")\
+        .select("*")\
+        .eq("id", assignment_id)\
+        .execute()
+    
+    if not assignment.data:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "title": "Assignment Not Found"},
+            status_code=404
+        )
+    
+    assignment_data = assignment.data[0]
+    course_id = assignment_data["course_id"]
+    
+    # Check if student is enrolled
+    enrollment = supabase.table("enrollments")\
+        .select("*")\
+        .eq("user_id", current_user["id"])\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    if not enrollment.data:
+        return templates.TemplateResponse(
+            "403.html",
+            {"request": request, "title": "Access Denied"},
+            status_code=403
+        )
+    
+    # Get existing submission
+    submission = supabase.table("code_submissions")\
+        .select("*")\
+        .eq("assignment_id", assignment_id)\
+        .eq("user_id", current_user["id"])\
+        .order("submitted_at", desc=True)\
+        .limit(1)\
+        .execute()
+    
+    saved_code = submission.data[0]["code"] if submission.data else None
+    
+    return templates.TemplateResponse(
+        "courses/vpl_assignment.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "assignment": assignment_data,
+            "saved_code": saved_code,
+            "title": assignment_data["title"]
+        }
+    )
+
+@web_router.get("/vpl/assignment/{assignment_id}/review", response_class=HTMLResponse)
+async def vpl_assignment_review(
+    request: Request,
+    assignment_id: str,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Review page for completed assignment"""
+    supabase = get_supabase_client()
+    
+    # Get assignment details
+    assignment = supabase.table("programming_assignments")\
+        .select("*")\
+        .eq("id", assignment_id)\
+        .execute()
+    
+    if not assignment.data:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "title": "Assignment Not Found"},
+            status_code=404
+        )
+    
+    assignment_data = assignment.data[0]
+    course_id = assignment_data["course_id"]
+    
+    # Check if student is enrolled
+    enrollment = supabase.table("enrollments")\
+        .select("*")\
+        .eq("user_id", current_user["id"])\
+        .eq("course_id", course_id)\
+        .execute()
+    
+    if not enrollment.data:
+        return templates.TemplateResponse(
+            "403.html",
+            {"request": request, "title": "Access Denied"},
+            status_code=403
+        )
+    
+    # Get latest submission
+    submission = supabase.table("code_submissions")\
+        .select("*")\
+        .eq("assignment_id", assignment_id)\
+        .eq("user_id", current_user["id"])\
+        .order("submitted_at", desc=True)\
+        .limit(1)\
+        .execute()
+    
+    if not submission.data:
+        return RedirectResponse(url=f"/vpl/assignment/{assignment_id}", status_code=302)
+    
+    return templates.TemplateResponse(
+        "courses/vpl_review.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "assignment": assignment_data,
+            "submission": submission.data[0],
+            "title": f"Review: {assignment_data['title']}"
+        }
+    )
+
+@web_router.get("/playground", response_class=HTMLResponse)
+async def vpl_playground(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_active_user)
+):
+    """VPL Playground page for practicing coding"""
+    return templates.TemplateResponse(
+        "vpl/playground.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "VPL Playground - Practice Coding"
+        }
+    )
+
+
