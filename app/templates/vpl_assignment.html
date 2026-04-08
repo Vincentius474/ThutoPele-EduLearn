@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    #codeEditor {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        border: 1px solid #333;
+        border-radius: 4px;
+    }
+    
+    #outputArea {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .pre-scrollable {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .keyboard-shortcut {
+        font-size: 0.8rem;
+        color: #6c757d;
+        border-top: 1px solid #dee2e6;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .shortcut-keys {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hidden data for JavaScript -->
+<script id="assignment-data" type="application/json">
+    {{ {
+        'assignment_id': assignment.id,
+        'language': assignment.programming_language
+    } | tojson | safe }}
+</script>
+
+<div class="container py-4">
+    <!-- Assignment Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="display-5 fw-bold text-primary mb-3">{{ assignment.title }}</h1>
+                    <p class="lead text-muted mb-4">{{ assignment.description }}</p>
+                    
+                    <div class="d-flex flex-wrap gap-3 mb-3">
+                        <span class="badge bg-primary py-2 px-3">
+                            <i class="fas fa-code me-2"></i>Language: {{ assignment.programming_language|upper }}
+                        </span>
+                        <span class="badge bg-info py-2 px-3">
+                            <i class="fas fa-hourglass-half me-2"></i>Time Limit: {{ assignment.time_limit }}s
+                        </span>
+                        <span class="badge bg-warning py-2 px-3">
+                            <i class="fas fa-memory me-2"></i>Memory Limit: {{ assignment.memory_limit }}MB
+                        </span>
+                        {% if assignment.due_date %}
+                        <span class="badge bg-danger py-2 px-3">
+                            <i class="fas fa-calendar me-2"></i>Due: {{ assignment.due_date[:10] }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if assignment.total_points %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-star me-2"></i>
+                        <strong>Points:</strong> {{ assignment.total_points }} points
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Code Editor Section -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-code me-2 text-primary"></i>Code Editor
+                    </h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary me-2" onclick="resetCode()" title="Reset to starter code">
+                            <i class="fas fa-undo-alt"></i> Reset
+                        </button>
+                        <span class="text-muted small">
+                            <i class="fas fa-keyboard"></i> Ctrl+Enter to run
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <textarea id="codeEditor" class="form-control font-monospace" rows="18" 
+                              placeholder="Write your code here...">{{ assignment.starter_code or '' }}</textarea>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex gap-2">
+                        <button id="runButton" class="btn btn-primary" onclick="runCode()">
+                            <i class="fas fa-play me-2"></i>Run Code
+                        </button>
+                        <button id="submitButton" class="btn btn-success" onclick="submitCode()">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Assignment
+                        </button>
+                    </div>
+                    <div class="keyboard-shortcut mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span class="shortcut-keys">Ctrl+Enter</span> to run code | 
+                            <span class="shortcut-keys">Ctrl+S</span> to submit
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Output Section -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-terminal me-2"></i>Output
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="outputArea" class="output-container">
+                        <div class="alert alert-info mb-2">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Click "Run Code" to test your solution, or "Submit Assignment" to submit for grading.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tips Section -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Test your code with sample inputs</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Check edge cases</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Read the problem carefully</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Use the provided starter code</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Submit only when you're ready</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Sample Test Cases (if available) -->
+            {% if assignment.test_cases %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-flask me-2"></i>Sample Test Cases
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for test in assignment.test_cases[:3] %}
+                    <div class="mb-3">
+                        <strong>Test {{ loop.index }}:</strong>
+                        <div class="bg-light p-2 rounded mt-1">
+                            <div><strong>Input:</strong> <code>{{ test.input or '(no input)' }}</code></div>
+                            <div class="mt-1"><strong>Expected Output:</strong> <code>{{ test.expected_output }}</code></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Link to external JavaScript -->
+<script src="{{ url_for('static', path='/js/vpl_assignment.js') }}"></script>
+{% endblock %}
