@@ -16,7 +16,12 @@
             
             <div class="d-flex flex-wrap align-items-center text-muted mb-4">
                 <span class="me-3">
-                    <i class="far fa-calendar me-1"></i>{{ post.published_at[:10] }}
+                    <i class="far fa-calendar me-1"></i>
+                    {% if post.published_at %}
+                        {{ post.published_at[:10] }}
+                    {% else %}
+                        Draft (Not Published)
+                    {% endif %}
                 </span>
                 <span class="me-3">
                     <i class="far fa-clock me-1"></i>{{ post.read_time }} min read
@@ -83,58 +88,71 @@
             <!-- <h3 class="fw-bold mb-4">Comments ({{ post.comments|length }})</h3> -->
             
             <!-- Comment Form -->
-            {% if current_user %}
-            <!-- <div class="card border-0 shadow-sm mb-4">
+            <!-- {% if current_user %}
+            <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body">
                     <form id="commentForm" data-post-id="{{ post.id }}" data-post-slug="{{ post.slug }}">
                         <div class="mb-3">
                             <textarea class="form-control" id="commentContent" rows="3" 
-                                    placeholder="Leave a comment..." required></textarea>
+                                      placeholder="Leave a comment..." required></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Post Comment</button>
                     </form>
                 </div>
-            </div> -->
+            </div>
             {% else %}
             <div class="alert alert-info mb-4">
                 <i class="fas fa-info-circle me-2"></i>
                 <a href="/login" class="alert-link">Login</a> to leave a comment.
             </div>
-            {% endif %}
+            {% endif %} -->
             
             <!-- Comments List -->
-            <div class="comments-list">
+            <!-- <div class="comments-list">
                 {% for comment in post.comments %}
                 <div class="d-flex mb-4">
                     <img src="{{ comment.users.avatar_url or 'https://ui-avatars.com/api/?name=' + comment.users.full_name|urlencode }}" 
-                        class="rounded-circle me-3" width="50" height="50" alt="{{ comment.users.full_name }}">
+                         class="rounded-circle me-3" width="50" height="50" alt="{{ comment.users.full_name }}">
                     <div class="flex-grow-1">
                         <div class="bg-light p-3 rounded-3">
                             <div class="d-flex justify-content-between mb-2">
                                 <h6 class="fw-bold mb-0">{{ comment.users.full_name }}</h6>
-                                <small class="text-muted">{{ comment.created_at[:10] }}</small>
+                                <small class="text-muted">
+                                    {% if comment.created_at %}
+                                        {{ comment.created_at[:10] }}
+                                    {% else %}
+                                        Recently
+                                    {% endif %}
+                                </small>
                             </div>
-                            <!-- <p class="mb-0">{{ comment.content }}</p> -->
+                            <p class="mb-0">{{ comment.content }}</p>
                         </div>
                     </div>
                 </div>
                 {% else %}
-                <!-- <p class="text-muted text-center py-4">No comments yet. Be the first to comment!</p> -->
+                <p class="text-muted text-center py-4">No comments yet. Be the first to comment!</p>
                 {% endfor %}
-            </div>
+            </div> -->
         </div>
     </div>
 </div>
-
-<!-- At the bottom of blog_detail.html -->
-<script src="{{ url_for('static', path='/js/blog_detail.js') }}"></script>
 
 <script>
 document.getElementById('commentForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const content = document.getElementById('commentContent').value;
-    const postId = "{{ post.id }}";
+    if (!content.trim()) {
+        alert('Please enter a comment');
+        return;
+    }
+    
+    const postId = e.target.dataset.postId;
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Posting...';
     
     try {
         const response = await fetch(`/api/v1/blog/${postId}/comments`, {
@@ -145,15 +163,21 @@ document.getElementById('commentForm')?.addEventListener('submit', async (e) => 
             body: JSON.stringify({ content })
         });
         
+        const data = await response.json();
+        
         if (response.ok) {
             alert('Comment submitted for approval!');
             document.getElementById('commentContent').value = '';
+            setTimeout(() => location.reload(), 1500);
         } else {
-            alert('Failed to post comment. Please try again.');
+            alert(data.detail || 'Failed to post comment');
         }
     } catch (error) {
         console.error('Error posting comment:', error);
         alert('An error occurred');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     }
 });
 </script>
