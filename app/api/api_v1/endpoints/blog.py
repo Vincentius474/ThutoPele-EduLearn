@@ -591,6 +591,8 @@ async def delete_blog_post(
     Delete a blog post (admin/instructor only)
     """
     try:
+        print(f"Attempting to delete post: {post_id}")
+        
         # Check if post exists
         existing = supabase.table("blog_posts")\
             .select("id")\
@@ -603,18 +605,24 @@ async def delete_blog_post(
                 detail="Blog post not found"
             )
         
+        print(f"Post found, deleting...")
+        
         # Delete the post
         result = supabase.table("blog_posts")\
             .delete()\
             .eq("id", post_id)\
             .execute()
         
+        print(f"Delete result: {result}")
+        
         return {"message": "Blog post deleted successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting blog post: {e}")
+        print(f"Error deleting blog post: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting blog post: {str(e)}"
