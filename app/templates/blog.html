@@ -47,9 +47,22 @@
                                     <small class="text-muted">{{ featured_post.author.bio if featured_post.author else 'Instructor' }}</small>
                                 </div>
                             </div>
-                            <a href="/blog/{{ featured_post.slug }}" class="btn btn-primary btn-lg">
-                                Read Full Article <i class="fas fa-arrow-right ms-2"></i>
-                            </a>
+                            <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                                <div class="d-flex gap-2">
+                                    <a href="/blog/{{ featured_post.slug }}" class="btn btn-outline-primary flex-grow-1">
+                                        Read Full Article <i class="fas fa-arrow-right ms-2"></i>
+                                    </a>
+                                    {% if current_user and (current_user.is_admin or current_user.is_instructor) %}
+                                    <a href="/admin/blog/{{ featured_post.id }}/edit" class="btn btn-outline-secondary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger" onclick="deletePost('{{ featured_post.id }}')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -216,7 +229,7 @@
     </div>
 
     <!-- Newsletter Subscription -->
-    <div class="row mt-5">
+    <!-- <div class="row mt-5">
         <div class="col-12">
             <div class="card bg-primary text-white border-0">
                 <div class="card-body p-5 text-center">
@@ -236,7 +249,8 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
+
 </div>
 
 <!-- Link to external JavaScript -->

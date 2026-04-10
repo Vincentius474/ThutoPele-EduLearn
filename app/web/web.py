@@ -1659,10 +1659,44 @@ async def blog_page(
     
     featured_post = featured.data[0] if featured.data else None
     
-    # Get posts with pagination
+    # Pagination settings
     limit = 9
     offset = (page - 1) * limit
     
+    # Handle search using database function
+    if search:
+        # Use the database function for efficient search
+        result = supabase.rpc(
+            "search_blog_posts",
+            {
+                "search_term": search,
+                "category_filter": category if category else None
+            }
+        ).execute()
+        
+        posts = result.data
+        total = len(posts)
+        
+        # Apply pagination to results
+        paginated_posts = posts[offset:offset + limit]
+        total_pages = (total + limit - 1) // limit if total > 0 else 1
+        
+        return templates.TemplateResponse(
+            "blog.html",
+            {
+                "request": request,
+                "current_user": current_user,
+                "featured_post": featured_post,
+                "posts": paginated_posts,
+                "selected_category": category,
+                "search_query": search,
+                "page": page,
+                "total_pages": total_pages,
+                "title": f"Blog - Search: {search}"
+            }
+        )
+    
+    # Regular query without search
     query = supabase.table("blog_posts")\
         .select("*, users(full_name, avatar_url)", count="exact")\
         .eq("is_published", True)
@@ -1670,13 +1704,12 @@ async def blog_page(
     if category:
         query = query.eq("category", category)
     
-    if search:
-        query = query.or_(f"title.ilike.%{search}%,excerpt.ilike.%{search}%")
-    
+    # Get total count
     count_result = query.execute()
     total = count_result.count if hasattr(count_result, 'count') else 0
     
-    posts = query.order("published_at", desc=True)\
+    # Apply sorting and pagination
+    result = query.order("published_at", desc=True)\
         .range(offset, offset + limit - 1)\
         .execute()
     
@@ -1688,12 +1721,12 @@ async def blog_page(
             "request": request,
             "current_user": current_user,
             "featured_post": featured_post,
-            "posts": posts.data,
+            "posts": result.data,
             "selected_category": category,
             "search_query": search,
             "page": page,
             "total_pages": total_pages,
-            "title": "Blog"
+            "title": f"Blog - {category if category else 'All Posts'}"
         }
     )
 

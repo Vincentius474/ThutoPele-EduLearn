@@ -91,6 +91,19 @@ document.getElementById('blogForm').addEventListener('submit', async (e) => {
     
     const postId = document.getElementById('postId').value;
     
+    const formData = {
+        title: document.getElementById('title').value,
+        excerpt: document.getElementById('excerpt').value,
+        content: document.getElementById('content').value,
+        category: document.getElementById('category').value,
+        read_time: parseInt(document.getElementById('readTime').value),
+        featured_image: document.getElementById('featuredImage').value,
+        is_published: document.getElementById('isPublished').checked,
+        is_featured: document.getElementById('isFeatured').checked
+    };
+    
+    console.log('Sending update data:', formData);
+    
     const btn = document.getElementById('submitBtn');
     const spinner = document.getElementById('submitSpinner');
     const btnText = document.getElementById('submitText');
@@ -105,19 +118,11 @@ document.getElementById('blogForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                title: document.getElementById('title').value,
-                excerpt: document.getElementById('excerpt').value,
-                content: document.getElementById('content').value,
-                category: document.getElementById('category').value,
-                read_time: parseInt(document.getElementById('readTime').value),
-                featured_image: document.getElementById('featuredImage').value,
-                is_published: document.getElementById('isPublished').checked,
-                is_featured: document.getElementById('isFeatured').checked
-            })
+            body: JSON.stringify(formData)
         });
         
         const data = await response.json();
+        console.log('Update response:', data);
         
         if (response.ok) {
             alert('Blog post updated successfully!');
