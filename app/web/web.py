@@ -1759,6 +1759,39 @@ async def create_blog_page(
         }
     )
 
+@web_router.get("/admin/blog/{post_id}/edit", response_class=HTMLResponse)
+async def edit_blog_page(
+    request: Request,
+    post_id: str,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_admin_or_instructor)
+):
+    """Edit blog post page (admin/instructor only)"""
+    supabase = get_supabase_client()
+    
+    # Get blog post
+    post = supabase.table("blog_posts")\
+        .select("*")\
+        .eq("id", post_id)\
+        .execute()
+    
+    if not post.data:
+        return templates.TemplateResponse(
+            "404.html",
+            {"request": request, "title": "Post Not Found"},
+            status_code=404
+        )
+    
+    return templates.TemplateResponse(
+        "admin/edit_blog.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "post": post.data[0],
+            "title": f"Edit: {post.data[0]['title']}"
+        }
+    )
+
 # ==================== STATIC PAGES ====================
 
 @web_router.get("/about", response_class=HTMLResponse)

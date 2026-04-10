@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold text-primary"><i class="fas fa-edit me-2"></i>Edit Blog Post</h1>
+            <p class="lead text-muted">Update your blog post content</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form id="blogForm">
+                        <input type="hidden" id="postId" value="{{ post.id }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" id="title" value="{{ post.title }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Excerpt</label>
+                            <textarea class="form-control" id="excerpt" rows="2">{{ post.excerpt or '' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Content *</label>
+                            <textarea class="form-control" id="content" rows="12" required>{{ post.content }}</textarea>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Category *</label>
+                                <select class="form-select" id="category" required>
+                                    <option value="Programming" {% if post.category == 'Programming' %}selected{% endif %}>Programming</option>
+                                    <option value="Robotics" {% if post.category == 'Robotics' %}selected{% endif %}>Robotics</option>
+                                    <option value="Artificial Intelligence" {% if post.category == 'Artificial Intelligence' %}selected{% endif %}>Artificial Intelligence</option>
+                                    <option value="Machine Learning" {% if post.category == 'Machine Learning' %}selected{% endif %}>Machine Learning</option>
+                                    <option value="Networking" {% if post.category == 'Networking' %}selected{% endif %}>Networking</option>
+                                    <option value="Cyber Security" {% if post.category == 'Cyber Security' %}selected{% endif %}>Cyber Security</option>
+                                    <option value="Tutorials" {% if post.category == 'Tutorials' %}selected{% endif %}>Tutorials</option>
+                                    <option value="News" {% if post.category == 'News' %}selected{% endif %}>News</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Read Time (minutes)</label>
+                                <input type="number" class="form-control" id="readTime" value="{{ post.read_time }}" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Featured Image URL</label>
+                            <input type="url" class="form-control" id="featuredImage" value="{{ post.featured_image or '' }}">
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isPublished" {% if post.is_published %}checked{% endif %}>
+                                    <label class="form-check-label">Published</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isFeatured" {% if post.is_featured %}checked{% endif %}>
+                                    <label class="form-check-label">Featured Post</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4" id="submitBtn">
+                                <span class="spinner-border spinner-border-sm d-none" id="submitSpinner"></span>
+                                <span id="submitText">Update Post</span>
+                            </button>
+                            <a href="/blog/{{ post.slug }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('blogForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const postId = document.getElementById('postId').value;
+    
+    const btn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('submitSpinner');
+    const btnText = document.getElementById('submitText');
+    
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    btnText.textContent = 'Updating...';
+    
+    try {
+        const response = await fetch(`/api/v1/blog/${postId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: document.getElementById('title').value,
+                excerpt: document.getElementById('excerpt').value,
+                content: document.getElementById('content').value,
+                category: document.getElementById('category').value,
+                read_time: parseInt(document.getElementById('readTime').value),
+                featured_image: document.getElementById('featuredImage').value,
+                is_published: document.getElementById('isPublished').checked,
+                is_featured: document.getElementById('isFeatured').checked
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Blog post updated successfully!');
+            window.location.href = `/blog/${data.slug}`;
+        } else {
+            alert(data.detail || 'Failed to update blog post');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    } finally {
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+        btnText.textContent = 'Update Post';
+    }
+});
+</script>
+{% endblock %}

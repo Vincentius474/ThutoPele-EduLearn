@@ -325,3 +325,32 @@ async def add_comment_by_slug(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error adding comment: {str(e)}"
         )
+    
+@router.get("/blog/debug-user")
+async def debug_user(
+    supabase=Depends(get_supabase),
+    current_user: dict = Depends(get_current_user)
+) -> Any:
+    """
+    Debug endpoint to check user permissions
+    """
+    try:
+        # Check user from token
+        user_check = supabase.table("users")\
+            .select("id, email, is_instructor, is_admin")\
+            .eq("id", current_user["id"])\
+            .execute()
+        
+        return {
+            "user_id": current_user["id"],
+            "user_email": current_user["email"],
+            "is_instructor_from_token": current_user.get("is_instructor", False),
+            "is_admin_from_token": current_user.get("is_admin", False),
+            "user_from_db": user_check.data[0] if user_check.data else None,
+            "can_create_blog": (
+                current_user.get("is_instructor", False) or 
+                current_user.get("is_admin", False)
+            )
+        }
+    except Exception as e:
+        return {"error": str(e)}

@@ -13,6 +13,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+async function deletePost(postId) {
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) return;
+    
+    try {
+        const response = await fetch(`/api/v1/blog/${postId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            alert('Post deleted successfully');
+            location.reload();
+        } else {
+            alert('Failed to delete post');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred');
+    }
+}
+
 // Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold text-primary"><i class="fas fa-pen-fancy me-2"></i>Create Blog Post</h1>
+            <p class="lead text-muted">Share your knowledge and insights with the community</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form id="blogForm">
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" id="title" required>
+                            <div class="form-text">A clear, descriptive title (max 200 characters)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Excerpt</label>
+                            <textarea class="form-control" id="excerpt" rows="2" 
+                                      placeholder="Brief summary of the post (appears in listings)"></textarea>
+                            <div class="form-text">Short summary (max 300 characters)</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Content *</label>
+                            <textarea class="form-control" id="content" rows="12" required></textarea>
+                            <div class="form-text">You can use HTML for formatting (headings, lists, images, etc.)</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Category *</label>
+                                <select class="form-select" id="category" required>
+                                    <option value="">Select category...</option>
+                                    <option value="Programming">Programming</option>
+                                    <option value="Robotics">Robotics</option>
+                                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                    <option value="Machine Learning">Machine Learning</option>
+                                    <option value="Networking">Networking</option>
+                                    <option value="Cyber Security">Cyber Security</option>
+                                    <option value="Tutorials">Tutorials</option>
+                                    <option value="News">News</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Read Time (minutes)</label>
+                                <input type="number" class="form-control" id="readTime" value="5" min="1">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Featured Image URL</label>
+                            <input type="url" class="form-control" id="featuredImage" 
+                                   placeholder="https://...">
+                            <div class="form-text">URL for the post's featured image (optional)</div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isPublished">
+                                    <label class="form-check-label">
+                                        Publish immediately
+                                    </label>
+                                </div>
+                                <div class="form-text text-muted">If unchecked, post will be saved as draft</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isFeatured">
+                                    <label class="form-check-label">
+                                        Feature this post
+                                    </label>
+                                </div>
+                                <div class="form-text text-muted">Featured posts appear at the top of the blog</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4" id="submitBtn">
+                                <span class="spinner-border spinner-border-sm d-none" id="submitSpinner"></span>
+                                <span id="submitText">Create Post</span>
+                            </button>
+                            <a href="/blog" class="btn btn-outline-secondary px-4">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tips Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-lightbulb me-2"></i>Writing Tips</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Use clear, descriptive headings</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Include code examples with proper formatting</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Add images to break up text</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Write a compelling introduction</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> End with a conclusion or call to action</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-html5 me-2"></i>HTML Formatting Guide</h6>
+                </div>
+                <div class="card-body">
+                    <div class="small">
+                        <p class="mb-2"><code>&lt;h2&gt;Heading&lt;/h2&gt;</code> - Main section heading</p>
+                        <p class="mb-2"><code>&lt;h3&gt;Subheading&lt;/h3&gt;</code> - Subsection heading</p>
+                        <p class="mb-2"><code>&lt;pre&gt;&lt;code&gt;code&lt;/code&gt;&lt;/pre&gt;</code> - Code block</p>
+                        <p class="mb-2"><code>&lt;ul&gt;&lt;li&gt;item&lt;/li&gt;&lt;/ul&gt;</code> - Bullet list</p>
+                        <p class="mb-2"><code>&lt;img src="url"&gt;</code> - Insert image</p>
+                        <p class="mb-0"><code>&lt;blockquote&gt;quote&lt;/blockquote&gt;</code> - Blockquote</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Success</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <p id="successMessage" class="mb-0">Blog post created successfully!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-circle me-2"></i>Error</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
+                <p id="errorMessage" class="mb-0">An error occurred. Please try again.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('blogForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('title').value.trim();
+    const excerpt = document.getElementById('excerpt').value.trim();
+    const content = document.getElementById('content').value.trim();
+    const category = document.getElementById('category').value;
+    const readTime = parseInt(document.getElementById('readTime').value);
+    const featuredImage = document.getElementById('featuredImage').value;
+    const isPublished = document.getElementById('isPublished').checked;
+    const isFeatured = document.getElementById('isFeatured').checked;
+    
+    if (!title || !content || !category) {
+        showError('Please fill in all required fields');
+        return;
+    }
+    
+    const btn = document.getElementById('submitBtn');
+    const spinner = document.getElementById('submitSpinner');
+    const btnText = document.getElementById('submitText');
+    
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    btnText.textContent = 'Creating...';
+    
+    try {
+        const response = await fetch('/api/v1/blog', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                excerpt: excerpt,
+                content: content,
+                category: category,
+                read_time: readTime,
+                featured_image: featuredImage,
+                is_published: isPublished,
+                is_featured: isFeatured
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showSuccess('Blog post created successfully!');
+            setTimeout(() => {
+                window.location.href = `/blog/${data.slug}`;
+            }, 2000);
+        } else {
+            showError(data.detail || 'Failed to create blog post');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred. Please try again.');
+    } finally {
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+        btnText.textContent = 'Create Post';
+    }
+});
+
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    new bootstrap.Modal(document.getElementById('successModal')).show();
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    new bootstrap.Modal(document.getElementById('errorModal')).show();
+}
+</script>
+
+<style>
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}
