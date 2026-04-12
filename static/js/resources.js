@@ -1,5 +1,3 @@
-// resources.js - Resources page functionality
-
 let currentCategory = 'all';
 let currentUser = null;
 
