@@ -22,8 +22,7 @@ async def get_events(
     Get all events with optional filters
     """
     try:
-        print("Fetching events from database...")  # Debug log
-        
+   
         # Start building query
         query = supabase.table("events")\
             .select("*", count="exact")\

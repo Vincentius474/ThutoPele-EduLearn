@@ -301,7 +301,7 @@ function displayFeaturedEvent(event) {
                                 <span>${event.spots_left !== null ? event.spots_left + ' spots left' : 'Unlimited spots'}</span>
                             </div>
                         </div>
-                        <button class="btn btn-primary btn-lg" onclick="registerForEvent('${event.id}')">
+                        <button class="btn btn-primary btn-lg" onclick="">
                             <i class="fas fa-ticket-alt me-2"></i>Register Now
                         </button>
                     </div>
@@ -377,12 +377,12 @@ function displayEvents(events) {
                             <div class="progress-bar bg-${getProgressColor(event.spots_left, event.max_attendees)}" 
                                  style="width: ${getProgressWidth(event.spots_left, event.max_attendees)}%;"></div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            ${spotsDisplay}
-                            <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); registerForEvent('${event.id}')">
-                                ${event.is_free ? 'Register' : 'Book Now'}
-                            </button>
-                        </div>
+                        // <div class="d-flex justify-content-between align-items-center">
+                        //     ${spotsDisplay}
+                        //     <button class="btn btn-sm btn-outline-primary" onclick="">
+                        //         ${event.is_free ? 'Register' : 'Book Now'}
+                        //     </button>
+                        // </div>
                     </div>
                 </div>
             </div>
