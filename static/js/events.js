@@ -1,39 +1,7 @@
-// events.js - Events page functionality
-
 let currentFilter = 'all';
 let currentUser = null;
 let calendar = null;
 let allEvents = [];
-
-// Initialize when DOM is loaded
-// document.addEventListener('DOMContentLoaded', function() {
-//     console.log('Events page loaded');
-    
-//     // Get current user data from data attribute
-//     const userData = document.getElementById('user-data');
-//     if (userData) {
-//         try {
-//             currentUser = JSON.parse(userData.textContent);
-//             console.log('Current user:', currentUser);
-//         } catch (e) {
-//             console.error('Error parsing user data:', e);
-//         }
-//     }
-    
-//     loadEvents();
-//     loadFeaturedEvent();
-    
-//     // Initialize filter buttons
-//     initFilters();
-    
-//     // Initialize virtual event checkbox toggle
-//     const isVirtualCheckbox = document.getElementById('isVirtual');
-//     if (isVirtualCheckbox) {
-//         isVirtualCheckbox.addEventListener('change', function() {
-//             document.getElementById('meetingLinkField').style.display = this.checked ? 'block' : 'none';
-//         });
-//     }
-// });
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -200,7 +168,7 @@ function showEventDetails(event) {
             <span class="badge bg-${getCategoryColor(props.event_type)}">${capitalize(props.event_type)}</span>
             ${props.is_free ? 
                 '<span class="badge bg-success ms-2">Free</span>' : 
-                `<span class="badge bg-warning ms-2">$${props.price}</span>`}
+                `<span class="badge bg-warning ms-2">R${props.price}</span>`}
         </div>
         <h6 class="fw-bold">${date}</h6>
         <p><i class="fas fa-clock me-2 text-primary"></i>${props.time}</p>
@@ -372,7 +340,7 @@ function displayEvents(events) {
         
         const priceDisplay = event.is_free ? 
             '<small class="text-success"><i class="fas fa-circle me-1"></i>Free</small>' :
-            `<small class="text-warning"><i class="fas fa-tag me-1"></i>$${event.price}</small>`;
+            `<small class="text-warning"><i class="fas fa-tag me-1"></i>R${event.price}</small>`;
         
         const spotsDisplay = event.spots_left !== null ? 
             `<small class="text-muted">${event.spots_left} spots available</small>` :

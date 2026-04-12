@@ -20,6 +20,7 @@
         <div class="col-12 text-center">
             <h1 class="display-4 fw-bold text-primary">Free Learning Resources</h1>
             <p class="lead text-muted">Download ebooks, cheatsheets, templates, and more - all for free!</p>
+            <p class="lead text-danger">DISCLAIMER!! WE DO NOT OWN ANY OF THE PROVIDED RESOURCES.</p>
             {% if current_user and (current_user.is_admin or current_user.is_instructor) %}
             <button class="btn btn-primary mt-3" onclick="showUploadModal()">
                 <i class="fas fa-upload me-2"></i>Upload Resource
@@ -97,15 +98,13 @@
             <div class="card bg-primary text-white border-0">
                 <div class="card-body p-5 text-center">
                     <h3 class="mb-3">Share Your Resources</h3>
-                    <p class="mb-4">Have a useful cheatsheet or template? Share it with the community!</p>
                     {% if current_user and (current_user.is_admin or current_user.is_instructor) %}
+                    <p class="mb-4">Have a useful cheatsheet or template? Share it with the community!</p>
                     <button class="btn btn-light btn-lg" onclick="showUploadModal()">
                         <i class="fas fa-upload me-2"></i>Upload Resource
                     </button>
                     {% else %}
-                    <a href="#" class="btn btn-light btn-lg">
-                        <i class="fas fa-upload me-2"></i>Only Instructors & Admins can upload resources.
-                    </a>
+                    <p class="mb-3">Only Instructors & Admins can upload resources.</p>
                     <p class="mb-4">Have a useful cheatsheet or template? Share it with your Instructor!</p>
                     {% endif %}
                 </div>

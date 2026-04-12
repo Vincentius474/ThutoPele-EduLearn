@@ -33,30 +33,24 @@ async def get_events(
         # Apply filters
         if event_type:
             query = query.eq("event_type", event_type)
-            print(f"Filtering by event_type: {event_type}")
         
         if category:
             query = query.eq("category", category)
-            print(f"Filtering by category: {category}")
         
         if featured_only:
             query = query.eq("is_featured", True)
-            print("Filtering by featured only")
         
         if upcoming_only:
             # Get events that haven't happened yet (start_date >= today)
             today = datetime.now().strftime("%Y-%m-%d")
-            print(f"Filtering upcoming events from {today}")
             query = query.gte("start_date", today)
         
         # Execute query to get count
         count_result = query.execute()
         total = count_result.count if hasattr(count_result, 'count') else len(count_result.data or [])
-        print(f"Total events found: {total}")
         
         # Apply pagination
         result = query.range(offset, offset + limit - 1).execute()
-        print(f"Returning {len(result.data)} events")
         
         # Calculate spots left for each event
         for event in result.data:
