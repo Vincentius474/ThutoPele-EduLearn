@@ -20,6 +20,7 @@
         <div class="col-12 text-center">
             <h1 class="display-4 fw-bold text-primary">Free Tutorials</h1>
             <p class="lead text-muted">Learn with our step-by-step tutorials and practical guides</p>
+            <p class="lead text-danger">DISCLAIMER!! WE DO NOT OWN ANY OF THE PROVIDED TUTORIALS.</p>
             {% if current_user and (current_user.is_admin or current_user.is_instructor) %}
             <button class="btn btn-primary mt-3" onclick="showUploadModal()">
                 <i class="fas fa-upload me-2"></i>Upload Tutorial
@@ -29,7 +30,7 @@
     </div>
 
     <!-- Search and Filter -->
-    <!-- <div class="row mb-4">
+    <div class="row mb-4">
         <div class="col-md-8 mx-auto">
             <div class="input-group mb-4">
                 <input type="text" class="form-control form-control-lg" id="searchInput" 
@@ -44,7 +45,7 @@
                 Search in tutorial titles and descriptions
             </div>
         </div>
-    </div> -->
+    </div>
 
     <!-- Category Tabs -->
     <div class="row mb-4">

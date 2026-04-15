@@ -5,6 +5,7 @@ from typing import Optional
 import logging
 
 from app.api.api_v1.dependencies import get_current_active_user, get_current_admin_or_instructor, get_current_instructor
+from app.api.api_v1.endpoints.tutorials import get_tutorials
 from app.web.dependencies import get_templates, get_current_user_from_cookie, get_supabase_client
 from app.services.course_service import CourseService
 from app.services.blog_service import BlogService
@@ -1957,23 +1958,63 @@ async def cookie_policy_page(
 
 # ==================== RESOURCE PAGES ====================
 
+
 @web_router.get("/tutorials", response_class=HTMLResponse)
 async def tutorials_page(
     request: Request,
     category: Optional[str] = None,
     search: Optional[str] = None,
+    page: int = 1,
     templates: Jinja2Templates = Depends(get_templates),
     current_user: Optional[dict] = Depends(get_current_user_from_cookie)
 ):
-    """Tutorials page"""
+    """Tutorials listing page"""
+    supabase = get_supabase_client()
+    
+    limit = 9
+    offset = (page - 1) * limit
+    
+    if search:
+        # Use the search endpoint
+        result = await get_tutorials(
+            category=category,
+            search=search,
+            limit=limit,
+            offset=offset,
+            supabase=supabase
+        )
+        tutorials = result.get("tutorials", [])
+        total = result.get("total", 0)
+    else:
+        # Regular query
+        query = supabase.table("tutorials")\
+            .select("*", count="exact")\
+            .eq("is_published", True)
+        
+        if category and category != 'all':
+            query = query.eq("category", category)
+        
+        count_result = query.execute()
+        total = count_result.count if hasattr(count_result, 'count') else 0
+        
+        result = query.order("created_at", desc=True)\
+            .range(offset, offset + limit - 1)\
+            .execute()
+        tutorials = result.data
+    
+    total_pages = (total + limit - 1) // limit if total > 0 else 1
+    
     return templates.TemplateResponse(
         "tutorials.html",
         {
             "request": request,
             "current_user": current_user,
+            "tutorials": tutorials,
             "selected_category": category,
             "search_query": search,
-            "title": "Tutorials"
+            "page": page,
+            "total_pages": total_pages,
+            "title": "Tutorials" + (f" - Search: {search}" if search else "")
         }
     )
 

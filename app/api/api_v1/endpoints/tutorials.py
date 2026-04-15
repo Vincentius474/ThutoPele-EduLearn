@@ -9,6 +9,7 @@ import mimetypes
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+
 @router.get("/tutorials")
 async def get_tutorials(
     category: Optional[str] = None,
@@ -23,37 +24,48 @@ async def get_tutorials(
     Get all tutorials with optional filters
     """
     try:
-        # Start building query
+        if search:
+            # Use the database function for efficient search
+            result = supabase.rpc(
+                "search_tutorials",
+                {
+                    "search_term": search,
+                    "category_filter": category if category and category != 'all' else None,
+                    "difficulty_filter": difficulty
+                }
+            ).execute()
+            
+            tutorials = result.data
+            total = len(tutorials)
+            
+            # Apply pagination
+            paginated_tutorials = tutorials[offset:offset + limit]
+            
+            return {
+                "tutorials": paginated_tutorials,
+                "total": total,
+                "limit": limit,
+                "offset": offset
+            }
+        
+        # Regular query without search
         query = supabase.table("tutorials")\
-            .select("*, users(full_name, avatar_url)", count="exact")\
+            .select("*", count="exact")\
             .eq("is_published", True)
         
-        # Apply filters
         if category and category != 'all':
             query = query.eq("category", category)
-        
         if difficulty:
             query = query.eq("difficulty", difficulty)
-        
         if topic:
             query = query.eq("topic", topic)
         
-        # Handle search - search in title and description
-        if search:
-            search_term = search.strip()
-            # Use ilike for case-insensitive search
-            query = query.or_(f"title.ilike.%{search_term}%,description.ilike.%{search_term}%")
-        
-        # Get total count before pagination
         count_result = query.execute()
-        total = count_result.count if hasattr(count_result, 'count') else len(count_result.data or [])
+        total = count_result.count if hasattr(count_result, 'count') else 0
         
-        # Apply sorting and pagination
         result = query.order("created_at", desc=True)\
             .range(offset, offset + limit - 1)\
             .execute()
-        
-        print(f"Search query: '{search}', Found: {len(result.data)} tutorials")  # Debug log
         
         return {
             "tutorials": result.data,
