@@ -7,6 +7,9 @@ let allEvents = [];
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Events page loaded');
     
+    // Check if required libraries are loaded
+    checkRequiredLibraries();
+    
     // Get current user data from data attribute
     const userData = document.getElementById('user-data');
     if (userData) {
@@ -28,7 +31,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const isVirtualCheckbox = document.getElementById('isVirtual');
     if (isVirtualCheckbox) {
         isVirtualCheckbox.addEventListener('change', function() {
-            document.getElementById('meetingLinkField').style.display = this.checked ? 'block' : 'none';
+            const meetingLinkField = document.getElementById('meetingLinkField');
+            if (meetingLinkField) {
+                meetingLinkField.style.display = this.checked ? 'block' : 'none';
+            }
+        });
+    }
+    
+    // Initialize isFree checkbox toggle for price field
+    const isFreeCheckbox = document.getElementById('isFree');
+    if (isFreeCheckbox) {
+        isFreeCheckbox.addEventListener('change', function() {
+            const priceField = document.getElementById('priceField');
+            if (priceField) {
+                priceField.style.display = this.checked ? 'none' : 'block';
+            }
+            if (this.checked && document.getElementById('price')) {
+                document.getElementById('price').value = 0;
+            }
         });
     }
     
@@ -41,22 +61,66 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Add click handler for create event button in modal
-    const createEventBtn = document.querySelector('#createEventModal .btn-primary');
-    if (createEventBtn) {
-        createEventBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            createEvent();
+    // Initialize view buttons
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const calendarViewBtn = document.getElementById('calendarViewBtn');
+    
+    if (gridViewBtn) {
+        gridViewBtn.addEventListener('click', showGridView);
+    }
+    if (calendarViewBtn) {
+        calendarViewBtn.addEventListener('click', showCalendarView);
+    }
+    
+    // Initialize modal close handlers to reset forms
+    const createEventModal = document.getElementById('createEventModal');
+    if (createEventModal) {
+        createEventModal.addEventListener('hidden.bs.modal', function() {
+            resetCreateEventForm();
         });
     }
 });
 
+// Check if required libraries are loaded
+function checkRequiredLibraries() {
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap JS not loaded - modals will not work');
+        showLibraryError('Bootstrap');
+    }
+    
+    if (typeof FullCalendar === 'undefined') {
+        console.warn('FullCalendar not loaded - calendar view will be disabled');
+        const calendarViewBtn = document.getElementById('calendarViewBtn');
+        if (calendarViewBtn) {
+            calendarViewBtn.disabled = true;
+            calendarViewBtn.title = 'Calendar view requires FullCalendar library';
+        }
+    }
+}
+
+// Show library error message
+function showLibraryError(library) {
+    const eventsGrid = document.getElementById('eventsGrid');
+    if (eventsGrid) {
+        eventsGrid.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+                <h5>Configuration Error</h5>
+                <p class="text-muted">${library} library is not loaded. Please check your internet connection and refresh the page.</p>
+            </div>
+        `;
+    }
+}
+
 // Initialize filter buttons
 function initFilters() {
-    document.querySelectorAll('[data-filter]').forEach(button => {
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    if (filterButtons.length === 0) return;
+    
+    filterButtons.forEach(button => {
         button.addEventListener('click', () => {
             // Update active state
-            document.querySelectorAll('[data-filter]').forEach(btn => {
+            filterButtons.forEach(btn => {
                 btn.classList.remove('active');
             });
             button.classList.add('active');
@@ -69,32 +133,85 @@ function initFilters() {
 
 // Show grid view
 function showGridView() {
-    document.getElementById('gridViewBtn').classList.add('active');
-    document.getElementById('calendarViewBtn').classList.remove('active');
-    document.getElementById('eventsGrid').style.display = 'flex';
-    document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('filterSection').style.display = 'block';
-    document.getElementById('calendarLegend').style.display = 'none';
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const calendarViewBtn = document.getElementById('calendarViewBtn');
+    const eventsGrid = document.getElementById('eventsGrid');
+    const calendarView = document.getElementById('calendarView');
+    const filterSection = document.getElementById('filterSection');
+    const calendarLegend = document.getElementById('calendarLegend');
+    
+    if (gridViewBtn) gridViewBtn.classList.add('active');
+    if (calendarViewBtn) calendarViewBtn.classList.remove('active');
+    if (eventsGrid) eventsGrid.style.display = 'flex';
+    if (calendarView) calendarView.style.display = 'none';
+    if (filterSection) filterSection.style.display = 'block';
+    if (calendarLegend) calendarLegend.style.display = 'none';
 }
 
 // Show calendar view
-function showCalendarView() {
-    document.getElementById('calendarViewBtn').classList.add('active');
-    document.getElementById('gridViewBtn').classList.remove('active');
-    document.getElementById('eventsGrid').style.display = 'none';
-    document.getElementById('calendarView').style.display = 'block';
-    document.getElementById('filterSection').style.display = 'none';
-    document.getElementById('calendarLegend').style.display = 'block';
+async function showCalendarView() {
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const calendarViewBtn = document.getElementById('calendarViewBtn');
+    const eventsGrid = document.getElementById('eventsGrid');
+    const calendarView = document.getElementById('calendarView');
+    const filterSection = document.getElementById('filterSection');
+    const calendarLegend = document.getElementById('calendarLegend');
+    
+    if (calendarViewBtn) calendarViewBtn.classList.add('active');
+    if (gridViewBtn) gridViewBtn.classList.remove('active');
+    if (eventsGrid) eventsGrid.style.display = 'none';
+    if (calendarView) calendarView.style.display = 'block';
+    if (filterSection) filterSection.style.display = 'none';
+    if (calendarLegend) calendarLegend.style.display = 'block';
+    
+    // Check if FullCalendar is available
+    if (typeof FullCalendar === 'undefined') {
+        if (calendarView) {
+            calendarView.innerHTML = `
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Calendar view is unavailable. Please refresh the page or try again later.
+                </div>
+            `;
+        }
+        return;
+    }
     
     // Initialize calendar if not already done
-    if (!calendar && allEvents.length > 0) {
-        initCalendar();
+    if (!calendar) {
+        if (allEvents.length > 0) {
+            initCalendar();
+        } else {
+            // Wait for events to load if they haven't yet
+            if (allEvents.length === 0) {
+                await loadEvents();
+            }
+            if (allEvents.length > 0) {
+                initCalendar();
+            } else {
+                if (calendarView) {
+                    calendarView.innerHTML = `
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No events to display in calendar.
+                        </div>
+                    `;
+                }
+            }
+        }
+    } else {
+        // Refresh calendar events
+        calendar.refetchEvents();
     }
 }
 
 // Initialize FullCalendar
 function initCalendar() {
     const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) {
+        console.error('Calendar element not found');
+        return;
+    }
     
     // Get category color
     function getEventColor(eventType) {
@@ -108,85 +225,128 @@ function initCalendar() {
         return colors[eventType] || '#0d6efd';
     }
     
-    calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: allEvents.map(event => ({
-            id: event.id,
-            title: event.title,
-            start: event.start_date,
-            end: event.end_date || event.start_date,
-            backgroundColor: getEventColor(event.event_type),
-            borderColor: getEventColor(event.event_type),
-            textColor: '#ffffff',
-            extendedProps: {
-                description: event.description,
-                time: event.start_time ? `${event.start_time} - ${event.end_time || 'TBD'}` : 'TBD',
-                location: event.is_virtual ? 'Virtual Event' : (event.location || 'TBD'),
-                spots_left: event.spots_left,
-                event_type: event.event_type,
-                is_free: event.is_free,
-                price: event.price
+    try {
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: allEvents.map(event => ({
+                id: event.id,
+                title: escapeHtml(event.title),
+                start: event.start_date,
+                end: event.end_date || event.start_date,
+                backgroundColor: getEventColor(event.event_type),
+                borderColor: getEventColor(event.event_type),
+                textColor: '#ffffff',
+                extendedProps: {
+                    description: event.description,
+                    time: event.start_time ? `${event.start_time} - ${event.end_time || 'TBD'}` : 'TBD',
+                    location: event.is_virtual ? 'Virtual Event' : (event.location || 'TBD'),
+                    spots_left: event.spots_left,
+                    event_type: event.event_type,
+                    is_free: event.is_free,
+                    price: event.price,
+                    id: event.id
+                }
+            })),
+            eventClick: function(info) {
+                showEventDetails(info.event);
+            },
+            dateClick: function(info) {
+                console.log('Date clicked:', info.dateStr);
+            },
+            height: 'auto',
+            firstDay: 1,
+            locale: 'en',
+            eventTimeFormat: {
+                hour: '2-digit',
+                minute: '2-digit',
+                meridiem: 'short'
+            },
+            loading: function(isLoading) {
+                if (isLoading) {
+                    console.log('Calendar is loading events...');
+                }
             }
-        })),
-        eventClick: function(info) {
-            showEventDetails(info.event);
-        },
-        dateClick: function(info) {
-            console.log('Date clicked:', info.dateStr);
-        },
-        height: 'auto',
-        firstDay: 1,
-        locale: 'en',
-        eventTimeFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            meridiem: 'short'
+        });
+        
+        calendar.render();
+        console.log('Calendar initialized successfully');
+    } catch (error) {
+        console.error('Error initializing calendar:', error);
+        const calendarView = document.getElementById('calendarView');
+        if (calendarView) {
+            calendarView.innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Failed to initialize calendar: ${escapeHtml(error.message)}
+                </div>
+            `;
         }
-    });
-    
-    calendar.render();
+    }
 }
 
 // Show event details modal
 function showEventDetails(event) {
+    // Check if Bootstrap is available
+    if (typeof bootstrap === 'undefined') {
+        alert('Modal system unavailable. Please refresh the page.');
+        return;
+    }
+    
+    const modalElement = document.getElementById('eventDetailsModal');
+    if (!modalElement) {
+        console.error('Event details modal element not found');
+        alert('Event details view is unavailable');
+        return;
+    }
+    
     const props = event.extendedProps;
-    const date = new Date(event.start).toLocaleDateString('en-US', {
+    const startDate = new Date(event.start);
+    const date = !isNaN(startDate.getTime()) ? startDate.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-    });
+    }) : 'Date TBD';
     
     const modalBody = document.getElementById('eventDetailsBody');
+    if (!modalBody) return;
+    
     modalBody.innerHTML = `
         <div class="text-center mb-3">
-            <span class="badge bg-${getCategoryColor(props.event_type)}">${capitalize(props.event_type)}</span>
+            <span class="badge bg-${getCategoryColor(props.event_type)}">${capitalize(escapeHtml(props.event_type))}</span>
             ${props.is_free ? 
                 '<span class="badge bg-success ms-2">Free</span>' : 
-                `<span class="badge bg-warning ms-2">R${props.price}</span>`}
+                `<span class="badge bg-warning ms-2">R${props.price || 0}</span>`}
         </div>
-        <h6 class="fw-bold">${date}</h6>
-        <p><i class="fas fa-clock me-2 text-primary"></i>${props.time}</p>
-        <p><i class="fas ${props.location === 'Virtual Event' ? 'fa-globe' : 'fa-map-marker-alt'} me-2 text-primary"></i>${props.location}</p>
-        <p class="text-muted">${props.description || 'No description available'}</p>
+        <h6 class="fw-bold">${escapeHtml(date)}</h6>
+        <p><i class="fas fa-clock me-2 text-primary"></i>${escapeHtml(props.time)}</p>
+        <p><i class="fas ${props.location === 'Virtual Event' ? 'fa-globe' : 'fa-map-marker-alt'} me-2 text-primary"></i>${escapeHtml(props.location)}</p>
+        <p class="text-muted">${escapeHtml(props.description) || 'No description available'}</p>
         <div class="alert alert-info">
             <i class="fas fa-users me-2"></i>
-            ${props.spots_left !== null ? props.spots_left + ' spots available' : 'Unlimited spots'}
+            ${props.spots_left !== null && props.spots_left !== undefined ? 
+                props.spots_left + ' spots available' : 'Unlimited spots'}
         </div>
     `;
     
-    document.getElementById('eventDetailsTitle').textContent = event.title;
+    const titleElement = document.getElementById('eventDetailsTitle');
+    if (titleElement) {
+        titleElement.textContent = escapeHtml(event.title);
+    }
     
     // Set up register button
     const registerBtn = document.getElementById('registerFromDetailsBtn');
-    registerBtn.onclick = () => registerForEvent(event.id);
+    if (registerBtn) {
+        registerBtn.onclick = () => registerForEvent(props.id || event.id);
+    }
     
-    new bootstrap.Modal(document.getElementById('eventDetailsModal')).show();
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
 }
 
 // Load events from API
@@ -196,11 +356,15 @@ async function loadEvents() {
         const response = await fetch('/api/v1/events?limit=50&upcoming_only=false');
         console.log('Response status:', response.status);
         
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         console.log('Events API response:', data);
         
         // Store events globally
-        if (data && data.events) {
+        if (data && data.events && Array.isArray(data.events)) {
             allEvents = data.events;
             console.log(`Found ${allEvents.length} events`);
             if (allEvents.length > 0) {
@@ -218,30 +382,48 @@ async function loadEvents() {
             }
         } else {
             console.log('Unexpected response format:', data);
+            allEvents = [];
             displayNoEvents();
         }
     } catch (error) {
         console.error('Error loading events:', error);
-        displayNoEvents();
+        displayErrorMessage('Failed to load events. Please check your connection and try again.');
+    }
+}
+
+// Display error message
+function displayErrorMessage(message) {
+    const grid = document.getElementById('eventsGrid');
+    if (grid) {
+        grid.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+                <h5>Error Loading Events</h5>
+                <p class="text-muted">${escapeHtml(message)}</p>
+                <button class="btn btn-primary mt-3" onclick="location.reload()">
+                    <i class="fas fa-sync-alt me-2"></i>Retry
+                </button>
+            </div>
+        `;
     }
 }
 
 // Display message when no events are found
 function displayNoEvents() {
     const grid = document.getElementById('eventsGrid');
-    if (grid) {
-        grid.innerHTML = `
-            <div class="col-12 text-center py-5">
-                <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-                <h5>No events found</h5>
-                <p class="text-muted">Check back later for upcoming events!</p>
-                ${currentUser && (currentUser.is_admin || currentUser.is_instructor) ? 
-                    `<button class="btn btn-primary mt-3" onclick="showCreateEventModal()">
-                        <i class="fas fa-plus-circle me-2"></i>Create First Event
-                    </button>` : ''}
-            </div>
-        `;
-    }
+    if (!grid) return;
+    
+    grid.innerHTML = `
+        <div class="col-12 text-center py-5">
+            <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
+            <h5>No events found</h5>
+            <p class="text-muted">Check back later for upcoming events!</p>
+            ${currentUser && (currentUser.is_admin || currentUser.is_instructor) ? 
+                `<button class="btn btn-primary mt-3" onclick="showCreateEventModal()">
+                    <i class="fas fa-plus-circle me-2"></i>Create First Event
+                </button>` : ''}
+        </div>
+    `;
 }
 
 // Load featured event
@@ -250,6 +432,18 @@ async function loadFeaturedEvent() {
         console.log('Loading featured event...');
         const response = await fetch('/api/v1/events/featured');
         console.log('Featured response status:', response.status);
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.log('No featured event found');
+                const container = document.getElementById('featuredEvent');
+                if (container) {
+                    container.innerHTML = '';
+                }
+                return;
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const event = await response.json();
         console.log('Featured event:', event);
@@ -265,6 +459,11 @@ async function loadFeaturedEvent() {
         }
     } catch (error) {
         console.error('Error loading featured event:', error);
+        // Don't show error for featured event - it's optional
+        const container = document.getElementById('featuredEvent');
+        if (container) {
+            container.innerHTML = '';
+        }
     }
 }
 
@@ -273,11 +472,17 @@ function displayFeaturedEvent(event) {
     const container = document.getElementById('featuredEvent');
     if (!container) return;
     
-    const date = new Date(event.start_date).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-    });
+    let date = 'Date TBD';
+    if (event.start_date) {
+        const dateObj = new Date(event.start_date);
+        if (!isNaN(dateObj.getTime())) {
+            date = dateObj.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+    }
     
     container.innerHTML = `
         <div class="card border-0 shadow-lg">
@@ -290,18 +495,19 @@ function displayFeaturedEvent(event) {
                         <div class="d-flex flex-wrap gap-4 mb-4">
                             <div>
                                 <i class="fas fa-calendar text-primary me-2"></i>
-                                <span>${date}</span>
+                                <span>${escapeHtml(date)}</span>
                             </div>
                             <div>
                                 <i class="fas fa-clock text-primary me-2"></i>
-                                <span>${event.start_time || 'TBD'} - ${event.end_time || 'TBD'}</span>
+                                <span>${escapeHtml(event.start_time || 'TBD')} - ${escapeHtml(event.end_time || 'TBD')}</span>
                             </div>
                             <div>
                                 <i class="fas fa-users text-primary me-2"></i>
-                                <span>${event.spots_left !== null ? event.spots_left + ' spots left' : 'Unlimited spots'}</span>
+                                <span>${event.spots_left !== null && event.spots_left !== undefined ? 
+                                    event.spots_left + ' spots left' : 'Unlimited spots'}</span>
                             </div>
                         </div>
-                        <button class="btn btn-primary btn-lg" onclick="">
+                        <button class="btn btn-primary btn-lg" onclick="registerForEvent('${event.id}')">
                             <i class="fas fa-ticket-alt me-2"></i>Register Now
                         </button>
                     </div>
@@ -332,57 +538,68 @@ function displayEvents(events) {
     let html = '';
     events.forEach(event => {
         const category = event.event_type;
-        const date = new Date(event.start_date).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        });
+        let date = 'Date TBD';
+        if (event.start_date) {
+            const dateObj = new Date(event.start_date);
+            if (!isNaN(dateObj.getTime())) {
+                date = dateObj.toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            }
+        }
         
         const priceDisplay = event.is_free ? 
             '<small class="text-success"><i class="fas fa-circle me-1"></i>Free</small>' :
-            `<small class="text-warning"><i class="fas fa-tag me-1"></i>R${event.price}</small>`;
+            `<small class="text-warning"><i class="fas fa-tag me-1"></i>R${event.price || 0}</small>`;
         
-        const spotsDisplay = event.spots_left !== null ? 
+        const spotsDisplay = event.spots_left !== null && event.spots_left !== undefined ? 
             `<small class="text-muted">${event.spots_left} spots available</small>` :
             '<small class="text-muted">Unlimited spots</small>';
         
         const locationIcon = event.is_virtual ? 'fa-globe' : 'fa-map-marker-alt';
         const location = event.is_virtual ? 'Virtual Event' : (event.location || 'TBD');
         
+        const progressWidth = getProgressWidth(event.spots_left, event.max_attendees);
+        const progressColor = getProgressColor(event.spots_left, event.max_attendees);
+        
         html += `
             <div class="col-md-6 col-lg-4 event-item" data-category="${category}">
-                <div class="card h-100 border-0 shadow-sm event-card" onclick="showEventDetailsFromCard('${event.id}')">
+                <div class="card h-100 border-0 shadow-sm event-card">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-3">
-                            <span class="badge bg-${getCategoryColor(category)}">${capitalize(category)}</span>
+                            <span class="badge bg-${getCategoryColor(category)}">${capitalize(escapeHtml(category))}</span>
                             ${priceDisplay}
                         </div>
                         <h5 class="card-title fw-bold mb-2">${escapeHtml(event.title)}</h5>
-                        <p class="card-text text-muted small mb-3">${escapeHtml(event.description ? event.description.substring(0, 100) : '')}...</p>
+                        <p class="card-text text-muted small mb-3">${escapeHtml(event.description ? event.description.substring(0, 100) : '')}${event.description && event.description.length > 100 ? '...' : ''}</p>
                         <div class="event-details mb-3">
                             <div class="d-flex mb-2">
                                 <i class="fas fa-calendar-alt text-primary me-2" style="width: 20px;"></i>
-                                <small>${date}</small>
+                                <small>${escapeHtml(date)}</small>
                             </div>
                             <div class="d-flex mb-2">
                                 <i class="fas fa-clock text-primary me-2" style="width: 20px;"></i>
-                                <small>${event.start_time || 'TBD'} - ${event.end_time || 'TBD'}</small>
+                                <small>${escapeHtml(event.start_time || 'TBD')} - ${escapeHtml(event.end_time || 'TBD')}</small>
                             </div>
                             <div class="d-flex mb-2">
                                 <i class="fas ${locationIcon} text-primary me-2" style="width: 20px;"></i>
                                 <small>${escapeHtml(location)}</small>
                             </div>
                         </div>
+                        ${event.max_attendees ? `
                         <div class="progress mb-2" style="height: 5px;">
-                            <div class="progress-bar bg-${getProgressColor(event.spots_left, event.max_attendees)}" 
-                                 style="width: ${getProgressWidth(event.spots_left, event.max_attendees)}%;"></div>
+                            <div class="progress-bar bg-${progressColor}" 
+                                 style="width: ${progressWidth}%;"></div>
                         </div>
-                        // <div class="d-flex justify-content-between align-items-center">
-                        //     ${spotsDisplay}
-                        //     <button class="btn btn-sm btn-outline-primary" onclick="">
-                        //         ${event.is_free ? 'Register' : 'Book Now'}
-                        //     </button>
-                        // </div>
+                        ` : ''}
+                        <div class="d-flex justify-content-between align-items-center">
+                            ${spotsDisplay}
+                            <button class="btn btn-sm btn-outline-primary" onclick="registerForEvent('${event.id}')">
+                                <i class="fas fa-ticket-alt me-1"></i>${event.is_free ? 'Register' : 'Book Now'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -393,30 +610,6 @@ function displayEvents(events) {
     
     // Apply current filter
     filterEvents();
-}
-
-// Show event details from card
-function showEventDetailsFromCard(eventId) {
-    const event = allEvents.find(e => e.id === eventId);
-    if (event) {
-        // Create a fake FullCalendar event object
-        const fakeEvent = {
-            id: event.id,
-            title: event.title,
-            start: event.start_date,
-            end: event.end_date,
-            extendedProps: {
-                description: event.description,
-                time: event.start_time ? `${event.start_time} - ${event.end_time || 'TBD'}` : 'TBD',
-                location: event.is_virtual ? 'Virtual Event' : (event.location || 'TBD'),
-                spots_left: event.spots_left,
-                event_type: event.event_type,
-                is_free: event.is_free,
-                price: event.price
-            }
-        };
-        showEventDetails(fakeEvent);
-    }
 }
 
 // Filter events by category
@@ -434,11 +627,25 @@ function filterEvents() {
 
 // Register for event
 async function registerForEvent(eventId) {
-    if (!currentUser) {
-        alert('Please login to register for events');
-        window.location.href = '/login';
+    if (!eventId) {
+        alert('Invalid event ID');
         return;
     }
+    
+    if (!currentUser) {
+        const confirmLogin = confirm('Please login to register for events. Would you like to go to the login page?');
+        if (confirmLogin) {
+            window.location.href = '/login';
+        }
+        return;
+    }
+    
+    // Disable button to prevent double submission
+    const registerButtons = document.querySelectorAll(`[onclick="registerForEvent('${eventId}')"]`);
+    registerButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+    });
     
     try {
         const response = await fetch(`/api/v1/events/${eventId}/register`, {
@@ -452,13 +659,26 @@ async function registerForEvent(eventId) {
         
         if (response.ok) {
             alert('Successfully registered for event!');
+            // Reload events to update spot counts
             setTimeout(() => location.reload(), 1500);
         } else {
-            alert(data.detail || 'Failed to register');
+            alert(data.detail || 'Failed to register. Please try again.');
+            // Re-enable buttons
+            registerButtons.forEach(btn => {
+                btn.disabled = false;
+                const isFree = btn.textContent.includes('Register');
+                btn.innerHTML = `<i class="fas fa-ticket-alt me-1"></i>${isFree ? 'Register' : 'Book Now'}`;
+            });
         }
     } catch (error) {
         console.error('Registration error:', error);
-        alert('An error occurred');
+        alert('An error occurred. Please check your connection and try again.');
+        // Re-enable buttons
+        registerButtons.forEach(btn => {
+            btn.disabled = false;
+            const isFree = btn.textContent.includes('Register');
+            btn.innerHTML = `<i class="fas fa-ticket-alt me-1"></i>${isFree ? 'Register' : 'Book Now'}`;
+        });
     }
 }
 
@@ -471,13 +691,45 @@ function showCreateEventModal() {
     
     const modal = document.getElementById('createEventModal');
     if (modal) {
-        new bootstrap.Modal(modal).show();
+        // Reset form before showing
+        resetCreateEventForm();
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    } else {
+        alert('Event creation form is unavailable');
+    }
+}
+
+// Reset create event form
+function resetCreateEventForm() {
+    const form = document.getElementById('createEventForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Reset virtual event field visibility
+    const meetingLinkField = document.getElementById('meetingLinkField');
+    if (meetingLinkField) {
+        meetingLinkField.style.display = 'none';
+    }
+    
+    // Reset price field visibility
+    const priceField = document.getElementById('priceField');
+    const isFreeCheckbox = document.getElementById('isFree');
+    if (priceField && isFreeCheckbox && isFreeCheckbox.checked) {
+        priceField.style.display = 'none';
     }
 }
 
 // Create new event (for admins/instructors)
 async function createEvent() {
     console.log('Create event function called');
+    
+    // Check if user is authorized
+    if (!currentUser || (!currentUser.is_admin && !currentUser.is_instructor)) {
+        alert('You are not authorized to create events');
+        return;
+    }
     
     // Get form data with error checking
     const titleInput = document.getElementById('eventTitle');
@@ -491,20 +743,20 @@ async function createEvent() {
     }
     
     const eventData = {
-        title: titleInput.value,
-        description: document.getElementById('eventDescription')?.value || '',
+        title: titleInput.value.trim(),
+        description: document.getElementById('eventDescription')?.value.trim() || '',
         event_type: typeInput.value,
         start_date: startDateInput.value,
         end_date: document.getElementById('endDate')?.value || null,
         start_time: document.getElementById('startTime')?.value || null,
         end_time: document.getElementById('endTime')?.value || null,
-        location: document.getElementById('location')?.value || '',
+        location: document.getElementById('location')?.value.trim() || '',
         is_virtual: document.getElementById('isVirtual')?.checked || false,
-        meeting_link: document.getElementById('meetingLink')?.value || '',
+        meeting_link: document.getElementById('meetingLink')?.value.trim() || '',
         price: parseFloat(document.getElementById('price')?.value) || 0,
         is_free: document.getElementById('isFree')?.checked || true,
         max_attendees: parseInt(document.getElementById('maxAttendees')?.value) || null,
-        organizer_name: document.getElementById('organizerName')?.value || currentUser?.full_name || 'Instructor',
+        organizer_name: document.getElementById('organizerName')?.value.trim() || currentUser?.full_name || 'Instructor',
         is_published: document.getElementById('isPublished')?.checked || true,
         is_featured: document.getElementById('isFeatured')?.checked || false
     };
@@ -523,16 +775,31 @@ async function createEvent() {
         return;
     }
     
+    // Validate virtual event requirements
+    if (eventData.is_virtual && !eventData.meeting_link) {
+        alert('Please provide a meeting link for the virtual event');
+        return;
+    }
+    
+    // Validate date range
+    if (eventData.end_date && eventData.end_date < eventData.start_date) {
+        alert('End date cannot be before start date');
+        return;
+    }
+    
     console.log('Creating event with data:', eventData);
     
     // Show loading state
+    const modal = bootstrap.Modal.getInstance(document.getElementById('createEventModal'));
     const btn = document.querySelector('#createEventModal .btn-primary');
     const spinner = document.getElementById('createSpinner');
     const btnText = btn ? btn.querySelector('span:last-child') : null;
     
-    if (btn) btn.disabled = true;
+    if (btn) {
+        btn.disabled = true;
+        if (btnText) btnText.textContent = 'Creating...';
+    }
     if (spinner) spinner.classList.remove('d-none');
-    if (btnText) btnText.textContent = 'Creating...';
     
     try {
         const response = await fetch('/api/v1/events', {
@@ -548,28 +815,26 @@ async function createEvent() {
         
         if (response.ok) {
             // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('createEventModal'));
             if (modal) modal.hide();
             
             // Show success message
             alert('Event created successfully!');
             
-            // Reset form
-            document.getElementById('createEventForm')?.reset();
-            
             // Reload events
             setTimeout(() => location.reload(), 1500);
         } else {
-            alert(responseData.detail || 'Failed to create event');
+            alert(responseData.detail || 'Failed to create event. Please check your input and try again.');
         }
     } catch (error) {
         console.error('Error creating event:', error);
-        alert('An error occurred while creating the event. Please try again.');
+        alert('An error occurred while creating the event. Please check your connection and try again.');
     } finally {
         // Reset button state
-        if (btn) btn.disabled = false;
+        if (btn) {
+            btn.disabled = false;
+            if (btnText) btnText.textContent = 'Create Event';
+        }
         if (spinner) spinner.classList.add('d-none');
-        if (btnText) btnText.textContent = 'Create Event';
     }
 }
 
@@ -586,21 +851,24 @@ function getCategoryColor(category) {
 }
 
 function getProgressColor(spotsLeft, maxAttendees) {
-    if (!maxAttendees) return 'success';
+    if (!maxAttendees || spotsLeft === null || spotsLeft === undefined) return 'success';
     const percentage = ((maxAttendees - spotsLeft) / maxAttendees) * 100;
+    if (percentage >= 100) return 'danger';
     if (percentage >= 80) return 'danger';
     if (percentage >= 50) return 'warning';
     return 'success';
 }
 
 function getProgressWidth(spotsLeft, maxAttendees) {
-    if (!maxAttendees) return 0;
-    return ((maxAttendees - spotsLeft) / maxAttendees) * 100;
+    if (!maxAttendees || spotsLeft === null || spotsLeft === undefined) return 0;
+    const percentage = ((maxAttendees - spotsLeft) / maxAttendees) * 100;
+    // Cap at 100%
+    return Math.min(percentage, 100);
 }
 
 function capitalize(str) {
     if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 function escapeHtml(text) {
@@ -616,4 +884,3 @@ window.showCalendarView = showCalendarView;
 window.showCreateEventModal = showCreateEventModal;
 window.createEvent = createEvent;
 window.registerForEvent = registerForEvent;
-window.showEventDetailsFromCard = showEventDetailsFromCard;
