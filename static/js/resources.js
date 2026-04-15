@@ -48,6 +48,53 @@ async function loadResources() {
     }
 }
 
+// Load resources from API
+// async function loadResources() {
+//     const grid = document.getElementById('resourcesGrid');
+//     if (grid) {
+//         grid.innerHTML = `
+//             <div class="col-12 text-center py-5">
+//                 <div class="spinner-border text-primary" role="status">
+//                     <span class="visually-hidden">Loading...</span>
+//                 </div>
+//             </div>
+//         `;
+//     }
+    
+//     let url = `/api/v1/resources?limit=9&offset=${(currentPage - 1) * 9}`;
+//     if (currentCategory && currentCategory !== 'all') {
+//         url += `&category=${currentCategory}`;
+//     }
+//     if (currentSearch) {
+//         url += `&search=${encodeURIComponent(currentSearch)}`;
+//     }
+    
+//     try {
+//         const response = await fetch(url);
+//         const data = await response.json();
+        
+//         const resources = data.resources || [];
+//         const total = data.total || 0;
+//         totalPages = Math.ceil(total / 9);
+        
+//         console.log(`Loaded ${resources.length} resources out of ${total} total`); // Debug log
+        
+//         displayResources(resources);
+//         updatePagination(total);
+//     } catch (error) {
+//         console.error('Error loading resources:', error);
+//         if (grid) {
+//             grid.innerHTML = `
+//                 <div class="col-12 text-center py-5">
+//                     <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
+//                     <h5>Error loading resources</h5>
+//                     <p class="text-muted">Please try again later.</p>
+//                 </div>
+//             `;
+//         }
+//     }
+// }
+
 // Display resources in grid
 function displayResources(resources) {
     const grid = document.getElementById('resourcesGrid');

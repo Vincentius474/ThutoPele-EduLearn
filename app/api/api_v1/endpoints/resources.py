@@ -1,10 +1,12 @@
 from typing import Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form
 from app.core.supabase_client import get_supabase
 from app.api.api_v1.dependencies import get_current_user, get_current_admin_or_instructor
 import logging
 import mimetypes
 import os
+from typing import Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form, Query
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -32,6 +34,120 @@ async def get_resources(
     except Exception as e:
         logger.error(f"Error getting resources: {e}")
         return []
+
+# @router.get("/resources")
+# async def get_resources(
+#     category: Optional[str] = None,
+#     search: Optional[str] = None,
+#     sort_by: str = Query("created_at", regex="^(created_at|download_count|title)$"),
+#     sort_direction: str = Query("desc", regex="^(asc|desc)$"),
+#     limit: int = Query(50, ge=1, le=100),
+#     offset: int = Query(0, ge=0),
+#     supabase=Depends(get_supabase)
+# ) -> Any:
+#     """
+#     Get all resources with optional filters and search using database function
+#     """
+#     try:
+#         # If search is provided, use the database function for efficient search
+#         if search:
+#             # Call the database function
+#             result = supabase.rpc(
+#                 "search_resources",
+#                 {
+#                     "search_term": search,
+#                     "category_filter": category if category and category != 'all' else None,
+#                     "sort_by": sort_by,
+#                     "sort_direction": sort_direction
+#                 }
+#             ).execute()
+            
+#             all_resources = result.data
+#             total = len(all_resources)
+            
+#             # Apply pagination
+#             paginated_resources = all_resources[offset:offset + limit]
+            
+#             # Get uploader details for each resource
+#             for resource in paginated_resources:
+#                 if resource.get("uploaded_by"):
+#                     uploader = supabase.table("users")\
+#                         .select("full_name, avatar_url")\
+#                         .eq("id", resource["uploaded_by"])\
+#                         .execute()
+#                     if uploader.data:
+#                         resource["uploader"] = uploader.data[0]
+            
+#             return {
+#                 "resources": paginated_resources,
+#                 "total": total,
+#                 "limit": limit,
+#                 "offset": offset
+#             }
+        
+#         # Regular query without search
+#         query = supabase.table("resources")\
+#             .select("*", count="exact")\
+#             .eq("is_published", True)
+        
+#         if category and category != 'all':
+#             query = query.eq("category", category)
+        
+#         # Apply sorting
+#         query = query.order(sort_by, desc=(sort_direction == "desc"))
+        
+#         # Get total count
+#         count_result = query.execute()
+#         total = count_result.count if hasattr(count_result, 'count') else 0
+        
+#         # Apply pagination
+#         result = query.range(offset, offset + limit - 1).execute()
+        
+#         # Get uploader details
+#         for resource in result.data:
+#             if resource.get("uploaded_by"):
+#                 uploader = supabase.table("users")\
+#                     .select("full_name, avatar_url")\
+#                     .eq("id", resource["uploaded_by"])\
+#                     .execute()
+#                 if uploader.data:
+#                     resource["uploader"] = uploader.data[0]
+        
+#         return {
+#             "resources": result.data,
+#             "total": total,
+#             "limit": limit,
+#             "offset": offset
+#         }
+        
+#     except Exception as e:
+#         logger.error(f"Error getting resources: {e}")
+#         import traceback
+#         traceback.print_exc()
+#         return {"resources": [], "total": 0, "limit": limit, "offset": offset}
+
+
+# @router.get("/resources/popular")
+# async def get_popular_resources(
+#     limit: int = 4,
+#     supabase=Depends(get_supabase)
+# ) -> Any:
+#     """
+#     Get most downloaded resources
+#     """
+#     try:
+#         result = supabase.table("resources")\
+#             .select("*")\
+#             .eq("is_published", True)\
+#             .order("download_count", desc=True)\
+#             .limit(limit)\
+#             .execute()
+        
+#         return result.data
+        
+#     except Exception as e:
+#         logger.error(f"Error getting popular resources: {e}")
+#         return []
 
 @router.get("/resources/popular")
 async def get_popular_resources(

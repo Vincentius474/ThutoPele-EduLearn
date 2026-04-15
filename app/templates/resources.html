@@ -29,6 +29,27 @@
         </div>
     </div>
 
+    <!-- Compact Search Bar -->
+    <div class="row mb-4">
+        <div class="col-md-6 mx-auto">
+            <div class="input-group">
+                <input type="text" class="form-control" 
+                    id="searchInput" 
+                    placeholder="Search resources..." 
+                    value="{{ search_query or '' }}">
+                <button class="btn btn-primary" type="button" onclick="searchResources()">
+                    <i class="fas fa-search"></i>
+                </button>
+                {% if search_query %}
+                <button class="btn btn-outline-secondary" type="button" onclick="clearSearch()">
+                    <i class="fas fa-times"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
     <!-- Resource Categories -->
     <div class="row mb-4">
         <div class="col-12">
