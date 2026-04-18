@@ -1698,6 +1698,61 @@ async def server_error_page(
 
 # =================== Admin =============================
 
+@web_router.get("/admin", response_class=HTMLResponse)
+async def admin_dashboard(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin dashboard"""
+    supabase = get_supabase_client()
+    
+    # Get statistics
+    stats = {
+        "total_users": supabase.table("users").select("*", count="exact").execute().count,
+        "total_instructors": supabase.table("users").select("*", count="exact").eq("is_instructor", True).execute().count,
+        "total_students": supabase.table("users").select("*", count="exact").eq("is_instructor", False).eq("is_admin", False).execute().count,
+        "total_courses": supabase.table("courses").select("*", count="exact").execute().count
+    }
+    
+    # Get pending instructor applications
+    pending_instructors = supabase.table("instructor_applications")\
+        .select("*")\
+        .eq("status", "pending")\
+        .execute()
+    
+    # Get pending courses
+    pending_courses = supabase.table("courses")\
+        .select("*, users(full_name)")\
+        .eq("is_published", False)\
+        .execute()
+    
+    for course in pending_courses.data:
+        course["instructor_name"] = course.get("users", {}).get("full_name", "Unknown")
+    
+    # Get recent users
+    recent_users = supabase.table("users")\
+        .select("*")\
+        .order("created_at", desc=True)\
+        .limit(5)\
+        .execute()
+    
+    return templates.TemplateResponse(
+        "admin/dashboard.html",  # Note: Rename admin.html to dashboard.html or keep as admin.html
+        {
+            "request": request,
+            "current_user": current_user,
+            "total_users": stats["total_users"],
+            "total_instructors": stats["total_instructors"],
+            "total_students": stats["total_students"],
+            "total_courses": stats["total_courses"],
+            "pending_instructors": pending_instructors.data,
+            "pending_courses": pending_courses.data,
+            "recent_users": recent_users.data,
+            "title": "Admin Dashboard"
+        }
+    )
+
 @web_router.get("/admin/users", response_class=HTMLResponse)
 async def admin_users_page(
     request: Request,
