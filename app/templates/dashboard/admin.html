@@ -188,71 +188,6 @@
         </div>
     </div>
 
-    <!-- Recent Users -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 pt-3 d-flex justify-content-between align-items-center">
-                    <h5 class="fw-bold mb-0">Recent Users</h5>
-                    <a href="/admin/users" class="btn btn-sm btn-primary">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Joined</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for user in recent_users %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <img src="{{ user.avatar_url or 'https://ui-avatars.com/api/?name=' + user.full_name|urlencode }}" 
-                                                 class="rounded-circle me-2" width="30" height="30" alt="{{ user.full_name }}">
-                                            {{ user.full_name }}
-                                        </div>
-                                    </td>
-                                    <td>{{ user.email }}</td>
-                                    <td>
-                                        {% if user.is_admin %}
-                                        <span class="badge bg-danger">Admin</span>
-                                        {% elif user.is_instructor %}
-                                        <span class="badge bg-success">Instructor</span>
-                                        {% else %}
-                                        <span class="badge bg-info">Student</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ user.created_at[:10] }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ 'success' if user.is_active else 'secondary' }}">
-                                            {{ 'Active' if user.is_active else 'Inactive' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editUser('{{ user.id }}')">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="toggleUserStatus('{{ user.id }}')">
-                                            <i class="fas fa-ban"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Platform Analytics -->
     <div class="row">
         <div class="col-md-6 mb-3">
@@ -325,22 +260,55 @@ new Chart(categoryCtx, {
 // Admin action functions
 function approveInstructor(id) {
     if(confirm('Approve this instructor application?')) {
-        fetch(`/admin/instructors/${id}/approve`, { method: 'POST' })
-            .then(() => location.reload());
+        fetch(`/api/v1/admin/instructors/${id}/approve`, { method: 'POST' })
+            .then(response => {
+                if(response.ok) {
+                    showToast('Instructor approved successfully', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('Failed to approve instructor', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            });
     }
 }
 
 function rejectInstructor(id) {
     if(confirm('Reject this instructor application?')) {
-        fetch(`/admin/instructors/${id}/reject`, { method: 'POST' })
-            .then(() => location.reload());
+        fetch(`/api/v1/admin/instructors/${id}/reject`, { method: 'POST' })
+            .then(response => {
+                if(response.ok) {
+                    showToast('Instructor application rejected', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('Failed to reject application', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            });
     }
 }
 
 function approveCourse(id) {
     if(confirm('Publish this course?')) {
-        fetch(`/admin/courses/${id}/approve`, { method: 'POST' })
-            .then(() => location.reload());
+        fetch(`/api/v1/admin/courses/${id}/approve`, { method: 'POST' })
+            .then(response => {
+                if(response.ok) {
+                    showToast('Course published successfully', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('Failed to publish course', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            });
     }
 }
 
@@ -350,8 +318,19 @@ function reviewCourse(id) {
 
 function rejectCourse(id) {
     if(confirm('Reject this course?')) {
-        fetch(`/admin/courses/${id}/reject`, { method: 'POST' })
-            .then(() => location.reload());
+        fetch(`/api/v1/admin/courses/${id}/reject`, { method: 'POST' })
+            .then(response => {
+                if(response.ok) {
+                    showToast('Course rejected', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('Failed to reject course', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            });
     }
 }
 
@@ -361,10 +340,39 @@ function editUser(id) {
 
 function toggleUserStatus(id) {
     if(confirm('Toggle user active status?')) {
-        fetch(`/admin/users/${id}/toggle-status`, { method: 'POST' })
-            .then(() => location.reload());
+        fetch(`/api/v1/admin/users/${id}/toggle-status`, { method: 'POST' })
+            .then(response => {
+                if(response.ok) {
+                    showToast('User status updated', 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showToast('Failed to update user status', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred', 'error');
+            });
     }
 }
+
+// Toast notification function
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed top-0 end-0 m-3 shadow`;
+    toast.style.zIndex = '9999';
+    toast.style.minWidth = '300px';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close ms-3" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
 </script>
 
 <style>

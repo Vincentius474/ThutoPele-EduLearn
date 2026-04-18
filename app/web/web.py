@@ -1708,12 +1708,28 @@ async def admin_dashboard(
     supabase = get_supabase_client()
     
     # Get statistics
-    stats = {
-        "total_users": supabase.table("users").select("*", count="exact").execute().count,
-        "total_instructors": supabase.table("users").select("*", count="exact").eq("is_instructor", True).execute().count,
-        "total_students": supabase.table("users").select("*", count="exact").eq("is_instructor", False).eq("is_admin", False).execute().count,
-        "total_courses": supabase.table("courses").select("*", count="exact").execute().count
-    }
+    # Total users
+    total_users_result = supabase.table("users").select("*", count="exact").execute()
+    total_users = total_users_result.count if hasattr(total_users_result, 'count') else 0
+    
+    # Total instructors
+    total_instructors_result = supabase.table("users")\
+        .select("*", count="exact")\
+        .eq("is_instructor", True)\
+        .execute()
+    total_instructors = total_instructors_result.count if hasattr(total_instructors_result, 'count') else 0
+    
+    # Total students (users who are not instructors and not admins)
+    total_students_result = supabase.table("users")\
+        .select("*", count="exact")\
+        .eq("is_instructor", False)\
+        .eq("is_admin", False)\
+        .execute()
+    total_students = total_students_result.count if hasattr(total_students_result, 'count') else 0
+    
+    # Total courses
+    total_courses_result = supabase.table("courses").select("*", count="exact").execute()
+    total_courses = total_courses_result.count if hasattr(total_courses_result, 'count') else 0
     
     # Get pending instructor applications
     pending_instructors = supabase.table("instructor_applications")\
@@ -1721,34 +1737,59 @@ async def admin_dashboard(
         .eq("status", "pending")\
         .execute()
     
-    # Get pending courses
+    # Get pending courses (unpublished)
     pending_courses = supabase.table("courses")\
         .select("*, users(full_name)")\
         .eq("is_published", False)\
         .execute()
     
+    # Add instructor names to pending courses
     for course in pending_courses.data:
         course["instructor_name"] = course.get("users", {}).get("full_name", "Unknown")
     
-    # Get recent users
+    # Get recent users (last 5)
     recent_users = supabase.table("users")\
         .select("*")\
         .order("created_at", desc=True)\
         .limit(5)\
         .execute()
     
+    # Get recent courses (last 5)
+    recent_courses = supabase.table("courses")\
+        .select("*, users(full_name)")\
+        .order("created_at", desc=True)\
+        .limit(5)\
+        .execute()
+    
+    # Calculate revenue data for chart (example - you can replace with actual data)
+    revenue_data = [12000, 19000, 15000, 25000, 22000, 30000]
+    
+    # Calculate category distribution for chart
+    categories = ['Programming', 'Robotics', 'Artificial Intelligence', 'Machine Learning', 'Networking', 'Cyber Security']
+    category_counts = []
+    for category in categories:
+        count = supabase.table("courses")\
+            .select("*", count="exact")\
+            .eq("category", category)\
+            .execute()
+        category_counts.append(count.count if hasattr(count, 'count') else 0)
+    
+    print(f"{total_users} | {total_instructors} | {total_students}| {total_courses}")
+
     return templates.TemplateResponse(
-        "admin/dashboard.html",  # Note: Rename admin.html to dashboard.html or keep as admin.html
+        "dashboard/admin.html",
         {
             "request": request,
             "current_user": current_user,
-            "total_users": stats["total_users"],
-            "total_instructors": stats["total_instructors"],
-            "total_students": stats["total_students"],
-            "total_courses": stats["total_courses"],
+            "total_users": total_users,
+            "total_instructors": total_instructors,
+            "total_students": total_students,
+            "total_courses": total_courses,
             "pending_instructors": pending_instructors.data,
             "pending_courses": pending_courses.data,
-            "recent_users": recent_users.data,
+            "revenue_data": revenue_data,
+            "category_labels": categories,
+            "category_data": category_counts,
             "title": "Admin Dashboard"
         }
     )
