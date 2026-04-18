@@ -1,15 +1,18 @@
-from app.schemas.invitation import Invitation, InvitationCreate
-from app.services.invitation_service import InvitationService
-from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from typing import Any, List, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+from fastapi.responses import StreamingResponse
 from app.core.supabase_client import get_supabase
 from app.api.api_v1.dependencies import get_current_admin
-from app.schemas.user import User
+import csv
+import io
+from datetime import datetime
 
 router = APIRouter()
 
-@router.get("/users")
-async def get_users(
+# ==================== USER MANAGEMENT ====================
+
+@router.get("/admin/users")
+async def get_all_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     supabase=Depends(get_supabase),
@@ -24,14 +27,14 @@ async def get_users(
     
     return result.data
 
-@router.put("/users/{user_id}/role")
+@router.put("/admin/users/{user_id}/role")
 async def update_user_role(
     user_id: str,
     request: Request,
     supabase=Depends(get_supabase),
     admin: dict = Depends(get_current_admin)
 ) -> dict:
-    """Update user role"""
+    """Update user role (student/instructor/admin)"""
     data = await request.json()
     role = data.get("role")
     
@@ -54,7 +57,7 @@ async def update_user_role(
     
     return {"message": "User role updated"}
 
-@router.put("/users/{user_id}/status")
+@router.put("/admin/users/{user_id}/status")
 async def update_user_status(
     user_id: str,
     request: Request,
@@ -65,8 +68,7 @@ async def update_user_status(
     data = await request.json()
     is_active = data.get("is_active", True)
     
-    # Note: This updates the profile status, not the auth user
-    # You might need additional logic to disable auth user
+    # Note: This updates the profile status
     result = supabase.table("users")\
         .update({"is_active": is_active, "updated_at": "now()"})\
         .eq("id", user_id)\
@@ -80,15 +82,13 @@ async def update_user_status(
     
     return {"message": "User status updated"}
 
-@router.delete("/users/{user_id}")
+@router.delete("/admin/users/{user_id}")
 async def delete_user(
     user_id: str,
     supabase=Depends(get_supabase),
     admin: dict = Depends(get_current_admin)
 ) -> dict:
     """Delete a user"""
-    # First delete from auth.users (requires admin API)
-    # This is simplified - you'd need to use the admin API
     result = supabase.table("users")\
         .delete()\
         .eq("id", user_id)\
@@ -102,7 +102,7 @@ async def delete_user(
     
     return {"message": "User deleted successfully"}
 
-@router.get("/users/export")
+@router.get("/admin/users/export")
 async def export_users(
     supabase=Depends(get_supabase),
     admin: dict = Depends(get_current_admin)
@@ -112,15 +112,11 @@ async def export_users(
         .select("*")\
         .execute()
     
-    import csv
-    from io import StringIO
-    from fastapi.responses import StreamingResponse
-    
-    output = StringIO()
+    output = io.StringIO()
     writer = csv.writer(output)
     
-    # Write headers
     if result.data:
+        # Write headers
         writer.writerow(result.data[0].keys())
         
         # Write data
@@ -135,57 +131,214 @@ async def export_users(
         headers={"Content-Disposition": "attachment; filename=users.csv"}
     )
 
-@router.post("/invitations", response_model=Invitation)
-async def create_invitation(
-    *,
+# ==================== COURSE MANAGEMENT ====================
+
+@router.get("/admin/courses")
+async def get_all_courses(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
     supabase=Depends(get_supabase),
-    invitation_in: InvitationCreate,
     admin: dict = Depends(get_current_admin)
-) -> Any:
-    """
-    Create a new instructor invitation (admin only).
-    """
-    invitation_service = InvitationService(supabase)
+) -> List[dict]:
+    """Get all courses with pagination and instructor info"""
+    result = supabase.table("courses")\
+        .select("*, users(full_name)")\
+        .range(skip, skip + limit - 1)\
+        .order("created_at", desc=True)\
+        .execute()
     
-    invitation = await invitation_service.create_invitation(
-        email=invitation_in.email,
-        full_name=invitation_in.full_name,
-        username=invitation_in.username,
-        admin_id=admin["id"]
-    )
+    courses = []
+    for course in result.data:
+        # Get student count
+        enrollments = supabase.table("enrollments")\
+            .select("id", count="exact")\
+            .eq("course_id", course["id"])\
+            .execute()
+        
+        course["student_count"] = enrollments.count if hasattr(enrollments, 'count') else 0
+        course["instructor_name"] = course.get("users", {}).get("full_name", "Unknown")
+        courses.append(course)
     
-    if not invitation:
+    return courses
+
+@router.delete("/admin/courses/{course_id}")
+async def delete_course(
+    course_id: str,
+    supabase=Depends(get_supabase),
+    admin: dict = Depends(get_current_admin)
+) -> dict:
+    """Delete a course"""
+    result = supabase.table("courses")\
+        .delete()\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not result.data:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create invitation"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
         )
     
-    return invitation
+    return {"message": "Course deleted successfully"}
 
-@router.get("/invitations", response_model=List[Invitation])
-async def get_invitations(
-    *,
+@router.put("/admin/courses/{course_id}/approve")
+async def approve_course(
+    course_id: str,
     supabase=Depends(get_supabase),
     admin: dict = Depends(get_current_admin)
-) -> Any:
-    """
-    Get all invitations (admin only).
-    """
-    invitation_service = InvitationService(supabase)
-    invitations = await invitation_service.get_invitations()
-    return invitations
+) -> dict:
+    """Approve and publish a course"""
+    result = supabase.table("courses")\
+        .update({"is_published": True, "updated_at": "now()"})\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not result.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    
+    return {"message": "Course approved and published"}
 
-@router.get("/invitations/pending", response_model=List[Invitation])
-async def get_pending_invitations(
-    *,
+# ==================== INSTRUCTOR APPROVALS ====================
+
+@router.get("/admin/instructors/pending")
+async def get_pending_instructors(
     supabase=Depends(get_supabase),
     admin: dict = Depends(get_current_admin)
-) -> Any:
-    """
-    Get all pending invitations (admin only).
-    """
-    invitation_service = InvitationService(supabase)
-    invitations = await invitation_service.get_invitations()
-    # Filter pending invitations
-    pending = [inv for inv in invitations if not inv["is_used"]]
-    return pending
+) -> List[dict]:
+    """Get pending instructor applications"""
+    result = supabase.table("instructor_applications")\
+        .select("*")\
+        .eq("status", "pending")\
+        .order("created_at", desc=True)\
+        .execute()
+    
+    return result.data
+
+@router.post("/admin/instructors/{application_id}/approve")
+async def approve_instructor(
+    application_id: str,
+    supabase=Depends(get_supabase),
+    admin: dict = Depends(get_current_admin)
+) -> dict:
+    """Approve an instructor application"""
+    # Get application
+    application = supabase.table("instructor_applications")\
+        .select("*")\
+        .eq("id", application_id)\
+        .execute()
+    
+    if not application.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found"
+        )
+    
+    # Update user to be instructor
+    supabase.table("users")\
+        .update({"is_instructor": True, "updated_at": "now()"})\
+        .eq("id", application.data[0]["user_id"])\
+        .execute()
+    
+    # Update application status
+    supabase.table("instructor_applications")\
+        .update({
+            "status": "approved",
+            "reviewed_by": admin["id"],
+            "reviewed_at": "now()"
+        })\
+        .eq("id", application_id)\
+        .execute()
+    
+    return {"message": "Instructor approved"}
+
+@router.post("/admin/instructors/{application_id}/reject")
+async def reject_instructor(
+    application_id: str,
+    supabase=Depends(get_supabase),
+    admin: dict = Depends(get_current_admin)
+) -> dict:
+    """Reject an instructor application"""
+    result = supabase.table("instructor_applications")\
+        .update({
+            "status": "rejected",
+            "reviewed_by": admin["id"],
+            "reviewed_at": "now()"
+        })\
+        .eq("id", application_id)\
+        .execute()
+    
+    if not result.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found"
+        )
+    
+    return {"message": "Instructor application rejected"}
+
+# ==================== COURSE REVIEWS ====================
+
+@router.get("/admin/courses/pending")
+async def get_pending_courses(
+    supabase=Depends(get_supabase),
+    admin: dict = Depends(get_current_admin)
+) -> List[dict]:
+    """Get pending course reviews (unpublished courses)"""
+    result = supabase.table("courses")\
+        .select("*, users(full_name)")\
+        .eq("is_published", False)\
+        .order("created_at", desc=True)\
+        .execute()
+    
+    courses = []
+    for course in result.data:
+        course["instructor_name"] = course.get("users", {}).get("full_name", "Unknown")
+        courses.append(course)
+    
+    return courses
+
+@router.post("/admin/courses/{course_id}/review")
+async def review_course(
+    course_id: str,
+    request: Request,
+    supabase=Depends(get_supabase),
+    admin: dict = Depends(get_current_admin)
+) -> dict:
+    """Add review notes to a course"""
+    data = await request.json()
+    notes = data.get("notes", "")
+    
+    result = supabase.table("courses")\
+        .update({"admin_notes": notes, "updated_at": "now()"})\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not result.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    
+    return {"message": "Review notes added"}
+
+@router.post("/admin/courses/{course_id}/reject")
+async def reject_course(
+    course_id: str,
+    supabase=Depends(get_supabase),
+    admin: dict = Depends(get_current_admin)
+) -> dict:
+    """Reject a course"""
+    result = supabase.table("courses")\
+        .delete()\
+        .eq("id", course_id)\
+        .execute()
+    
+    if not result.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Course not found"
+        )
+    
+    return {"message": "Course rejected and deleted"}
