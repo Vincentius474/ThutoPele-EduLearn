@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from fastapi.responses import StreamingResponse
-from app.core.supabase_client import get_supabase
+from app.core.supabase_client import get_supabase, get_supabase_service
 from app.api.api_v1.dependencies import get_current_admin
 import csv
 import io
@@ -58,143 +58,6 @@ async def get_admin_stats(
     }
 
 # ==================== USER MANAGEMENT ====================
-
-@router.get("/users")
-async def get_all_users(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    supabase=Depends(get_supabase),
-    admin: dict = Depends(get_current_admin)
-) -> List[dict]:
-    """Get all users with pagination"""
-    result = supabase.table("users")\
-        .select("*")\
-        .range(skip, skip + limit - 1)\
-        .order("created_at", desc=True)\
-        .execute()
-    
-    # Add default is_active if not present
-    for user in result.data:
-        if 'is_active' not in user:
-            user['is_active'] = True
-    
-    return result.data
-
-@router.put("/users/{user_id}/role")
-async def update_user_role(
-    user_id: str,
-    request: Request,
-    supabase=Depends(get_supabase),
-    admin: dict = Depends(get_current_admin)
-) -> dict:
-    """Update user role (student/instructor/admin)"""
-    try:
-        data = await request.json()
-        role = data.get("role")
-        
-        print(f"Updating user {user_id} role to: {role}")
-        
-        # First, check if user exists
-        user_check = supabase.table("users")\
-            .select("id")\
-            .eq("id", user_id)\
-            .execute()
-        
-        if not user_check.data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        # Prepare update data based on role
-        update_data = {
-            "is_instructor": role == "instructor",
-            "is_admin": role == "admin",
-            "updated_at": "now()"
-        }
-        
-        # If setting to student, ensure both flags are false
-        if role == "student":
-            update_data["is_instructor"] = False
-            update_data["is_admin"] = False
-        
-        # Use service client to bypass RLS for admin operations
-        from app.core.supabase_client import supabase as supabase_client
-        service_client = supabase_client.get_service_client()
-        
-        result = service_client.table("users")\
-            .update(update_data)\
-            .eq("id", user_id)\
-            .execute()
-        
-        if not result.data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to update user role"
-            )
-        
-        return {"message": f"User role updated to {role} successfully"}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error updating user role: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating user role: {str(e)}"
-        )
-
-@router.put("/users/{user_id}/status")
-async def update_user_status(
-    user_id: str,
-    request: Request,
-    supabase=Depends(get_supabase),
-    admin: dict = Depends(get_current_admin)
-) -> dict:
-    """Update user active status"""
-    try:
-        data = await request.json()
-        is_active = data.get("is_active", True)
-        
-        print(f"Updating user {user_id} status to: {is_active}")
-        
-        # First, check if user exists
-        user_check = supabase.table("users")\
-            .select("id")\
-            .eq("id", user_id)\
-            .execute()
-        
-        if not user_check.data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        # Use service client to bypass RLS for admin operations
-        from app.core.supabase_client import supabase as supabase_client
-        service_client = supabase_client.get_service_client()
-        
-        result = service_client.table("users")\
-            .update({"is_active": is_active, "updated_at": "now()"})\
-            .eq("id", user_id)\
-            .execute()
-        
-        if not result.data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to update user status"
-            )
-        
-        return {"message": f"User status updated to {'active' if is_active else 'inactive'} successfully"}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Error updating user status: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating user status: {str(e)}"
-        )
 
 @router.delete("/users/{user_id}")
 async def delete_user(
@@ -294,6 +157,29 @@ async def export_users(
             detail=f"Error exporting users: {str(e)}"
         )
 
+@router.get("/users")
+async def get_all_users(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    supabase=Depends(get_supabase),
+    admin: dict = Depends(get_current_admin)
+) -> List[dict]:
+    """Get all users with pagination"""
+    try:
+        # Use service client to bypass RLS for admin operations
+        service_client = get_supabase_service()
+        
+        result = service_client.table("users")\
+            .select("*")\
+            .range(skip, skip + limit - 1)\
+            .order("created_at", desc=True)\
+            .execute()
+        
+        return result.data
+    except Exception as e:
+        print(f"Error getting users: {e}")
+        return []
+
 @router.get("/users/{user_id}")
 async def get_user(
     user_id: str,
@@ -302,7 +188,10 @@ async def get_user(
 ) -> dict:
     """Get a single user by ID"""
     try:
-        result = supabase.table("users")\
+        # Use service client to bypass RLS
+        service_client = get_supabase_service()
+        
+        result = service_client.table("users")\
             .select("*")\
             .eq("id", user_id)\
             .execute()
@@ -324,19 +213,153 @@ async def get_user(
             detail=f"Error getting user: {str(e)}"
         )
 
+@router.put("/users/{user_id}/role")
+async def update_user_role(
+    user_id: str,
+    request: Request,
+    admin: dict = Depends(get_current_admin)
+) -> dict:
+    """Update user role (student/instructor/admin)"""
+    try:
+        data = await request.json()
+        role = data.get("role")
+        
+        print(f"Updating user {user_id} role to: {role}")
+        
+        # Use service client to bypass RLS
+        service_client = get_supabase_service()
+        
+        # First, check if user exists
+        user_check = service_client.table("users")\
+            .select("id")\
+            .eq("id", user_id)\
+            .execute()
+        
+        if not user_check.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Prepare update data based on role
+        if role == "instructor":
+            update_data = {
+                "is_instructor": True,
+                "is_admin": False,
+                "updated_at": datetime.now().isoformat()
+            }
+        elif role == "admin":
+            update_data = {
+                "is_instructor": False,
+                "is_admin": True,
+                "updated_at": datetime.now().isoformat()
+            }
+        else:  # student
+            update_data = {
+                "is_instructor": False,
+                "is_admin": False,
+                "updated_at": datetime.now().isoformat()
+            }
+        
+        print(f"Update data: {update_data}")
+        
+        result = service_client.table("users")\
+            .update(update_data)\
+            .eq("id", user_id)\
+            .execute()
+        
+        print(f"Update result: {result.data}")
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to update user role - no data returned"
+            )
+        
+        return {"message": f"User role updated to {role} successfully", "user": result.data[0]}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating user role: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating user role: {str(e)}"
+        )
+
+@router.put("/users/{user_id}/status")
+async def update_user_status(
+    user_id: str,
+    request: Request,
+    admin: dict = Depends(get_current_admin)
+) -> dict:
+    """Update user active status"""
+    try:
+        data = await request.json()
+        is_active = data.get("is_active", True)
+        
+        print(f"Updating user {user_id} status to: {is_active}")
+        
+        # Use service client to bypass RLS
+        service_client = get_supabase_service()
+        
+        # First, check if user exists
+        user_check = service_client.table("users")\
+            .select("id")\
+            .eq("id", user_id)\
+            .execute()
+        
+        if not user_check.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Update the is_active status
+        result = service_client.table("users")\
+            .update({"is_active": is_active, "updated_at": datetime.now().isoformat()})\
+            .eq("id", user_id)\
+            .execute()
+        
+        print(f"Update result: {result.data}")
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to update user status"
+            )
+        
+        return {"message": f"User status updated to {'active' if is_active else 'inactive'} successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating user status: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating user status: {str(e)}"
+        )
+
 @router.put("/users/{user_id}")
 async def update_user(
     user_id: str,
     request: Request,
-    supabase=Depends(get_supabase),
     admin: dict = Depends(get_current_admin)
 ) -> dict:
     """Update a user's profile information"""
     try:
         data = await request.json()
+        print(f"Updating user {user_id} with data: {data}")
+        
+        # Use service client to bypass RLS
+        service_client = get_supabase_service()
         
         # Check if user exists
-        user_check = supabase.table("users")\
+        user_check = service_client.table("users")\
             .select("id")\
             .eq("id", user_id)\
             .execute()
@@ -348,22 +371,28 @@ async def update_user(
             )
         
         # Prepare update data (only allow certain fields)
-        update_data = {
-            "full_name": data.get("full_name"),
-            "username": data.get("username"),
-            "bio": data.get("bio"),
-            "avatar_url": data.get("avatar_url"),
-            "expertise": data.get("expertise"),
-            "experience": data.get("experience"),
-            "updated_at": "now()"
-        }
+        update_data = {}
         
-        # Remove None values
-        update_data = {k: v for k, v in update_data.items() if v is not None}
+        if "full_name" in data and data["full_name"]:
+            update_data["full_name"] = data["full_name"]
+        if "username" in data and data["username"]:
+            update_data["username"] = data["username"]
+        if "bio" in data:
+            update_data["bio"] = data["bio"]
+        if "avatar_url" in data:
+            update_data["avatar_url"] = data["avatar_url"]
+        if "expertise" in data:
+            update_data["expertise"] = data["expertise"]
+        if "experience" in data:
+            update_data["experience"] = data["experience"]
+        
+        update_data["updated_at"] = datetime.now().isoformat()
+        
+        print(f"Update data: {update_data}")
         
         # Check if username is unique (excluding current user)
         if "username" in update_data:
-            username_check = supabase.table("users")\
+            username_check = service_client.table("users")\
                 .select("id")\
                 .eq("username", update_data["username"])\
                 .neq("id", user_id)\
@@ -375,14 +404,15 @@ async def update_user(
                     detail="Username already taken"
                 )
         
-        # Use service client to bypass RLS for admin operations
-        from app.core.supabase_client import supabase as supabase_client
-        service_client = supabase_client.get_service_client()
+        if not update_data or len(update_data) <= 1:  # Only updated_at
+            return {"message": "No changes to update"}
         
         result = service_client.table("users")\
             .update(update_data)\
             .eq("id", user_id)\
             .execute()
+        
+        print(f"Update result: {result.data}")
         
         if not result.data:
             raise HTTPException(
@@ -396,6 +426,8 @@ async def update_user(
         raise
     except Exception as e:
         print(f"Error updating user: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error updating user: {str(e)}"
