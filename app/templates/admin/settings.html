@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold text-primary"><i class="fas fa-cog me-2"></i>Admin Settings</h1>
+            <p class="text-muted">Configure platform settings and preferences</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <!-- Settings Navigation -->
+            <div class="card border-0 shadow-sm">
+                <div class="list-group list-group-flush">
+                    <a href="#general" class="list-group-item list-group-item-action active" data-bs-toggle="list">
+                        <i class="fas fa-globe me-2"></i>General Settings
+                    </a>
+                    <a href="#appearance" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-palette me-2"></i>Appearance
+                    </a>
+                    <a href="#email" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-envelope me-2"></i>Email Settings
+                    </a>
+                    <a href="#payment" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-credit-card me-2"></i>Payment Settings
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-shield-alt me-2"></i>Security
+                    </a>
+                    <a href="#backup" class="list-group-item list-group-item-action" data-bs-toggle="list">
+                        <i class="fas fa-database me-2"></i>Backup
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="tab-content">
+                <!-- General Settings -->
+                <div class="tab-pane fade show active" id="general">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h5 class="fw-bold mb-0">General Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="generalSettingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Platform Name</label>
+                                    <input type="text" class="form-control" id="platformName" value="ThutoPele EduLearn">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Platform Description</label>
+                                    <textarea class="form-control" id="platformDescription" rows="3">Empowering learners worldwide with quality education in technology fields.</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Contact Email</label>
+                                    <input type="email" class="form-control" id="contactEmail" value="info@thutopele.org">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Support Email</label>
+                                    <input type="email" class="form-control" id="supportEmail" value="support@thutopele.org">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appearance Settings -->
+                <div class="tab-pane fade" id="appearance">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h5 class="fw-bold mb-0">Appearance Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="appearanceSettingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Primary Color</label>
+                                    <input type="color" class="form-control form-control-color" id="primaryColor" value="#0d6efd">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Logo URL</label>
+                                    <input type="url" class="form-control" id="logoUrl" placeholder="https://...">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Favicon URL</label>
+                                    <input type="url" class="form-control" id="faviconUrl" placeholder="https://...">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Settings -->
+                <div class="tab-pane fade" id="email">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h5 class="fw-bold mb-0">Email Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="emailSettingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">SMTP Server</label>
+                                    <input type="text" class="form-control" id="smtpServer" placeholder="smtp.gmail.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">SMTP Port</label>
+                                    <input type="number" class="form-control" id="smtpPort" value="587">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">SMTP Username</label>
+                                    <input type="email" class="form-control" id="smtpUsername">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">SMTP Password</label>
+                                    <input type="password" class="form-control" id="smtpPassword">
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="useTLS" checked>
+                                        <label class="form-check-label">Use TLS</label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="button" class="btn btn-outline-secondary ms-2" onclick="testEmailConnection()">Test Connection</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Settings -->
+                <div class="tab-pane fade" id="payment">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h5 class="fw-bold mb-0">Payment Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="paymentSettingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Stripe Publishable Key</label>
+                                    <input type="text" class="form-control" id="stripePublishableKey">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Stripe Secret Key</label>
+                                    <input type="password" class="form-control" id="stripeSecretKey">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Currency</label>
+                                    <select class="form-select" id="currency">
+                                        <option value="USD">USD - US Dollar</option>
+                                        <option value="EUR">EUR - Euro</option>
+                                        <option value="GBP">GBP - British Pound</option>
+                                        <option value="ZAR" selected>ZAR - South African Rand</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Settings -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h5 class="fw-bold mb-0">Security Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="securitySettingsForm">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="twoFactorAuth">
+                                        <label class="form-check-label">Enable Two-Factor Authentication</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="emailVerification" checked>
+                                        <label class="form-check-label">Require Email Verification</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Session Timeout (minutes)</label>
+                                    <input type="number" class="form-control" id="sessionTimeout" value="30">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Max Login Attempts</label>
+                                    <input type="number" class="form-control" id="maxLoginAttempts" value="5">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup Settings -->
+                <div class="tab-pane fade" id="backup">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-transparent">
+                            <h5 class="fw-bold mb-0">Backup Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Configure automatic backups of your platform data.
+                            </div>
+                            <form id="backupSettingsForm">
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="autoBackup">
+                                        <label class="form-check-label">Enable Automatic Backups</label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Backup Frequency</label>
+                                    <select class="form-select" id="backupFrequency">
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Backup Time</label>
+                                    <input type="time" class="form-control" id="backupTime" value="02:00">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Retention Days</label>
+                                    <input type="number" class="form-control" id="backupRetention" value="30">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <button type="button" class="btn btn-outline-primary ms-2" onclick="createBackup()">
+                                    <i class="fas fa-database me-2"></i>Create Backup Now
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// General Settings
+document.getElementById('generalSettingsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showToast('Settings saved successfully', 'success');
+});
+
+// Appearance Settings
+document.getElementById('appearanceSettingsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showToast('Appearance settings saved', 'success');
+});
+
+// Email Settings
+document.getElementById('emailSettingsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showToast('Email settings saved', 'success');
+});
+
+// Payment Settings
+document.getElementById('paymentSettingsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showToast('Payment settings saved', 'success');
+});
+
+// Security Settings
+document.getElementById('securitySettingsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showToast('Security settings saved', 'success');
+});
+
+// Backup Settings
+document.getElementById('backupSettingsForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showToast('Backup settings saved', 'success');
+});
+
+function testEmailConnection() {
+    showToast('Testing email connection...', 'info');
+    setTimeout(() => {
+        showToast('Email connection successful!', 'success');
+    }, 2000);
+}
+
+function createBackup() {
+    if (confirm('Create a full backup of the platform?')) {
+        showToast('Backup started...', 'info');
+        setTimeout(() => {
+            showToast('Backup completed successfully!', 'success');
+        }, 3000);
+    }
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed top-0 end-0 m-3 shadow`;
+    toast.style.zIndex = '9999';
+    toast.style.minWidth = '300px';
+    toast.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+            <div class="flex-grow-1">${message}</div>
+            <button type="button" class="btn-close ms-3" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

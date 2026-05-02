@@ -21,6 +21,9 @@
             <h1 class="display-4 fw-bold text-primary">Free Tutorials</h1>
             <p class="lead text-muted">Learn with our step-by-step tutorials and practical guides</p>
             <p class="lead text-danger">DISCLAIMER!! WE DO NOT OWN ANY OF THE PROVIDED TUTORIALS.</p>
+            <p class="lead text-info">Recommended Editor: 
+                <a href="https://onecompiler.com/html" target="_blank" rel="noopener noreferrer">CLICK HERE</a>
+            </p>
             {% if current_user and (current_user.is_admin or current_user.is_instructor) %}
             <button class="btn btn-primary mt-3" onclick="showUploadModal()">
                 <i class="fas fa-upload me-2"></i>Upload Tutorial

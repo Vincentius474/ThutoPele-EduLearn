@@ -1854,6 +1854,38 @@ async def admin_courses_page(
         }
     )
 
+@web_router.get("/admin/settings", response_class=HTMLResponse)
+async def admin_settings_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin settings page"""
+    return templates.TemplateResponse(
+        "admin/settings.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Admin Settings"
+        }
+    )
+
+@web_router.get("/admin/invitations", response_class=HTMLResponse)
+async def admin_invitations_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_admin)
+):
+    """Admin invitations page"""
+    return templates.TemplateResponse(
+        "admin/invitations.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Instructor Invitations"
+        }
+    )
+
 @web_router.get("/admin/reports", response_class=HTMLResponse)
 async def admin_reports_page(
     request: Request,
@@ -1870,21 +1902,6 @@ async def admin_reports_page(
         }
     )
 
-@web_router.get("/admin/settings", response_class=HTMLResponse)
-async def admin_settings_page(
-    request: Request,
-    templates: Jinja2Templates = Depends(get_templates),
-    current_user: dict = Depends(get_current_admin)
-):
-    """Admin settings page"""
-    return templates.TemplateResponse(
-        "admin/settings.html",
-        {
-            "request": request,
-            "current_user": current_user,
-            "title": "Admin Settings"
-        }
-    )
 
 # =================== VPL ===============================
 

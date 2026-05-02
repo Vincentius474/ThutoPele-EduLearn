@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<style>
+    #codeEditor {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        border: 1px solid #333;
+        border-radius: 4px;
+    }
+    
+    #outputArea {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .language-btn {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .language-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .language-btn.active {
+        border: 2px solid var(--bs-primary);
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    
+    .snippet-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .snippet-card:hover {
+        transform: translateX(5px);
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .keyboard-shortcut {
+        font-size: 0.8rem;
+        color: #6c757d;
+        border-top: 1px solid #dee2e6;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .shortcut-keys {
+        font-family: monospace;
+        background-color: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-5 fw-bold text-primary">
+                        <i class="fas fa-laptop-code me-2"></i>VPL Playground
+                    </h1>
+                    <p class="lead text-muted">Practice coding in a safe sandbox environment</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="showSnippetsModal()">
+                        <i class="fas fa-folder-open me-2"></i>My Snippets
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Language Selection -->
+        <div class="col-12 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Select Language</h6>
+                    <div id="languageList" class="d-flex flex-wrap gap-2">
+                        <!-- Languages will be loaded here -->
+                        <div class="text-center w-100 py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading languages...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Playground Area -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-code me-2 text-primary"></i>Code Editor
+                    </h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary me-2" onclick="saveCurrentCode()" title="Save code">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetEditor()" title="Reset to default">
+                            <i class="fas fa-undo-alt"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <textarea id="codeEditor" class="form-control font-monospace" rows="20" 
+                              placeholder="Write your code here..."></textarea>
+                </div>
+
+                <div class="card-body">
+                    <iframe
+                    frameBorder="0"
+                    height="450px"
+                    src="https://onecompiler.com/embed/"
+                    width="100%"
+                    ></iframe>
+                </div>
+
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex gap-2">
+                        <button id="runButton" class="btn btn-primary" onclick="runPlaygroundCode()">
+                            <i class="fas fa-play me-2"></i>Run Code
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="clearOutput()">
+                            <i class="fas fa-eraser me-2"></i>Clear Output
+                        </button>
+                    </div>
+                    <div class="keyboard-shortcut mt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span class="shortcut-keys">Ctrl+Enter</span> to run code | 
+                            <span class="shortcut-keys">Ctrl+S</span> to save
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Output and Examples -->
+        <div class="col-lg-4">
+            <!-- Output Section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-terminal me-2"></i>Output
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="outputArea" class="output-container">
+                        <div class="alert alert-info mb-2">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Click "Run Code" to execute your code.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Section -->
+            <!-- <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-keyboard me-2"></i>Standard Input
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <textarea id="stdinInput" class="form-control" rows="4" 
+                              placeholder="Enter input for your program..."></textarea>
+                </div>
+            </div> -->
+            <!-- Input Section -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-keyboard me-2"></i>Standard Input
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <textarea id="stdinInput" class="form-control" rows="4" 
+                            placeholder="Enter input for your program...
+                            Example: 
+                            John
+                            25
+                            Paris">
+                    </textarea>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-info-circle me-1"></i>
+                        One line per input value. This will be fed to input() calls in order.
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Example Code -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Examples
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group" id="examplesList">
+                        <a href="#" class="list-group-item list-group-item-action" onclick="loadExample('python', 'hello')">
+                            <i class="fab fa-python me-2"></i>Python - Hello World
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="loadExample('python', 'fibonacci')">
+                            <i class="fab fa-python me-2"></i>Python - Fibonacci
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="loadExample('javascript', 'hello')">
+                            <i class="fab fa-js me-2"></i>JavaScript - Hello World
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" onclick="loadExample('javascript', 'factorial')">
+                            <i class="fab fa-js me-2"></i>JavaScript - Factorial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Snippets Modal -->
+<div class="modal fade" id="snippetsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-folder-open me-2"></i>My Saved Snippets
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="snippetsList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Snippet Modal -->
+<div class="modal fade" id="saveSnippetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-save me-2"></i>Save Code Snippet
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="saveSnippetForm">
+                    <div class="mb-3">
+                        <label class="form-label">Snippet Title</label>
+                        <input type="text" class="form-control" id="snippetTitle" 
+                               placeholder="My Awesome Code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Language</label>
+                        <input type="text" class="form-control" id="snippetLanguage" readonly>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSnippet()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script src="{{ url_for('static', path='/js/vpl_playground.js') }}"></script>
+{% endblock %}
