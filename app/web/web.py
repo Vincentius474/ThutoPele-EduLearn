@@ -12,6 +12,18 @@ from app.services.blog_service import BlogService
 from app.services.user_service import UserService
 from app.web.auth_routes import router as auth_router
 
+from jinja2 import BaseCache
+
+class _NoCache(BaseCache):
+    def __init__(self):
+        pass
+    def get(self, key):
+        return None
+    def set(self, key, value):
+        pass
+    def clear(self):
+        pass
+
 logger = logging.getLogger(__name__)
 
 web_router = APIRouter()
@@ -37,7 +49,8 @@ async def home(
         is_published=True
     )
     
-    templates.env.cache_size = 0
+    if not isinstance(templates.env.cache, _NoCache):
+        templates.env.cache = _NoCache()
     return templates.TemplateResponse(
         "index.html",
         {
