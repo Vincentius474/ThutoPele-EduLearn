@@ -37,6 +37,7 @@ async def home(
         is_published=True
     )
     
+    templates.env.cache_size = 0
     return templates.TemplateResponse(
         "index.html",
         {
