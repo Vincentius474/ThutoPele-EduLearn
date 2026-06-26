@@ -16,6 +16,7 @@ STATIC_DIR = BASE_DIR.parent / "static"
 
 # Initialize templates
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.cache_size = 0
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
