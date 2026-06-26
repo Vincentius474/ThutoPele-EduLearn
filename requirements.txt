@@ -19,3 +19,4 @@ aiofiles
 python-multipart
 itsdangerous
 python-jose[cryptography]
+jinja2
