@@ -12,14 +12,14 @@ from app.services.blog_service import BlogService
 from app.services.user_service import UserService
 from app.web.auth_routes import router as auth_router
 
-class _NoCache:
-    """A dummy cache that never stores anything."""
-    def get(self, key):
-        return None
-    def set(self, key, value):
-        pass
-    def clear(self):
-        pass
+# class _NoCache:
+#     """A dummy cache that never stores anything."""
+#     def get(self, key):
+#         return None
+#     def set(self, key, value):
+#         pass
+#     def clear(self):
+#         pass
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +46,8 @@ async def home(
         is_published=True
     )
     
-    if not isinstance(templates.env.cache, _NoCache):
-        templates.env.cache = _NoCache()
+    # if not isinstance(templates.env.cache, _NoCache):
+    #     templates.env.cache = _NoCache()
     return templates.TemplateResponse(
         "index.html",
         {
