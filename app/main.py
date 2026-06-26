@@ -57,6 +57,6 @@ async def not_found_handler(request: Request, exc: HTTPException):
 @app.on_event("startup")
 async def startup_event():
     """Validate templates on startup"""
-    print(f"✅ Templates directory: {TEMPLATES_DIR}")
-    print(f"✅ Static files directory: {STATIC_DIR}")
-    print(f"✅ Templates available in app.state")
+    print(f"Templates directory: {TEMPLATES_DIR}")
+    print(f"Static files directory: {STATIC_DIR}")
+    print(f"Templates available in app.state")
