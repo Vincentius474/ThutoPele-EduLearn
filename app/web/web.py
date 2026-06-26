@@ -12,11 +12,8 @@ from app.services.blog_service import BlogService
 from app.services.user_service import UserService
 from app.web.auth_routes import router as auth_router
 
-from jinja2 import BaseCache
-
-class _NoCache(BaseCache):
-    def __init__(self):
-        pass
+class _NoCache:
+    """A dummy cache that never stores anything."""
     def get(self, key):
         return None
     def set(self, key, value):
