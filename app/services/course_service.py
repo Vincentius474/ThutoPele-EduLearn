@@ -58,14 +58,14 @@ class CourseService:
             result = service_client.table("courses").insert(course_data).execute()
             
             if result.data and len(result.data) > 0:
-                logger.info(f"✅ Created course: {course_data.get('title')} with ID: {result.data[0]['id']}")
+                logger.info(f" Created course: {course_data.get('title')} with ID: {result.data[0]['id']}")
                 return result.data[0]
             else:
                 logger.error("No data returned from insert operation")
                 return None
                 
         except Exception as e:
-            logger.error(f"❌ Error creating course: {str(e)}")
+            logger.error(f"  Error creating course: {str(e)}")
             if hasattr(e, 'response') and hasattr(e.response, 'json'):
                 try:
                     error_detail = e.response.json()

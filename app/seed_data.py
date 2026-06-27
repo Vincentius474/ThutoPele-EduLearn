@@ -192,7 +192,7 @@ async def create_user(client, email, password, username, full_name, is_instructo
         
         if response.status_code == 200:
             user_data = response.json()
-            print(f"✅ Created user: {email}")
+            print(f" Created user: {email}")
             
             # Login to get token
             login_response = await client.post(
@@ -206,22 +206,22 @@ async def create_user(client, email, password, username, full_name, is_instructo
             
             if login_response.status_code == 200:
                 token_data = login_response.json()
-                print(f"✅ Logged in: {email}")
+                print(f" Logged in: {email}")
                 
                 # Note: You'll need to manually set is_instructor in Supabase dashboard
                 if is_instructor:
-                    print(f"   ⚠️  Remember to set {email} as instructor in Supabase dashboard")
+                    print(f"      Remember to set {email} as instructor in Supabase dashboard")
                 
                 return token_data["access_token"]
             else:
-                print(f"❌ Failed to login: {email}")
+                print(f"  Failed to login: {email}")
                 return None
         else:
-            print(f"❌ Failed to create user: {email} - {response.text}")
+            print(f"  Failed to create user: {email} - {response.text}")
             return None
             
     except Exception as e:
-        print(f"❌ Error creating user {email}: {e}")
+        print(f"  Error creating user {email}: {e}")
         return None
 
 async def create_course(client, token, course_data):
@@ -236,27 +236,27 @@ async def create_course(client, token, course_data):
         )
         
         if response.status_code == 200:
-            print(f"✅ Created course: {course_data['title']}")
+            print(f" Created course: {course_data['title']}")
             return response.json()
         else:
-            print(f"❌ Failed to create course: {course_data['title']}")
+            print(f"  Failed to create course: {course_data['title']}")
             print(f"   Status: {response.status_code}, Response: {response.text}")
             return None
             
     except Exception as e:
-        print(f"❌ Error creating course {course_data['title']}: {e}")
+        print(f"  Error creating course {course_data['title']}: {e}")
         return None
 
 async def main():
     """Seed the database with sample data"""
     print("=" * 60)
-    print("🚀 Seeding Database with Sample Data")
+    print("  Seeding Database with Sample Data")
     print("=" * 60)
     
     async with httpx.AsyncClient(timeout=30.0) as client:
         
         # Create instructor
-        print("\n📝 Creating Instructor Account...")
+        print("\n  Creating Instructor Account...")
         instructor_token = await create_user(
             client,
             "instructor@example.com",
@@ -267,7 +267,7 @@ async def main():
         )
         
         # Create student
-        print("\n📝 Creating Student Account...")
+        print("\n  Creating Student Account...")
         student_token = await create_user(
             client,
             "student@example.com",
@@ -277,7 +277,7 @@ async def main():
         )
         
         if instructor_token:
-            print("\n📚 Creating Sample Courses...")
+            print("\n  Creating Sample Courses...")
             
             # Create courses
             created_courses = []
@@ -286,7 +286,7 @@ async def main():
                 if course:
                     created_courses.append(course)
             
-            print(f"\n✅ Created {len(created_courses)} courses successfully!")
+            print(f"\n Created {len(created_courses)} courses successfully!")
             
             # Show statistics by category
             print("\n📊 Course Statistics by Category:")
@@ -299,16 +299,16 @@ async def main():
                 print(f"   {category}: {count} courses")
         
         print("\n" + "=" * 60)
-        print("✅ Seeding Complete!")
+        print(" Seeding Complete!")
         print("=" * 60)
-        print("\n🔑 Login Credentials:")
+        print("\n  Login Credentials:")
         print("   Instructor: instructor@example.com / password123")
         print("   Student: student@example.com / password123")
-        print("\n⚠️  Important Notes:")
+        print("\n   Important Notes:")
         print("   1. Make sure your FastAPI server is running on http://localhost:8000")
         print("   2. Set instructor@example.com as instructor in Supabase dashboard")
         print("   3. You can now browse courses at http://localhost:8000/courses")
-        print("\n📚 Categories added:")
+        print("\n  Categories added:")
         for category in ['Programming', 'Robotics', 'Artificial Intelligence', 'Machine Learning', 'Networking', 'Cyber Security']:
             print(f"   • {category}")
 
@@ -319,7 +319,7 @@ if __name__ == "__main__":
     result = sock.connect_ex(('localhost', 8000))
     
     if result != 0:
-        print("❌ Error: FastAPI server is not running on http://localhost:8000")
+        print("  Error: FastAPI server is not running on http://localhost:8000")
         print("   Please start your server first with: uvicorn app.main:app --reload")
         sys.exit(1)
     

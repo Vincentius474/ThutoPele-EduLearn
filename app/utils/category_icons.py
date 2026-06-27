@@ -3,7 +3,7 @@ category_icons = {
     'Robotics': '🤖',
     'Artificial Intelligence': '🧠',
     'Machine Learning': '📊',
-    'Networking': '🌐',
+    'Networking': ' ',
     'Cyber Security': '🛡️'
 }
 
@@ -17,7 +17,7 @@ category_colors = {
 }
 
 def get_category_icon(category):
-    return category_icons.get(category, '📚')
+    return category_icons.get(category, ' ')
 
 def get_category_color(category):
     return category_colors.get(category, 'primary')

@@ -134,13 +134,13 @@ async def wait_for_server(max_retries=5, delay=2):
             async with httpx.AsyncClient(timeout=5.0) as client:
                 response = await client.get("http://localhost:8000/health")
                 if response.status_code == 200:
-                    print("✅ FastAPI server is running")
+                    print("FastAPI server is running")
                     return True
         except:
-            print(f"⏳ Waiting for server (attempt {i+1}/{max_retries})...")
+            print(f"Waiting for server (attempt {i+1}/{max_retries})...")
             time.sleep(delay)
     
-    print("❌ FastAPI server is not responding")
+    print("FastAPI server is not responding")
     print("Please run: uvicorn app.main:app --reload")
     return False
 
@@ -149,7 +149,7 @@ async def create_user_with_service_role(email, password, username, full_name, is
     print(f"Creating user: {email}...")
     
     if not SUPABASE_SERVICE_KEY:
-        print("❌ SUPABASE_SERVICE_KEY not found in .env file")
+        print("SUPABASE_SERVICE_KEY not found in .env file")
         return None
     
     headers = {
@@ -170,7 +170,7 @@ async def create_user_with_service_role(email, password, username, full_name, is
                 users = check_response.json().get('users', [])
                 for user in users:
                     if user.get('email') == email:
-                        print(f"⚠️ User {email} already exists with ID: {user['id']}")
+                        print(f"  User {email} already exists with ID: {user['id']}")
                         
                         # Still try to create/update profile
                         profile_response = await client.post(
@@ -189,14 +189,14 @@ async def create_user_with_service_role(email, password, username, full_name, is
                         )
                         
                         if profile_response.status_code in [200, 201]:
-                            print(f"✅ Profile updated for {email}")
+                            print(f"Profile updated for {email}")
                             return user['id']
                         else:
-                            print(f"⚠️ Could not update profile: {profile_response.text}")
+                            print(f"Could not update profile: {profile_response.text}")
                             return user['id']
             
             # Create new user if doesn't exist
-            print(f"   Creating new auth user...")
+            print(f"Creating new auth user...")
             auth_response = await client.post(
                 f"{SUPABASE_URL}/auth/v1/admin/users",
                 headers=headers,
@@ -212,15 +212,15 @@ async def create_user_with_service_role(email, password, username, full_name, is
             )
             
             if auth_response.status_code != 200:
-                print(f"❌ Failed to create auth user: {auth_response.text}")
+                print(f"Failed to create auth user: {auth_response.text}")
                 return None
             
             user_data = auth_response.json()
             user_id = user_data['id']
-            print(f"   ✅ Auth user created with ID: {user_id}")
+            print(f"Auth user created with ID: {user_id}")
             
             # Create profile
-            print(f"   Creating user profile...")
+            print(f"Creating user profile...")
             profile_response = await client.post(
                 f"{SUPABASE_URL}/rest/v1/users",
                 headers={
@@ -238,17 +238,17 @@ async def create_user_with_service_role(email, password, username, full_name, is
             )
             
             if profile_response.status_code in [200, 201]:
-                print(f"   ✅ Profile created successfully")
+                print(f"Profile created successfully")
                 return user_id
             else:
-                print(f"❌ Failed to create profile: {profile_response.text}")
+                print(f"Failed to create profile: {profile_response.text}")
                 return None
                 
         except httpx.TimeoutException:
-            print(f"❌ Timeout while creating user {email}")
+            print(f"Timeout while creating user {email}")
             return None
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"Error: {e}")
             return None
 
 async def login_with_retry(client, email, password, max_retries=3):
@@ -268,26 +268,26 @@ async def login_with_retry(client, email, password, max_retries=3):
             if response.status_code == 200:
                 return response.json()["access_token"]
             elif response.status_code == 401:
-                print(f"   Invalid credentials for {email}")
+                print(f"Invalid credentials for {email}")
                 return None
             else:
-                print(f"   Attempt {attempt + 1}: Status {response.status_code}")
+                print(f"Attempt {attempt + 1}: Status {response.status_code}")
                 
         except httpx.TimeoutException:
-            print(f"   Attempt {attempt + 1}: Timeout")
+            print(f"Attempt {attempt + 1}: Timeout")
         except Exception as e:
-            print(f"   Attempt {attempt + 1}: {e}")
+            print(f"Attempt {attempt + 1}: {e}")
         
         if attempt < max_retries - 1:
             wait_time = 2 ** attempt
-            print(f"   Waiting {wait_time} seconds...")
+            print(f"Waiting {wait_time} seconds...")
             time.sleep(wait_time)
     
     return None
 
 async def create_courses_with_api(instructor_email, password):
     """Create courses by logging in as instructor"""
-    print("\n📚 Creating Courses...")
+    print("\nCreating Courses...")
     
     async with httpx.AsyncClient(timeout=30.0) as client:
         # Login as instructor with retry
@@ -295,14 +295,14 @@ async def create_courses_with_api(instructor_email, password):
         token = await login_with_retry(client, instructor_email, password)
         
         if not token:
-            print("❌ Could not login as instructor")
+            print("Could not login as instructor")
             print("\nTroubleshooting tips:")
             print("1. Make sure your FastAPI server is running")
             print("2. Check if the user exists in Supabase")
             print("3. Try logging in manually at http://localhost:8000/login")
             return False
         
-        print("✅ Logged in successfully")
+        print("Logged in successfully")
         
         # Create courses
         headers = {"Authorization": f"Bearer {token}"}
@@ -321,10 +321,10 @@ async def create_courses_with_api(instructor_email, password):
                 
                 if response.status_code == 200:
                     created_count += 1
-                    print(f"   ✅ Created: {course['title']}")
+                    print(f"    Created: {course['title']}")
                 elif response.status_code == 403:
-                    print(f"   ⚠️ Need instructor privileges for: {course['title']}")
-                    print("\n📝 To fix this:")
+                    print(f"     Need instructor privileges for: {course['title']}")
+                    print("\n  To fix this:")
                     print("   1. Go to Supabase Dashboard → Table Editor → users")
                     print("   2. Find instructor@example.com")
                     print("   3. Set 'is_instructor' to true")
@@ -333,42 +333,34 @@ async def create_courses_with_api(instructor_email, password):
                     return False
                 else:
                     skipped_count += 1
-                    print(f"   ❌ Failed: {course['title']} - {response.status_code}")
+                    print(f"     Failed: {course['title']} - {response.status_code}")
                     
             except httpx.TimeoutException:
-                print(f"   ⏳ Timeout creating: {course['title']}")
+                print(f"     Timeout creating: {course['title']}")
                 skipped_count += 1
             except Exception as e:
-                print(f"   ❌ Error creating {course['title']}: {e}")
+                print(f"     Error creating {course['title']}: {e}")
                 skipped_count += 1
         
-        print(f"\n✅ Created {created_count} courses")
+        print(f"\n Created {created_count} courses")
         if skipped_count > 0:
-            print(f"⚠️ Skipped {skipped_count} courses due to errors")
+            print(f"  Skipped {skipped_count} courses due to errors")
         
         return True
 
 async def main():
-    print("=" * 60)
-    print("🚀 Seeding Database with Service Role")
-    print("=" * 60)
-    
+    # Seeding Database with Service Role
+
     # Check if server is running
     if not await wait_for_server():
         return
     
     # Check for service key
     if not SUPABASE_SERVICE_KEY:
-        print("\n❌ ERROR: SUPABASE_SERVICE_KEY not found in .env file")
-        print("\nTo fix this:")
-        print("1. Go to Supabase Dashboard → Project Settings → API")
-        print("2. Copy the 'service_role' key")
-        print("3. Add it to your .env file:")
-        print("   SUPABASE_SERVICE_KEY=your-service-role-key-here")
+        print("\n  ERROR: SUPABASE_SERVICE_KEY not found in .env file")
         return
     
     # Create instructor
-    print("\n📝 Creating Instructor Account...")
     instructor_id = await create_user_with_service_role(
         "instructor@example.com",
         "password123",
@@ -378,7 +370,6 @@ async def main():
     )
     
     # Create student (if needed)
-    print("\n📝 Creating Student Account...")
     student_id = await create_user_with_service_role(
         "student@example.com",
         "password123",
@@ -392,28 +383,17 @@ async def main():
         success = await create_courses_with_api("instructor@example.com", "password123")
         
         if not success:
-            print("\n⚠️ Course creation incomplete. Please follow the instructions above.")
+            print("\nCourse creation incomplete. Please follow the instructions above.")
     else:
-        print("\n❌ Failed to create instructor account")
+        print("\nFailed to create instructor account")
     
-    print("\n" + "=" * 60)
-    print("✅ Seeding Process Complete!")
-    print("=" * 60)
-    print("\n🔑 Login Credentials:")
-    print("   Instructor: instructor@example.com / password123")
-    print("   Student: student@example.com / password123")
-    print("\n📚 Categories added:")
-    for category in ['Programming', 'Robotics', 'Artificial Intelligence', 
-                    'Machine Learning', 'Networking', 'Cyber Security']:
-        print(f"   • {category}")
-    
-    print("\n🌐 Visit: http://localhost:8000")
-    print("📚 Browse courses: http://localhost:8000/courses")
+    print("\n  Visit: http://localhost:8000")
+    print("  Browse courses: http://localhost:8000/courses")
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n\n⚠️ Seeding interrupted by user")
+        print("\n\nSeeding interrupted by user")
     except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
+        print(f"\nUnexpected error: {e}")
