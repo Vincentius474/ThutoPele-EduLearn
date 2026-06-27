@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import asyncio
 import httpx
 import os
@@ -28,7 +27,7 @@ async def create_user(email, password, username, full_name, is_instructor=False,
         )
         
         if response.status_code == 200:
-            print(f" Created: {email}")
+            print(f"Created: {email}")
             
             # Update role if needed
             if is_instructor or is_admin:
@@ -62,10 +61,10 @@ async def create_user(email, password, username, full_name, is_instructor=False,
                                 "is_admin": is_admin
                             }
                         )
-                        print(f"   Role updated: {'Admin' if is_admin else 'Instructor' if is_instructor else 'Student'}")
+                        print(f"Role updated: {'Admin' if is_admin else 'Instructor' if is_instructor else 'Student'}")
             return True
         else:
-            print(f"  Failed: {response.text}")
+            print(f"Failed: {response.text}")
             return False
 
 async def main():
@@ -106,12 +105,12 @@ async def main():
     print("\n" + "=" * 50)
     print("Test Accounts Created Successfully!")
     print("=" * 50)
-    print("\n  Login Credentials:")
-    print("   Student:  student@example.com / password123")
-    print("   Instructor: instructor@example.com / password123")
-    print("   Admin:    admin@example.com / password123")
-    print("\n  Access dashboards:")
-    print("   http://localhost:8000/dashboard")
+    print("\nLogin Credentials:")
+    print("Student: student@example.com / password123")
+    print("Instructor: instructor@example.com / password123")
+    print("Admin:    admin@example.com / password123")
+    print("\nAccess dashboards:")
+    print("http://localhost:8000/dashboard")
 
 if __name__ == "__main__":
     asyncio.run(main())

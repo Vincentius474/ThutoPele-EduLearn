@@ -11,7 +11,6 @@ class CourseManagementService:
         self.supabase = supabase_client
     
     # ==================== MATERIALS MANAGEMENT ====================
-    
     async def get_materials(self, course_id: str) -> List[Dict[str, Any]]:
         """Get all materials for a course"""
         try:
@@ -66,8 +65,6 @@ class CourseManagementService:
         """Create a quiz with questions"""
         try:
             logger.info(f"Creating quiz for course: {course_id}")
-            
-            # First create a material entry for the quiz
             material_data = {
                 "title": quiz_data.get("title"),
                 "description": quiz_data.get("description", ""),
@@ -78,15 +75,13 @@ class CourseManagementService:
             }
             
             material_result = self.supabase.table("course_materials").insert(material_data).execute()
-            
             if not material_result.data:
                 logger.error("Failed to create material for quiz")
                 return None
             
             material = material_result.data[0]
             logger.info(f"Material created: {material['id']}")
-            
-            # Now create the quiz
+
             quiz_insert_data = {
                 "course_id": course_id,
                 "material_id": material["id"],
@@ -96,19 +91,16 @@ class CourseManagementService:
                 "passing_score": quiz_data.get("passing_score", 70),
                 "attempts_allowed": quiz_data.get("attempts_allowed", 1)
             }
-            
             quiz_result = self.supabase.table("quizzes").insert(quiz_insert_data).execute()
             
             if not quiz_result.data:
                 logger.error("Failed to create quiz")
-                # Clean up the material
                 self.supabase.table("course_materials").delete().eq("id", material["id"]).execute()
                 return None
             
             quiz = quiz_result.data[0]
             logger.info(f"Quiz created: {quiz['id']}")
             
-            # Add questions
             for idx, q in enumerate(questions):
                 question_data = {
                     "quiz_id": quiz["id"],
@@ -133,7 +125,6 @@ class CourseManagementService:
     async def get_quiz(self, quiz_id: str) -> Optional[Dict[str, Any]]:
         """Get quiz with questions"""
         try:
-            # Get quiz
             quiz = self.supabase.table("quizzes")\
                 .select("*")\
                 .eq("id", quiz_id)\
@@ -141,8 +132,7 @@ class CourseManagementService:
             
             if not quiz.data:
                 return None
-            
-            # Get questions
+
             questions = self.supabase.table("quiz_questions")\
                 .select("*")\
                 .eq("quiz_id", quiz_id)\
@@ -162,8 +152,6 @@ class CourseManagementService:
         """Create a new assignment"""
         try:
             logger.info(f"Creating assignment for course: {course_id}")
-            
-            # First create a material entry for the assignment
             material_data = {
                 "title": assignment_data.get("title"),
                 "description": assignment_data.get("description", ""),
@@ -174,15 +162,13 @@ class CourseManagementService:
             }
             
             material_result = self.supabase.table("course_materials").insert(material_data).execute()
-            
             if not material_result.data:
                 logger.error("Failed to create material for assignment")
                 return None
             
             material = material_result.data[0]
             logger.info(f"Material created: {material['id']}")
-            
-            # Now create the assignment
+
             assignment_insert_data = {
                 "course_id": course_id,
                 "material_id": material["id"],
@@ -197,7 +183,6 @@ class CourseManagementService:
             
             if not result.data:
                 logger.error("Failed to create assignment")
-                # Clean up the material
                 self.supabase.table("course_materials").delete().eq("id", material["id"]).execute()
                 return None
             
@@ -260,7 +245,6 @@ class CourseManagementService:
             if not result.data:
                 logger.error("Failed to create announcement")
                 return None
-            
             logger.info(f"Announcement created: {result.data[0]['id']}")
             return result.data[0]
             

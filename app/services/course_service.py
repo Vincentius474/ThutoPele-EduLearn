@@ -26,14 +26,11 @@ class CourseService:
                 query = query.eq("level", level)
             if is_published is not None:
                 query = query.eq("is_published", is_published)
-            
-            # Add ordering
+
             query = query.order("created_at", desc=True)
-            
             result = query.range(skip, skip + limit - 1).execute()
             logger.info(f"Retrieved {len(result.data)} courses")
             return result.data
-            
         except Exception as e:
             logger.error(f"Error getting courses: {e}")
             return []
@@ -43,18 +40,15 @@ class CourseService:
         try:
             logger.info(f"Attempting to create course: {course_data.get('title')}")
             logger.info(f"Instructor ID: {course_data.get('instructor_id')}")
-            
-            # Validate required fields
+
             required_fields = ['title', 'instructor_id']
             for field in required_fields:
                 if field not in course_data:
                     logger.error(f"Missing required field: {field}")
                     return None
-            
-            # Use service client to bypass RLS
+
             from app.core.supabase_client import supabase
             service_client = supabase.get_service_client()
-            
             result = service_client.table("courses").insert(course_data).execute()
             
             if result.data and len(result.data) > 0:
@@ -62,8 +56,7 @@ class CourseService:
                 return result.data[0]
             else:
                 logger.error("No data returned from insert operation")
-                return None
-                
+                return None  
         except Exception as e:
             logger.error(f"  Error creating course: {str(e)}")
             if hasattr(e, 'response') and hasattr(e.response, 'json'):
@@ -82,9 +75,7 @@ class CourseService:
                 .select("*")\
                 .eq("id", course_id)\
                 .execute()
-            
             return result.data[0] if result.data else None
-            
         except Exception as e:
             logger.error(f"Error getting course {course_id}: {e}")
             return None
@@ -92,14 +83,11 @@ class CourseService:
     async def update_course(self, course_id: str, course_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Update an existing course"""
         try:
-            # Add updated_at timestamp
             course_data["updated_at"] = "now()"
-            
             result = self.supabase.table("courses")\
                 .update(course_data)\
                 .eq("id", course_id)\
                 .execute()
-            
             return result.data[0] if result.data else None
         except Exception as e:
             logger.error(f"Error updating course {course_id}: {e}")
@@ -112,9 +100,7 @@ class CourseService:
                 .delete()\
                 .eq("id", course_id)\
                 .execute()
-            
             return len(result.data) > 0
-            
         except Exception as e:
             logger.error(f"Error deleting course {course_id}: {e}")
             return False
@@ -125,17 +111,12 @@ class CourseService:
             course = await self.get_course(course_id)
             if not course:
                 return None
-            
-            # Get instructor details
             instructor = self.supabase.table("users")\
                 .select("id, email, full_name, username, avatar_url")\
                 .eq("id", course["instructor_id"])\
                 .execute()
-            
             if instructor.data:
                 course["instructor"] = instructor.data[0]
-            
-            # Get lessons
             lessons = self.supabase.table("lessons")\
                 .select("*")\
                 .eq("course_id", course_id)\
@@ -143,7 +124,6 @@ class CourseService:
                 .execute()
             
             course["lessons"] = lessons.data
-            
             return course
             
         except Exception as e:
@@ -157,7 +137,6 @@ class CourseService:
                 .select("*")\
                 .eq("instructor_id", instructor_id)\
                 .execute()
-            
             return result.data
             
         except Exception as e:
@@ -173,8 +152,6 @@ class CourseService:
         try:
             from app.core.supabase_client import supabase as supabase_client
             service_client = supabase_client.get_service_client()
-            
-            # Add updated_at timestamp
             if "updated_at" not in course_data:
                 course_data["updated_at"] = "now()"
             
@@ -182,7 +159,6 @@ class CourseService:
                 .update(course_data)\
                 .eq("id", course_id)\
                 .execute()
-            
             return result.data[0] if result.data else None
         except Exception as e:
             logger.error(f"Error updating course {course_id} with service role: {e}")

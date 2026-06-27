@@ -10,24 +10,6 @@ class VPLService:
     def __init__(self, jail_url: str = "http://localhost:8080"):
         self.jail_url = jail_url
     
-    # async def execute_code(
-    #     self, 
-    #     code: str, 
-    #     language: str, 
-    #     stdin_input: str = ""
-    # ) -> Dict[str, Any]:
-    #     """Execute code in VPL sandbox"""
-    #     async with httpx.AsyncClient() as client:
-    #         response = await client.post(
-    #             f"{self.jail_url}/execute",
-    #             json={
-    #                 "code": code,
-    #                 "language": language,
-    #                 "stdin": stdin_input
-    #             }
-    #         )
-    #         return response.json()
-    
     async def execute_code(
         self, 
         code: str, 
@@ -38,21 +20,18 @@ class VPLService:
         
         if language == "python":
             try:
-                # Create a temporary file for the code
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
                     f.write(code)
                     temp_file = f.name
                 
-                # Run the Python script with the provided stdin
                 process = subprocess.run(
                     ['python', temp_file],
                     input=stdin_input,
                     capture_output=True,
                     text=True,
-                    timeout=30  # 30 second timeout
+                    timeout=30  
                 )
-                
-                # Clean up temp file
+
                 os.unlink(temp_file)
                 
                 return {

@@ -1,5 +1,3 @@
-// contact.js - Contact form functionality
-
 console.log('contact.js loaded successfully');
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Form submitted - event fired');
             e.preventDefault();
             
-            // Get form data
             const name = document.getElementById('name')?.value || '';
             const email = document.getElementById('email')?.value || '';
             const subject = document.getElementById('subject')?.value || '';
@@ -21,14 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const formData = { name, email, subject, message };
             console.log('Form data:', formData);
-            
-            // Simple validation
+ 
             if (!name || !email || !subject || !message) {
                 alert('Please fill in all fields');
                 return;
             }
-            
-            // Get button elements
+
             const submitBtn = document.getElementById('submitBtn');
             const spinner = document.getElementById('submitSpinner');
             const submitText = document.getElementById('submitText');
@@ -41,22 +36,18 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const originalText = submitText.innerHTML;
             
-            // Show loading
             submitBtn.disabled = true;
             spinner.classList.remove('d-none');
             submitText.innerHTML = 'Sending...';
             
-            // Hide previous alerts
             const successAlert = document.getElementById('successAlert');
             const errorAlert = document.getElementById('errorAlert');
             if (successAlert) successAlert.classList.add('d-none');
             if (errorAlert) errorAlert.classList.add('d-none');
-            
-            // Determine the correct URL
+
             const apiUrl = '/api/v1/contact';
             console.log('Fetching URL:', apiUrl);
             
-            // Make the API call
             fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -72,16 +63,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Response data:', data);
                 
                 if (data.success) {
-                    // Show success message
                     if (successAlert) {
                         document.getElementById('successMessage').textContent = data.message || 'Thank you for your message!';
                         successAlert.classList.remove('d-none');
                     }
-                    
-                    // Reset form
                     document.getElementById('contactForm').reset();
                 } else {
-                    // Show error message
                     if (errorAlert) {
                         document.getElementById('errorMessage').textContent = data.detail || 'An error occurred';
                         errorAlert.classList.remove('d-none');

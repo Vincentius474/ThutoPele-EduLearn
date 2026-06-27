@@ -12,20 +12,8 @@ from app.services.blog_service import BlogService
 from app.services.user_service import UserService
 from app.web.auth_routes import router as auth_router
 
-# class _NoCache:
-#     """A dummy cache that never stores anything."""
-#     def get(self, key):
-#         return None
-#     def set(self, key, value):
-#         pass
-#     def clear(self):
-#         pass
-
 logger = logging.getLogger(__name__)
-
 web_router = APIRouter()
-
-# Include auth routes
 web_router.include_router(auth_router)
 
 # ==================== HOME PAGE ====================
@@ -39,15 +27,11 @@ async def home(
     """Home page"""
     supabase = get_supabase_client()
     course_service = CourseService(supabase)
-    
-    # Get featured courses
     courses = await course_service.get_courses(
         limit=6,
         is_published=True
     )
     
-    # if not isinstance(templates.env.cache, _NoCache):
-    #     templates.env.cache = _NoCache()
     return templates.TemplateResponse(
         "index.html",
         {
@@ -71,8 +55,7 @@ async def dashboard(
         return RedirectResponse(url="/login", status_code=302)
     
     supabase = get_supabase_client()
-    
-    # Route to appropriate dashboard based on role
+
     if current_user.get("is_admin"):
         # Admin dashboard
         return templates.TemplateResponse(
@@ -85,7 +68,6 @@ async def dashboard(
         )
         
     elif current_user.get("is_instructor"):
-        # Instructor dashboard
         return templates.TemplateResponse(
             "dashboard/instructor.html",
             {
@@ -96,7 +78,6 @@ async def dashboard(
         )
         
     else:
-        # Student dashboard
         try:
             enrollments = supabase.table("enrollments")\
                 .select("*, courses(*)")\
@@ -114,7 +95,6 @@ async def dashboard(
                     course["progress"] = enrollment.get("progress", 0)
                     course["enrolled_at"] = enrollment.get("enrolled_at")
                     
-                    # Get instructor details
                     instructor = supabase.table("users")\
                         .select("full_name")\
                         .eq("id", course["instructor_id"])\
@@ -129,11 +109,8 @@ async def dashboard(
                         completed_courses += 1
                     elif enrollment.get("progress", 0) > 0:
                         in_progress_courses.append(course)
-                    
-                    # Calculate total hours (simplified)
                     total_hours += 15
             
-            # Get recommended courses
             categories = list(set([c.get("category") for c in enrolled_courses if c.get("category")]))
             recommended = []
             if categories:
@@ -146,7 +123,6 @@ async def dashboard(
                 recommended = recommended_query.data or []
             
             # ==================== PROGRAMMING ASSIGNMENTS ====================
-            # Get programming assignments for enrolled courses
             programming_assignments = []
             
             for course in enrolled_courses:
@@ -156,7 +132,6 @@ async def dashboard(
                     .execute()
                 
                 for assignment in course_assignments.data:
-                    # Check if student has submitted this assignment
                     submission = supabase.table("code_submissions")\
                         .select("*")\
                         .eq("assignment_id", assignment["id"])\
@@ -170,14 +145,12 @@ async def dashboard(
                     
                     programming_assignments.append(assignment)
             
-            # Sort by due date (if exists) or creation date
             programming_assignments.sort(key=lambda x: x.get("due_date", x.get("created_at", "")), reverse=False)
             
             # ==================== RECENT ACTIVITIES ====================
             recent_activities = []
             
             try:
-                # Get recent quiz attempts
                 quiz_attempts = supabase.table("quiz_attempts")\
                     .select("*, quizzes(title)")\
                     .eq("user_id", current_user["id"])\
@@ -195,7 +168,6 @@ async def dashboard(
                 print(f"Error fetching quiz attempts: {e}")
             
             try:
-                # Get recent assignment submissions
                 submissions = supabase.table("submissions")\
                     .select("*, assignments(title)")\
                     .eq("user_id", current_user["id"])\
@@ -213,7 +185,6 @@ async def dashboard(
                 print(f"Error fetching submissions: {e}")
             
             try:
-                # Get recent programming assignment submissions
                 code_submissions = supabase.table("code_submissions")\
                     .select("*, programming_assignments(title)")\
                     .eq("user_id", current_user["id"])\
@@ -231,7 +202,6 @@ async def dashboard(
             except Exception as e:
                 print(f"Error fetching code submissions: {e}")
             
-            # Sort and limit activities
             recent_activities.sort(key=lambda x: x.get("created_at", ""), reverse=True)
             recent_activities = recent_activities[:10]
             
@@ -246,7 +216,7 @@ async def dashboard(
                     "certificates": completed_courses,
                     "total_hours": total_hours,
                     "recommended_courses": recommended,
-                    "programming_assignments": programming_assignments,  # Add this
+                    "programming_assignments": programming_assignments,
                     "recent_activities": recent_activities,
                     "title": "My Dashboard"
                 }
@@ -256,7 +226,6 @@ async def dashboard(
             import traceback
             traceback.print_exc()
             
-            # Return basic dashboard if there's an error
             return templates.TemplateResponse(
                 "dashboard/student.html",
                 {
@@ -268,7 +237,7 @@ async def dashboard(
                     "certificates": 0,
                     "total_hours": 0,
                     "recommended_courses": [],
-                    "programming_assignments": [],  # Add this
+                    "programming_assignments": [],
                     "recent_activities": [],
                     "title": "My Dashboard"
                 }
@@ -300,15 +269,12 @@ async def my_taught_courses_page(
 ):
     """My taught courses page (instructors only)"""
     supabase = get_supabase_client()
-    
-    # Get courses taught by this instructor
     courses = supabase.table("courses")\
         .select("*")\
         .eq("instructor_id", current_user["id"])\
         .order("created_at", desc=True)\
         .execute()
     
-    # Calculate total students
     total_students = 0
     for course in courses.data or []:
         enrollments = supabase.table("enrollments")\
@@ -319,7 +285,7 @@ async def my_taught_courses_page(
         total_students += course["student_count"]
     
     return templates.TemplateResponse(
-        "instructor/my_courses.html",  # This template exists now
+        "instructor/my_courses.html",
         {
             "request": request,
             "current_user": current_user,
@@ -337,27 +303,23 @@ async def instructor_analytics(
 ):
     """Instructor analytics page"""
     supabase = get_supabase_client()
-    
-    # Get instructor's courses
+
     courses = supabase.table("courses")\
         .select("*")\
         .eq("instructor_id", current_user["id"])\
         .execute()
-    
-    # Calculate stats
+
     total_courses = len(courses.data)
     total_students = 0
     total_revenue = 0
     
     for course in courses.data:
-        # Get enrollments
         enrollments = supabase.table("enrollments")\
             .select("id", count="exact")\
             .eq("course_id", course["id"])\
             .execute()
         total_students += enrollments.count if hasattr(enrollments, 'count') else 0
-        
-        # Calculate revenue (simplified)
+
         if course.get("price", 0) > 0:
             total_revenue += course["price"] * (enrollments.count if hasattr(enrollments, 'count') else 0)
     
@@ -383,14 +345,11 @@ async def instructor_earnings(
 ):
     """Instructor earnings page"""
     supabase = get_supabase_client()
-    
-    # Get instructor's courses
     courses = supabase.table("courses")\
         .select("*")\
         .eq("instructor_id", current_user["id"])\
         .execute()
-    
-    # Calculate earnings
+
     total_revenue = 0
     monthly_revenue = 0
     transactions = []
@@ -450,11 +409,9 @@ async def courses_list(
         level=level,
         is_published=True
     )
-    
-    # Enhance courses with instructor data
+
     enhanced_courses = []
     for course in courses:
-        # Get instructor details
         instructor = supabase.table("users")\
             .select("id, email, full_name, username, avatar_url")\
             .eq("id", course["instructor_id"])\
@@ -468,7 +425,6 @@ async def courses_list(
                 "avatar_url": None
             }
         
-        # Get enrollment count
         enrollments = supabase.table("enrollments")\
             .select("id", count="exact")\
             .eq("course_id", course["id"])\
@@ -477,8 +433,7 @@ async def courses_list(
         course["enrollment_count"] = enrollments.count if hasattr(enrollments, 'count') else 0
         
         enhanced_courses.append(course)
-    
-    # Apply search filter
+
     if search:
         search_lower = search.lower()
         enhanced_courses = [
@@ -486,14 +441,12 @@ async def courses_list(
             if search_lower in c["title"].lower() or 
                (c.get("description") and search_lower in c["description"].lower())
         ]
-    
-    # Apply price filter
+
     if price == "free":
         enhanced_courses = [c for c in enhanced_courses if c.get("price", 0) == 0]
     elif price == "paid":
         enhanced_courses = [c for c in enhanced_courses if c.get("price", 0) > 0]
-    
-    # Apply sorting
+
     if sort == "newest":
         enhanced_courses.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     elif sort == "popular":
@@ -504,8 +457,7 @@ async def courses_list(
         enhanced_courses.sort(key=lambda x: x.get("price", 0), reverse=True)
     elif sort == "title":
         enhanced_courses.sort(key=lambda x: x.get("title", ""))
-    
-    # Pagination
+ 
     total_courses = len(enhanced_courses)
     courses_per_page = 9
     total_pages = (total_courses + courses_per_page - 1) // courses_per_page if total_courses > 0 else 1
@@ -540,8 +492,7 @@ async def course_detail(
 ):
     """Course detail page"""
     supabase = get_supabase_client()
-    
-    # Get course details
+
     course_result = supabase.table("courses")\
         .select("*")\
         .eq("id", course_id)\
@@ -555,32 +506,26 @@ async def course_detail(
         )
     
     course = course_result.data[0]
-    
-    # Get instructor details
+
     instructor = supabase.table("users")\
         .select("id, email, full_name, avatar_url, bio")\
         .eq("id", course["instructor_id"])\
         .execute()
     
     course["instructor"] = instructor.data[0] if instructor.data else {"full_name": "Unknown"}
-    
-    # Get course materials
+ 
     materials = supabase.table("course_materials")\
         .select("*")\
         .eq("course_id", course_id)\
         .order("order_index")\
         .execute()
     
-    print(f"Found {len(materials.data)} materials for course {course_id}")  # Debug log
-    
-    # Check enrollment status
     is_enrolled = False
     progress = 0
     completed_lessons = 0
     has_reviewed = False
     
     if current_user:
-        # Check enrollment
         enrollment = supabase.table("enrollments")\
             .select("*")\
             .eq("user_id", current_user["id"])\
@@ -591,7 +536,6 @@ async def course_detail(
             is_enrolled = True
             progress = enrollment.data[0].get("progress", 0)
             
-            # Get completed lessons
             if materials.data:
                 completed = supabase.table("lesson_progress")\
                     .select("lesson_id")\
@@ -601,7 +545,6 @@ async def course_detail(
                 completed_ids = {item["lesson_id"] for item in completed.data}
                 completed_lessons = len(completed_ids)
                 
-                # Mark materials as completed
                 for material in materials.data:
                     material["completed"] = material["id"] in completed_ids
     
@@ -632,7 +575,6 @@ async def course_management_page(
     """Course management page"""
     supabase = get_supabase_client()
     
-    # Fetch all course data
     result = supabase.table("courses")\
         .select("*")\
         .eq("id", course_id)\
@@ -646,42 +588,36 @@ async def course_management_page(
         )
     
     course = result.data[0]
-    
-    # Verify instructor owns this course
+
     if course["instructor_id"] != current_user["id"]:
         return templates.TemplateResponse(
             "403.html",
             {"request": request, "title": "Access Denied"},
             status_code=403
         )
-    
-    # Fetch materials
+
     materials = supabase.table("course_materials")\
         .select("*")\
         .eq("course_id", course_id)\
         .order("order_index")\
         .execute()
-    
-    # Fetch quizzes
+
     quizzes = supabase.table("quizzes")\
         .select("*")\
         .eq("course_id", course_id)\
         .execute()
-    
-    # Fetch assignments
+
     assignments = supabase.table("assignments")\
         .select("*")\
         .eq("course_id", course_id)\
         .execute()
-    
-    # Fetch announcements
+
     announcements = supabase.table("announcements")\
         .select("*, users(full_name, avatar_url)")\
         .eq("course_id", course_id)\
         .order("created_at", desc=True)\
         .execute()
-    
-    # Fetch enrolled students
+
     students = supabase.table("enrollments")\
         .select("*, users(id, email, full_name, avatar_url)")\
         .eq("course_id", course_id)\
@@ -720,7 +656,6 @@ async def edit_course_page(
     """Edit course page (instructors only)"""
     supabase = get_supabase_client()
     
-    # Get course details
     course_result = supabase.table("courses")\
         .select("*")\
         .eq("id", course_id)\
@@ -734,8 +669,6 @@ async def edit_course_page(
         )
     
     course = course_result.data[0]
-    
-    # Check if user owns this course
     if course["instructor_id"] != current_user["id"]:
         return templates.TemplateResponse(
             "403.html",
@@ -761,8 +694,6 @@ async def instructor_materials_page(
 ):
     """Instructor materials management page"""
     supabase = get_supabase_client()
-    
-    # Get instructor's courses
     courses = supabase.table("courses")\
         .select("*")\
         .eq("instructor_id", current_user["id"])\
@@ -786,14 +717,12 @@ async def instructor_messages_page(
 ):
     """Instructor messages page"""
     supabase = get_supabase_client()
-    
-    # Get instructor's courses with student counts
+
     courses = supabase.table("courses")\
         .select("*")\
         .eq("instructor_id", current_user["id"])\
         .execute()
-    
-    # Add student counts
+
     for course in courses.data:
         enrollments = supabase.table("enrollments")\
             .select("id", count="exact")\
@@ -821,8 +750,6 @@ async def my_courses_page(
 ):
     """My Courses page"""
     supabase = get_supabase_client()
-    
-    # Get enrolled courses with progress
     enrollments = supabase.table("enrollments")\
         .select("*, courses(*)")\
         .eq("user_id", current_user["id"])\
@@ -842,8 +769,7 @@ async def my_courses_page(
                 completed.append(course)
             else:
                 in_progress.append(course)
-    
-    # Get wishlist (you'd need a wishlist table)
+
     wishlist = []
     
     return templates.TemplateResponse(
@@ -866,11 +792,8 @@ async def my_certificates_page(
 ):
     """My Certificates page"""
     supabase = get_supabase_client()
-    
-    # Get certificates (you'd need a certificates table)
     certificates = []
-    
-    # For now, generate from completed courses
+
     enrollments = supabase.table("enrollments")\
         .select("*, courses(title)")\
         .eq("user_id", current_user["id"])\
@@ -919,8 +842,6 @@ async def student_course_view(
 ):
     """Student course view page"""
     supabase = get_supabase_client()
-    
-    # Check if student is enrolled
     enrollment = supabase.table("enrollments")\
         .select("*")\
         .eq("user_id", current_user["id"])\
@@ -929,8 +850,7 @@ async def student_course_view(
     
     if not enrollment.data:
         return RedirectResponse(url=f"/courses/{course_id}", status_code=302)
-    
-    # Get course details
+
     course = supabase.table("courses")\
         .select("*")\
         .eq("id", course_id)\
@@ -943,20 +863,17 @@ async def student_course_view(
             status_code=404
         )
     
-    # Get instructor
     instructor = supabase.table("users")\
         .select("id, full_name, avatar_url")\
         .eq("id", course.data[0]["instructor_id"])\
         .execute()
-    
-    # Get materials with completion status
+
     materials = supabase.table("course_materials")\
         .select("*")\
         .eq("course_id", course_id)\
         .order("order_index")\
         .execute()
-    
-    # Get completed materials
+
     completed = supabase.table("lesson_progress")\
         .select("lesson_id")\
         .eq("user_id", current_user["id"])\
@@ -966,7 +883,6 @@ async def student_course_view(
     for material in materials.data:
         material["completed"] = material["id"] in completed_ids
     
-    # Get quizzes with attempts
     quizzes = supabase.table("quizzes")\
         .select("*")\
         .eq("course_id", course_id)\
@@ -979,7 +895,6 @@ async def student_course_view(
             .execute()
         quiz["questions"] = questions.data
         
-        # Get student's attempt
         attempt = supabase.table("quiz_attempts")\
             .select("*")\
             .eq("quiz_id", quiz["id"])\
@@ -990,7 +905,6 @@ async def student_course_view(
         if attempt.data:
             quiz["attempt"] = attempt.data[0]
     
-    # Get assignments with submissions
     assignments = supabase.table("assignments")\
         .select("*")\
         .eq("course_id", course_id)\
@@ -1005,14 +919,12 @@ async def student_course_view(
         if submission.data:
             assignment["submission"] = submission.data[0]
     
-    # Get announcements
     announcements = supabase.table("announcements")\
         .select("*, users(full_name)")\
         .eq("course_id", course_id)\
         .order("created_at", desc=True)\
         .execute()
     
-    # Get messages
     messages = supabase.table("course_messages")\
         .select("*")\
         .eq("course_id", course_id)\
@@ -1020,7 +932,6 @@ async def student_course_view(
         .order("created_at")\
         .execute()
     
-    # Get unread count
     unread_count = supabase.table("course_messages")\
         .select("*", count="exact")\
         .eq("course_id", course_id)\
@@ -1030,7 +941,6 @@ async def student_course_view(
     
     total_unread = unread_count.count if hasattr(unread_count, 'count') else 0
     
-    # Calculate progress
     total_materials = len(materials.data)
     completed_materials = len(completed_ids)
     progress = int((completed_materials / total_materials) * 100) if total_materials > 0 else 0
@@ -1069,8 +979,7 @@ async def blog_page(
 ):
     """Blog listing page"""
     supabase = get_supabase_client()
-    
-    # Get featured post
+
     featured = supabase.table("blog_posts")\
         .select("*, users(full_name, avatar_url)")\
         .eq("is_published", True)\
@@ -1080,14 +989,11 @@ async def blog_page(
         .execute()
     
     featured_post = featured.data[0] if featured.data else None
-    
-    # Pagination settings
+ 
     limit = 9
     offset = (page - 1) * limit
     
-    # Handle search using database function
     if search:
-        # Use the database function for efficient search
         result = supabase.rpc(
             "search_blog_posts",
             {
@@ -1099,7 +1005,6 @@ async def blog_page(
         posts = result.data
         total = len(posts)
         
-        # Apply pagination to results
         paginated_posts = posts[offset:offset + limit]
         total_pages = (total + limit - 1) // limit if total > 0 else 1
         
@@ -1118,7 +1023,6 @@ async def blog_page(
             }
         )
     
-    # Regular query without search
     query = supabase.table("blog_posts")\
         .select("*, users(full_name, avatar_url)", count="exact")\
         .eq("is_published", True)
@@ -1126,11 +1030,9 @@ async def blog_page(
     if category:
         query = query.eq("category", category)
     
-    # Get total count
     count_result = query.execute()
     total = count_result.count if hasattr(count_result, 'count') else 0
-    
-    # Apply sorting and pagination
+
     result = query.order("published_at", desc=True)\
         .range(offset, offset + limit - 1)\
         .execute()
@@ -1161,8 +1063,6 @@ async def blog_post_detail(
 ):
     """Blog post detail page"""
     supabase = get_supabase_client()
-    
-    # Fetch the post
     result = supabase.table("blog_posts")\
         .select("*, users(full_name, avatar_url)")\
         .eq("slug", slug)\
@@ -1177,8 +1077,6 @@ async def blog_post_detail(
         )
     
     post = result.data[0]
-    
-    # Get comments
     comments = supabase.table("blog_comments")\
         .select("*, users(full_name, avatar_url)")\
         .eq("post_id", post["id"])\
@@ -1223,8 +1121,7 @@ async def edit_blog_page(
 ):
     """Edit blog post page (admin/instructor only)"""
     supabase = get_supabase_client()
-    
-    # Get blog post
+
     post = supabase.table("blog_posts")\
         .select("*")\
         .eq("id", post_id)\
@@ -1395,7 +1292,6 @@ async def tutorials_page(
     offset = (page - 1) * limit
     
     if search:
-        # Use the search endpoint
         result = await get_tutorials(
             category=category,
             search=search,
@@ -1406,7 +1302,6 @@ async def tutorials_page(
         tutorials = result.get("tutorials", [])
         total = result.get("total", 0)
     else:
-        # Regular query
         query = supabase.table("tutorials")\
             .select("*", count="exact")\
             .eq("is_published", True)
@@ -1533,14 +1428,12 @@ async def search_page(
     results = []
     
     if q:
-        # Search in courses
         courses = supabase.table("courses")\
             .select("*")\
             .eq("is_published", True)\
             .ilike("title", f"%{q}%")\
             .execute()
-        
-        # Search in blog posts
+
         posts = supabase.table("blog_posts")\
             .select("*")\
             .eq("is_published", True)\
@@ -1612,8 +1505,7 @@ async def tutorial_detail(
 ):
     """Tutorial detail page"""
     supabase = get_supabase_client()
-    
-    # Get tutorial details
+
     tutorial_result = supabase.table("tutorials")\
         .select("*, users(full_name, avatar_url, bio)")\
         .eq("id", tutorial_id)\
@@ -1627,14 +1519,12 @@ async def tutorial_detail(
         )
     
     tutorial = tutorial_result.data[0]
-    
-    # Increment view count
+
     supabase.table("tutorials")\
         .update({"view_count": tutorial["view_count"] + 1})\
         .eq("id", tutorial_id)\
         .execute()
-    
-    # Get related tutorials (same category/difficulty)
+
     related = supabase.table("tutorials")\
         .select("*")\
         .eq("category", tutorial["category"])\
@@ -1717,65 +1607,53 @@ async def admin_dashboard(
 ):
     """Admin dashboard"""
     supabase = get_supabase_client()
-    
-    # Get statistics
-    # Total users
+
     total_users_result = supabase.table("users").select("*", count="exact").execute()
     total_users = total_users_result.count if hasattr(total_users_result, 'count') else 0
     
-    # Total instructors
     total_instructors_result = supabase.table("users")\
         .select("*", count="exact")\
         .eq("is_instructor", True)\
         .execute()
     total_instructors = total_instructors_result.count if hasattr(total_instructors_result, 'count') else 0
-    
-    # Total students (users who are not instructors and not admins)
+
     total_students_result = supabase.table("users")\
         .select("*", count="exact")\
         .eq("is_instructor", False)\
         .eq("is_admin", False)\
         .execute()
     total_students = total_students_result.count if hasattr(total_students_result, 'count') else 0
-    
-    # Total courses
+
     total_courses_result = supabase.table("courses").select("*", count="exact").execute()
     total_courses = total_courses_result.count if hasattr(total_courses_result, 'count') else 0
-    
-    # Get pending instructor applications
+
     pending_instructors = supabase.table("instructor_applications")\
         .select("*")\
         .eq("status", "pending")\
         .execute()
-    
-    # Get pending courses (unpublished)
+
     pending_courses = supabase.table("courses")\
         .select("*, users(full_name)")\
         .eq("is_published", False)\
         .execute()
-    
-    # Add instructor names to pending courses
+
     for course in pending_courses.data:
         course["instructor_name"] = course.get("users", {}).get("full_name", "Unknown")
-    
-    # Get recent users (last 5)
+
     recent_users = supabase.table("users")\
         .select("*")\
         .order("created_at", desc=True)\
         .limit(5)\
         .execute()
-    
-    # Get recent courses (last 5)
+
     recent_courses = supabase.table("courses")\
         .select("*, users(full_name)")\
         .order("created_at", desc=True)\
         .limit(5)\
         .execute()
     
-    # Calculate revenue data for chart (example - you can replace with actual data)
     revenue_data = [12000, 19000, 15000, 25000, 22000, 30000]
-    
-    # Calculate category distribution for chart
+
     categories = ['Programming', 'Robotics', 'Artificial Intelligence', 'Machine Learning', 'Networking', 'Cyber Security']
     category_counts = []
     for category in categories:
@@ -1813,8 +1691,7 @@ async def admin_users_page(
 ):
     """Admin users management page"""
     supabase = get_supabase_client()
-    
-    # Get all users
+
     users = supabase.table("users")\
         .select("*")\
         .order("created_at", desc=True)\
@@ -1838,8 +1715,7 @@ async def admin_courses_page(
 ):
     """Admin courses management page"""
     supabase = get_supabase_client()
-    
-    # Get all courses with instructor info
+
     courses = supabase.table("courses")\
         .select("*, users(full_name)")\
         .order("created_at", desc=True)\
@@ -1847,8 +1723,7 @@ async def admin_courses_page(
     
     for course in courses.data:
         course["instructor_name"] = course.get("users", {}).get("full_name", "Unknown")
-        
-        # Get student count
+
         enrollments = supabase.table("enrollments")\
             .select("id", count="exact")\
             .eq("course_id", course["id"])\
@@ -1926,7 +1801,6 @@ async def vpl_assignment_page(
     """VPL assignment page for students"""
     supabase = get_supabase_client()
     
-    # Get assignment details
     assignment = supabase.table("programming_assignments")\
         .select("*")\
         .eq("id", assignment_id)\
@@ -1941,8 +1815,7 @@ async def vpl_assignment_page(
     
     assignment_data = assignment.data[0]
     course_id = assignment_data["course_id"]
-    
-    # Check if student is enrolled
+
     enrollment = supabase.table("enrollments")\
         .select("*")\
         .eq("user_id", current_user["id"])\
@@ -1955,8 +1828,7 @@ async def vpl_assignment_page(
             {"request": request, "title": "Access Denied"},
             status_code=403
         )
-    
-    # Get existing submission
+
     submission = supabase.table("code_submissions")\
         .select("*")\
         .eq("assignment_id", assignment_id)\
@@ -1987,8 +1859,7 @@ async def vpl_assignment_review(
 ):
     """Review page for completed assignment"""
     supabase = get_supabase_client()
-    
-    # Get assignment details
+
     assignment = supabase.table("programming_assignments")\
         .select("*")\
         .eq("id", assignment_id)\
@@ -2003,8 +1874,7 @@ async def vpl_assignment_review(
     
     assignment_data = assignment.data[0]
     course_id = assignment_data["course_id"]
-    
-    # Check if student is enrolled
+
     enrollment = supabase.table("enrollments")\
         .select("*")\
         .eq("user_id", current_user["id"])\
@@ -2017,8 +1887,7 @@ async def vpl_assignment_review(
             {"request": request, "title": "Access Denied"},
             status_code=403
         )
-    
-    # Get latest submission
+
     submission = supabase.table("code_submissions")\
         .select("*")\
         .eq("assignment_id", assignment_id)\

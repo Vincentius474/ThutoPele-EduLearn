@@ -24,17 +24,11 @@ class BlogService:
             
             if category:
                 query = query.eq("category", category)
-            
             if featured_only:
                 query = query.eq("is_featured", True)
-            
-            # Order by published date (newest first)
+
             query = query.order("published_at", desc=True)
-            
-            # Apply pagination
             result = query.range(offset, offset + limit - 1).execute()
-            
-            # Get author details for each post
             posts = result.data if result.data else []
             for post in posts:
                 if post.get("author_id"):
@@ -62,8 +56,7 @@ class BlogService:
             
             if result.data and len(result.data) > 0:
                 post = result.data[0]
-                
-                # Get author details
+
                 if post.get("author_id"):
                     author = self.supabase.table("users")\
                         .select("id, full_name, email, avatar_url, bio")\
@@ -71,8 +64,7 @@ class BlogService:
                         .execute()
                     if author.data:
                         post["author"] = author.data[0]
-                
-                # Get comments
+
                 comments = self.supabase.table("blog_comments")\
                     .select("*, users(full_name, avatar_url)")\
                     .eq("post_id", post["id"])\
@@ -81,17 +73,13 @@ class BlogService:
                     .execute()
                 
                 post["comments"] = comments.data if comments.data else []
-                
-                # Increment view count
                 self.supabase.table("blog_posts")\
                     .update({"views": post.get("views", 0) + 1})\
                     .eq("id", post["id"])\
                     .execute()
                 
                 return post
-            
-            return None
-            
+            return None  
         except Exception as e:
             logger.error(f"Error getting blog post {slug}: {e}")
             return None
@@ -103,15 +91,12 @@ class BlogService:
                 .select("category", count="exact")\
                 .eq("is_published", True)\
                 .execute()
-            
-            # Count posts per category
             categories = {}
             for post in result.data:
                 cat = post.get("category")
                 if cat:
                     categories[cat] = categories.get(cat, 0) + 1
-            
-            # Format as list
+
             category_list = [
                 {"name": name, "count": count}
                 for name, count in categories.items()
@@ -134,25 +119,20 @@ class BlogService:
     async def search_posts(self, query: str) -> List[Dict[str, Any]]:
         """Search blog posts"""
         try:
-            # This is a simple search - consider using PostgreSQL full-text search for production
             result = self.supabase.table("blog_posts")\
                 .select("*")\
                 .eq("is_published", True)\
                 .execute()
             
             posts = result.data if result.data else []
-            
-            # Filter posts containing the search query
             query_lower = query.lower()
             filtered = [
                 post for post in posts
                 if query_lower in post.get("title", "").lower() or
                    query_lower in post.get("excerpt", "").lower() or
                    query_lower in post.get("content", "").lower()
-            ]
-            
-            return filtered[:10]  # Limit results
-            
+            ] 
+            return filtered[:10]  
         except Exception as e:
             logger.error(f"Error searching posts: {e}")
             return []

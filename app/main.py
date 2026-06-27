@@ -9,12 +9,10 @@ from app.core.config import settings
 from app.api.api_v1.api import api_router
 from app.web.web import web_router
 
-# Get the absolute path to the templates directory
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR.parent / "static"
 
-# Initialize templates
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 templates.env.cache_size = 0
 
@@ -24,7 +22,6 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Set up CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,13 +30,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-
-# Make templates available to routes via app state
 app.state.templates = templates
 
-# Include routers
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(web_router)
 

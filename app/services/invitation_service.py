@@ -22,7 +22,6 @@ class InvitationService:
     async def create_invitation(self, email: str, full_name: str, username: str, admin_id: str) -> Optional[Dict[str, Any]]:
         """Create a new invitation for an instructor"""
         try:
-            # Check if invitation already exists and is not used
             existing = self.supabase.table("invitations")\
                 .select("*")\
                 .eq("email", email)\
@@ -33,10 +32,9 @@ class InvitationService:
             if existing.data and len(existing.data) > 0:
                 logger.info(f"Active invitation already exists for {email}")
                 return existing.data[0]
-            
-            # Generate new invitation
+
             code = self.generate_invitation_code()
-            expires_at = datetime.utcnow() + timedelta(days=7)  # Valid for 7 days
+            expires_at = datetime.utcnow() + timedelta(days=7)
             
             invitation_data = {
                 "email": email,
@@ -62,7 +60,6 @@ class InvitationService:
     async def verify_invitation(self, email: str, code: str) -> Dict[str, Any]:
         """Verify an invitation code"""
         try:
-            # Check if invitation exists and is valid
             result = self.supabase.table("invitations")\
                 .select("*")\
                 .eq("email", email)\
@@ -83,8 +80,7 @@ class InvitationService:
                     "valid": False,
                     "invitation": None,
                     "message": "Invalid or expired invitation code"
-                }
-                
+                }  
         except Exception as e:
             logger.error(f"Error verifying invitation: {e}")
             return {
@@ -100,9 +96,7 @@ class InvitationService:
                 .update({"is_used": True, "used_at": datetime.utcnow().isoformat()})\
                 .eq("id", invitation_id)\
                 .execute()
-            
             return len(result.data) > 0
-            
         except Exception as e:
             logger.error(f"Error marking invitation as used: {e}")
             return False
@@ -111,13 +105,10 @@ class InvitationService:
         """Get all invitations (filter by admin if provided)"""
         try:
             query = self.supabase.table("invitations").select("*")
-            
             if admin_id:
                 query = query.eq("created_by", admin_id)
-            
             result = query.order("created_at", desc=True).execute()
             return result.data
-            
         except Exception as e:
             logger.error(f"Error getting invitations: {e}")
             return []

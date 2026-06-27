@@ -1,9 +1,7 @@
 let currentCategory = 'all';
 let currentUser = null;
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Get current user data from data attribute
     const userData = document.getElementById('user-data');
     if (userData) {
         try {
@@ -17,11 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPopularResources();
 });
 
-// Filter resources by category
 function filterResources(category) {
     currentCategory = category;
-    
-    // Update active tab
     document.querySelectorAll('[data-category]').forEach(el => {
         if (el.dataset.category === category) {
             el.classList.add('active');
@@ -33,7 +28,6 @@ function filterResources(category) {
     loadResources();
 }
 
-// Load resources from API
 async function loadResources() {
     const url = currentCategory === 'all' 
         ? '/api/v1/resources' 
@@ -48,54 +42,6 @@ async function loadResources() {
     }
 }
 
-// Load resources from API
-// async function loadResources() {
-//     const grid = document.getElementById('resourcesGrid');
-//     if (grid) {
-//         grid.innerHTML = `
-//             <div class="col-12 text-center py-5">
-//                 <div class="spinner-border text-primary" role="status">
-//                     <span class="visually-hidden">Loading...</span>
-//                 </div>
-//             </div>
-//         `;
-//     }
-    
-//     let url = `/api/v1/resources?limit=9&offset=${(currentPage - 1) * 9}`;
-//     if (currentCategory && currentCategory !== 'all') {
-//         url += `&category=${currentCategory}`;
-//     }
-//     if (currentSearch) {
-//         url += `&search=${encodeURIComponent(currentSearch)}`;
-//     }
-    
-//     try {
-//         const response = await fetch(url);
-//         const data = await response.json();
-        
-//         const resources = data.resources || [];
-//         const total = data.total || 0;
-//         totalPages = Math.ceil(total / 9);
-        
-//         console.log(`Loaded ${resources.length} resources out of ${total} total`); // Debug log
-        
-//         displayResources(resources);
-//         updatePagination(total);
-//     } catch (error) {
-//         console.error('Error loading resources:', error);
-//         if (grid) {
-//             grid.innerHTML = `
-//                 <div class="col-12 text-center py-5">
-//                     <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
-//                     <h5>Error loading resources</h5>
-//                     <p class="text-muted">Please try again later.</p>
-//                 </div>
-//             `;
-//         }
-//     }
-// }
-
-// Display resources in grid
 function displayResources(resources) {
     const grid = document.getElementById('resourcesGrid');
     
@@ -153,7 +99,6 @@ function displayResources(resources) {
     grid.innerHTML = html;
 }
 
-// Load popular resources
 async function loadPopularResources() {
     try {
         const response = await fetch('/api/v1/resources/popular?limit=4');
@@ -164,7 +109,6 @@ async function loadPopularResources() {
     }
 }
 
-// Display popular resources
 function displayPopularResources(resources) {
     const container = document.getElementById('popularResources');
     
@@ -193,7 +137,6 @@ function displayPopularResources(resources) {
     container.innerHTML = html;
 }
 
-// Download resource
 async function downloadResource(resourceId) {
     try {
         const response = await fetch(`/api/v1/resources/${resourceId}/download`, {
@@ -203,7 +146,6 @@ async function downloadResource(resourceId) {
         if (response.ok) {
             const data = await response.json();
             window.open(data.file_url, '_blank');
-            // Reload to update download count
             setTimeout(() => loadResources(), 500);
         }
     } catch (error) {
@@ -211,7 +153,6 @@ async function downloadResource(resourceId) {
     }
 }
 
-// Upload resource
 function showUploadModal() {
     document.getElementById('uploadForm').reset();
     new bootstrap.Modal(document.getElementById('uploadModal')).show();
@@ -267,7 +208,6 @@ async function uploadResource() {
     }
 }
 
-// Delete resource
 async function deleteResource(resourceId) {
     if (!confirm('Are you sure you want to delete this resource?')) return;
     
@@ -289,7 +229,6 @@ async function deleteResource(resourceId) {
     }
 }
 
-// Helper functions
 function getResourceIcon(fileType, category) {
     if (fileType?.includes('pdf')) return 'fa-file-pdf';
     if (fileType?.includes('word')) return 'fa-file-word';
@@ -353,7 +292,6 @@ function showError(message) {
     new bootstrap.Modal(document.getElementById('errorModal')).show();
 }
 
-// Make functions globally available
 window.filterResources = filterResources;
 window.showUploadModal = showUploadModal;
 window.uploadResource = uploadResource;

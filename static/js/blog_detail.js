@@ -1,5 +1,3 @@
-// blog_detail.js - Blog detail page functionality
-
 document.addEventListener('DOMContentLoaded', function() {
     const commentForm = document.getElementById('commentForm');
     if (commentForm) {
@@ -71,7 +69,5 @@ async function deletePost(postId) {
 }
 
 function showNotification(message, type) {
-    // You can implement a toast notification here
-    // For now, using alert
     alert(message);
 }

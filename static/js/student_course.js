@@ -1,5 +1,3 @@
-// student_course.js - Student course view functionality
-
 let courseId = null;
 let userId = null;
 let currentQuiz = null;
@@ -18,8 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error parsing course data:', e);
         }
     }
-    
-    // Initialize message form
+
     const messageForm = document.getElementById('sendMessageForm');
     if (messageForm) {
         messageForm.addEventListener('submit', sendMessage);

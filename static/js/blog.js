@@ -1,10 +1,7 @@
-// blog.js - Blog page functionality
-
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Blog page loaded');
     
-    // Newsletter form
     const newsletterForm = document.getElementById('newsletterForm');
     if (newsletterForm) {
         newsletterForm.addEventListener('submit', (e) => {
@@ -14,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Also attach delete handlers to buttons directly
     const deleteButtons = document.querySelectorAll('.delete-post-btn');
     console.log('Found delete buttons:', deleteButtons.length);
     
@@ -30,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Define the delete function
 async function deletePostFunction(postId) {
     console.log('deletePostFunction called with ID:', postId);
     
@@ -59,10 +54,8 @@ async function deletePostFunction(postId) {
     }
 }
 
-// Expose to global scope
 window.deletePost = deletePostFunction;
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');

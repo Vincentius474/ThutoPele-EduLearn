@@ -12,7 +12,6 @@ class AuthService:
     async def register_user(self, email: str, password: str, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """Register a new user with Supabase Auth"""
         try:
-            # Register with Supabase Auth
             auth_response = self.supabase.auth.sign_up({
                 "email": email,
                 "password": password,
@@ -23,8 +22,7 @@ class AuthService:
             
             if not auth_response.user:
                 return {"success": False, "error": "Registration failed"}
-            
-            # Create profile in public.users table
+
             profile_data = {
                 "id": auth_response.user.id,
                 "email": email,
@@ -33,7 +31,6 @@ class AuthService:
                 "is_instructor": user_data.get("role") == "instructor",
                 "is_admin": False
             }
-            
             profile_result = self.supabase.table("users").insert(profile_data).execute()
             
             return {
@@ -61,8 +58,7 @@ class AuthService:
                 "success": True,
                 "session": auth_response.session,
                 "user": auth_response.user
-            }
-            
+            }    
         except Exception as e:
             logger.error(f"Login error: {e}")
             return {"success": False, "error": str(e)}
@@ -82,8 +78,7 @@ class AuthService:
             user = self.supabase.auth.get_user()
             if not user or not hasattr(user, 'user'):
                 return None
-            
-            # Get additional profile data
+
             profile = self.supabase.table("users")\
                 .select("*")\
                 .eq("id", user.user.id)\

@@ -1,12 +1,8 @@
-// vpl_assignment.js - VPL Assignment functionality
-
 let assignmentId = null;
 let currentLanguage = null;
 let codeEditor = null;
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Get assignment data from data attribute
     const assignmentData = document.getElementById('assignment-data');
     if (assignmentData) {
         try {
@@ -18,49 +14,36 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error parsing assignment data:', e);
         }
     }
-    
-    // Initialize code editor
+
     initCodeEditor();
-    
-    // Set up keyboard shortcuts
     setupKeyboardShortcuts();
 });
 
-// Initialize code editor
 function initCodeEditor() {
     const textarea = document.getElementById('codeEditor');
     if (textarea) {
-        // Add line numbers (simple version)
         textarea.addEventListener('keydown', handleTabKey);
-        
-        // Optional: You can integrate a proper code editor like CodeMirror or Monaco here
         console.log('Code editor initialized');
     }
 }
 
-// Handle tab key in textarea
 function handleTabKey(e) {
     if (e.key === 'Tab') {
         e.preventDefault();
         const textarea = e.target;
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        
-        // Insert 4 spaces at cursor position
         textarea.value = textarea.value.substring(0, start) + '    ' + textarea.value.substring(end);
         textarea.selectionStart = textarea.selectionEnd = start + 4;
     }
 }
 
-// Setup keyboard shortcuts
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
-        // Ctrl+Enter or Cmd+Enter to run code
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             runCode();
         }
-        // Ctrl+S or Cmd+S to submit
         else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
             e.preventDefault();
             submitCode();
@@ -68,7 +51,6 @@ function setupKeyboardShortcuts() {
     });
 }
 
-// Run code in VPL sandbox
 async function runCode() {
     const code = getCode();
     const language = currentLanguage;
@@ -120,7 +102,6 @@ async function runCode() {
     }
 }
 
-// Submit code assignment
 async function submitCode() {
     const code = getCode();
     const language = currentLanguage;
@@ -129,12 +110,10 @@ async function submitCode() {
         showError('Please enter some code before submitting');
         return;
     }
-    
     if (!confirm('Are you sure you want to submit this assignment? You can only submit once.')) {
         return;
     }
-    
-    // Show loading state
+ 
     const submitButton = document.getElementById('submitButton');
     const originalText = submitButton?.innerHTML;
     if (submitButton) {
@@ -168,7 +147,6 @@ async function submitCode() {
         console.error('Error submitting code:', error);
         showError('Network error. Please try again.');
     } finally {
-        // Reset button state
         if (submitButton) {
             submitButton.disabled = false;
             submitButton.innerHTML = originalText;
@@ -176,13 +154,11 @@ async function submitCode() {
     }
 }
 
-// Get code from editor
 function getCode() {
     const textarea = document.getElementById('codeEditor');
     return textarea ? textarea.value : '';
 }
 
-// Set code in editor
 function setCode(code) {
     const textarea = document.getElementById('codeEditor');
     if (textarea) {
@@ -190,7 +166,6 @@ function setCode(code) {
     }
 }
 
-// Clear output area
 function clearOutput() {
     const outputArea = document.getElementById('outputArea');
     if (outputArea) {
@@ -198,7 +173,6 @@ function clearOutput() {
     }
 }
 
-// Show output message
 function showOutput(message, type = 'info') {
     const outputArea = document.getElementById('outputArea');
     if (outputArea) {
@@ -213,7 +187,6 @@ function showOutput(message, type = 'info') {
     }
 }
 
-// Display run result
 function displayRunResult(result) {
     if (result.error) {
         showOutput(`<strong>Error:</strong> ${escapeHtml(result.error)}`, 'error');
@@ -238,11 +211,9 @@ function displayRunResult(result) {
     showOutput(output, 'success');
 }
 
-// Display submission result
 function displaySubmissionResult(result) {
     let output = '';
     
-    // Score display
     const scoreColor = result.score >= 70 ? 'success' : result.score >= 50 ? 'warning' : 'danger';
     output += `
         <div class="alert alert-${scoreColor} text-center mb-4">
@@ -289,7 +260,6 @@ function displaySubmissionResult(result) {
     showOutput(output, 'success');
 }
 
-// Load saved submission (if any)
 async function loadSavedSubmission() {
     try {
         const response = await fetch(`/api/v1/vpl/assignments/${assignmentId}/submission`);
@@ -305,7 +275,6 @@ async function loadSavedSubmission() {
     }
 }
 
-// Reset code to starter code
 async function resetCode() {
     if (!confirm('Reset code to starter template? Any unsaved changes will be lost.')) {
         return;
@@ -326,7 +295,6 @@ async function resetCode() {
     }
 }
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -334,17 +302,14 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Show error message
 function showError(message) {
     showOutput(`<strong>Error:</strong> ${escapeHtml(message)}`, 'error');
 }
 
-// Show success message
 function showSuccess(message) {
     showOutput(`<strong>Success:</strong> ${escapeHtml(message)}`, 'success');
 }
 
-// Make functions globally available for onclick handlers
 window.runCode = runCode;
 window.submitCode = submitCode;
 window.resetCode = resetCode;

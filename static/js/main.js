@@ -1,7 +1,6 @@
 // Handle logout with AJAX
 document.querySelectorAll('.logout-link, .dropdown-item.text-danger').forEach(link => {
     link.addEventListener('click', async (e) => {
-        // Only handle if it's the logout link
         if (link.getAttribute('href') === '/api/v1/auth/logout' || 
             link.innerHTML.includes('Logout')) {
             e.preventDefault();
@@ -30,8 +29,6 @@ document.querySelectorAll('.logout-link, .dropdown-item.text-danger').forEach(li
     });
 });
 
-
-// Show/hide loading spinner
 function showLoading() {
     const spinner = document.createElement('div');
     spinner.className = 'spinner-overlay';
@@ -47,7 +44,6 @@ function hideLoading() {
     }
 }
 
-// Show toast notification
 function showToast(message, type = 'info') {
     const toastContainer = document.getElementById('toast-container') || createToastContainer();
     
@@ -85,7 +81,6 @@ function createToastContainer() {
     return container;
 }
 
-// Form validation
 function validateForm(form) {
     let isValid = true;
     const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
@@ -97,8 +92,7 @@ function validateForm(form) {
         } else {
             input.classList.remove('is-invalid');
         }
-        
-        // Email validation
+
         if (input.type === 'email' && input.value) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(input.value)) {
@@ -106,8 +100,7 @@ function validateForm(form) {
                 isValid = false;
             }
         }
-        
-        // Password validation
+
         if (input.type === 'password' && input.value && input.dataset.minLength) {
             if (input.value.length < parseInt(input.dataset.minLength)) {
                 input.classList.add('is-invalid');
@@ -119,15 +112,12 @@ function validateForm(form) {
     return isValid;
 }
 
-// Initialize tooltips
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Bootstrap tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Auto-hide alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
     alerts.forEach(alert => {
         setTimeout(() => {
@@ -141,7 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ===== Footer Functionality =====
 
-// Newsletter form submission
 document.addEventListener('DOMContentLoaded', function() {
     const newsletterForm = document.getElementById('newsletterForm');
     if (newsletterForm) {
@@ -152,48 +141,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = emailInput.value;
             
             if (email && isValidEmail(email)) {
-                // Show success modal
                 const modal = new bootstrap.Modal(document.getElementById('newsletterModal'));
                 modal.show();
-                
-                // Reset form
                 emailInput.value = '';
-                
-                // You can also send this to your backend
                 console.log('Newsletter subscription:', email);
-                
-                // Optional: Send to API
-                // fetch('/api/v1/newsletter/subscribe', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ email: email })
-                // });
             } else {
-                // Show error
                 emailInput.classList.add('is-invalid');
                 setTimeout(() => emailInput.classList.remove('is-invalid'), 3000);
             }
         });
     }
-    
-    // Email validation helper
     function isValidEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
     }
 });
 
-// Back to top button
 (function() {
-    // Create back to top button
     const backToTop = document.createElement('a');
     backToTop.href = '#';
     backToTop.className = 'back-to-top';
     backToTop.innerHTML = '<i class="fas fa-arrow-up"></i>';
     backToTop.setAttribute('aria-label', 'Back to top');
     document.body.appendChild(backToTop);
-    
-    // Show/hide on scroll
     window.addEventListener('scroll', function() {
         if (window.scrollY > 300) {
             backToTop.classList.add('show');
@@ -201,8 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
             backToTop.classList.remove('show');
         }
     });
-    
-    // Smooth scroll to top
     backToTop.addEventListener('click', function(e) {
         e.preventDefault();
         window.scrollTo({
@@ -212,7 +180,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 })();
 
-// Current year in copyright
 document.addEventListener('DOMContentLoaded', function() {
     const yearElements = document.querySelectorAll('.current-year');
     yearElements.forEach(el => {

@@ -3,14 +3,11 @@ let currentUser = null;
 let calendar = null;
 let allEvents = [];
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Events page loaded');
     
-    // Check if required libraries are loaded
     checkRequiredLibraries();
     
-    // Get current user data from data attribute
     const userData = document.getElementById('user-data');
     if (userData) {
         try {
@@ -24,10 +21,8 @@ document.addEventListener('DOMContentLoaded', function() {
     loadEvents();
     loadFeaturedEvent();
     
-    // Initialize filter buttons
     initFilters();
-    
-    // Initialize virtual event checkbox toggle
+
     const isVirtualCheckbox = document.getElementById('isVirtual');
     if (isVirtualCheckbox) {
         isVirtualCheckbox.addEventListener('change', function() {
@@ -37,8 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Initialize isFree checkbox toggle for price field
+
     const isFreeCheckbox = document.getElementById('isFree');
     if (isFreeCheckbox) {
         isFreeCheckbox.addEventListener('change', function() {
@@ -51,8 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Add form submit handler for create event form
+
     const createEventForm = document.getElementById('createEventForm');
     if (createEventForm) {
         createEventForm.addEventListener('submit', function(e) {
@@ -60,8 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
             createEvent();
         });
     }
-    
-    // Initialize view buttons
+
     const gridViewBtn = document.getElementById('gridViewBtn');
     const calendarViewBtn = document.getElementById('calendarViewBtn');
     
@@ -71,8 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (calendarViewBtn) {
         calendarViewBtn.addEventListener('click', showCalendarView);
     }
-    
-    // Initialize modal close handlers to reset forms
+
     const createEventModal = document.getElementById('createEventModal');
     if (createEventModal) {
         createEventModal.addEventListener('hidden.bs.modal', function() {
@@ -81,7 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Check if required libraries are loaded
 function checkRequiredLibraries() {
     if (typeof bootstrap === 'undefined') {
         console.error('Bootstrap JS not loaded - modals will not work');
@@ -98,7 +88,6 @@ function checkRequiredLibraries() {
     }
 }
 
-// Show library error message
 function showLibraryError(library) {
     const eventsGrid = document.getElementById('eventsGrid');
     if (eventsGrid) {
@@ -112,14 +101,12 @@ function showLibraryError(library) {
     }
 }
 
-// Initialize filter buttons
 function initFilters() {
     const filterButtons = document.querySelectorAll('[data-filter]');
     if (filterButtons.length === 0) return;
     
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
-            // Update active state
             filterButtons.forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -131,7 +118,6 @@ function initFilters() {
     });
 }
 
-// Show grid view
 function showGridView() {
     const gridViewBtn = document.getElementById('gridViewBtn');
     const calendarViewBtn = document.getElementById('calendarViewBtn');
@@ -148,7 +134,6 @@ function showGridView() {
     if (calendarLegend) calendarLegend.style.display = 'none';
 }
 
-// Show calendar view
 async function showCalendarView() {
     const gridViewBtn = document.getElementById('gridViewBtn');
     const calendarViewBtn = document.getElementById('calendarViewBtn');
@@ -205,7 +190,6 @@ async function showCalendarView() {
     }
 }
 
-// Initialize FullCalendar
 function initCalendar() {
     const calendarEl = document.getElementById('calendar');
     if (!calendarEl) {
@@ -213,7 +197,6 @@ function initCalendar() {
         return;
     }
     
-    // Get category color
     function getEventColor(eventType) {
         const colors = {
             'webinar': '#0d6efd',
@@ -289,9 +272,7 @@ function initCalendar() {
     }
 }
 
-// Show event details modal
 function showEventDetails(event) {
-    // Check if Bootstrap is available
     if (typeof bootstrap === 'undefined') {
         alert('Modal system unavailable. Please refresh the page.');
         return;
@@ -339,7 +320,6 @@ function showEventDetails(event) {
         titleElement.textContent = escapeHtml(event.title);
     }
     
-    // Set up register button
     const registerBtn = document.getElementById('registerFromDetailsBtn');
     if (registerBtn) {
         registerBtn.onclick = () => registerForEvent(props.id || event.id);
@@ -349,7 +329,6 @@ function showEventDetails(event) {
     modal.show();
 }
 
-// Load events from API
 async function loadEvents() {
     try {
         console.log('Loading events from API...');
@@ -391,7 +370,6 @@ async function loadEvents() {
     }
 }
 
-// Display error message
 function displayErrorMessage(message) {
     const grid = document.getElementById('eventsGrid');
     if (grid) {
@@ -408,7 +386,6 @@ function displayErrorMessage(message) {
     }
 }
 
-// Display message when no events are found
 function displayNoEvents() {
     const grid = document.getElementById('eventsGrid');
     if (!grid) return;
@@ -426,7 +403,6 @@ function displayNoEvents() {
     `;
 }
 
-// Load featured event
 async function loadFeaturedEvent() {
     try {
         console.log('Loading featured event...');
@@ -467,7 +443,6 @@ async function loadFeaturedEvent() {
     }
 }
 
-// Display featured event
 function displayFeaturedEvent(event) {
     const container = document.getElementById('featuredEvent');
     if (!container) return;
@@ -520,7 +495,6 @@ function displayFeaturedEvent(event) {
     `;
 }
 
-// Display events in grid
 function displayEvents(events) {
     console.log('displayEvents called with', events.length, 'events');
     const grid = document.getElementById('eventsGrid');
@@ -608,11 +582,9 @@ function displayEvents(events) {
     
     grid.innerHTML = html;
     
-    // Apply current filter
     filterEvents();
 }
 
-// Filter events by category
 function filterEvents() {
     const items = document.querySelectorAll('.event-item');
     
@@ -625,7 +597,6 @@ function filterEvents() {
     });
 }
 
-// Register for event
 async function registerForEvent(eventId) {
     if (!eventId) {
         alert('Invalid event ID');
@@ -639,8 +610,7 @@ async function registerForEvent(eventId) {
         }
         return;
     }
-    
-    // Disable button to prevent double submission
+
     const registerButtons = document.querySelectorAll(`[onclick="registerForEvent('${eventId}')"]`);
     registerButtons.forEach(btn => {
         btn.disabled = true;
@@ -659,11 +629,9 @@ async function registerForEvent(eventId) {
         
         if (response.ok) {
             alert('Successfully registered for event!');
-            // Reload events to update spot counts
             setTimeout(() => location.reload(), 1500);
         } else {
             alert(data.detail || 'Failed to register. Please try again.');
-            // Re-enable buttons
             registerButtons.forEach(btn => {
                 btn.disabled = false;
                 const isFree = btn.textContent.includes('Register');
@@ -673,7 +641,6 @@ async function registerForEvent(eventId) {
     } catch (error) {
         console.error('Registration error:', error);
         alert('An error occurred. Please check your connection and try again.');
-        // Re-enable buttons
         registerButtons.forEach(btn => {
             btn.disabled = false;
             const isFree = btn.textContent.includes('Register');
@@ -682,7 +649,6 @@ async function registerForEvent(eventId) {
     }
 }
 
-// Show create event modal (for admins/instructors)
 function showCreateEventModal() {
     if (!currentUser || (!currentUser.is_admin && !currentUser.is_instructor)) {
         alert('Only instructors and admins can create events');
@@ -691,7 +657,6 @@ function showCreateEventModal() {
     
     const modal = document.getElementById('createEventModal');
     if (modal) {
-        // Reset form before showing
         resetCreateEventForm();
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
@@ -700,20 +665,17 @@ function showCreateEventModal() {
     }
 }
 
-// Reset create event form
 function resetCreateEventForm() {
     const form = document.getElementById('createEventForm');
     if (form) {
         form.reset();
     }
     
-    // Reset virtual event field visibility
     const meetingLinkField = document.getElementById('meetingLinkField');
     if (meetingLinkField) {
         meetingLinkField.style.display = 'none';
     }
-    
-    // Reset price field visibility
+
     const priceField = document.getElementById('priceField');
     const isFreeCheckbox = document.getElementById('isFree');
     if (priceField && isFreeCheckbox && isFreeCheckbox.checked) {
@@ -721,17 +683,14 @@ function resetCreateEventForm() {
     }
 }
 
-// Create new event (for admins/instructors)
 async function createEvent() {
     console.log('Create event function called');
     
-    // Check if user is authorized
     if (!currentUser || (!currentUser.is_admin && !currentUser.is_instructor)) {
         alert('You are not authorized to create events');
         return;
     }
-    
-    // Get form data with error checking
+
     const titleInput = document.getElementById('eventTitle');
     const typeInput = document.getElementById('eventType');
     const startDateInput = document.getElementById('startDate');
@@ -761,7 +720,6 @@ async function createEvent() {
         is_featured: document.getElementById('isFeatured')?.checked || false
     };
     
-    // Validate required fields
     if (!eventData.title) {
         alert('Please enter an event title');
         return;
@@ -775,13 +733,11 @@ async function createEvent() {
         return;
     }
     
-    // Validate virtual event requirements
     if (eventData.is_virtual && !eventData.meeting_link) {
         alert('Please provide a meeting link for the virtual event');
         return;
     }
     
-    // Validate date range
     if (eventData.end_date && eventData.end_date < eventData.start_date) {
         alert('End date cannot be before start date');
         return;
@@ -789,7 +745,6 @@ async function createEvent() {
     
     console.log('Creating event with data:', eventData);
     
-    // Show loading state
     const modal = bootstrap.Modal.getInstance(document.getElementById('createEventModal'));
     const btn = document.querySelector('#createEventModal .btn-primary');
     const spinner = document.getElementById('createSpinner');
@@ -814,13 +769,8 @@ async function createEvent() {
         console.log('Create event response:', responseData);
         
         if (response.ok) {
-            // Close modal
             if (modal) modal.hide();
-            
-            // Show success message
             alert('Event created successfully!');
-            
-            // Reload events
             setTimeout(() => location.reload(), 1500);
         } else {
             alert(responseData.detail || 'Failed to create event. Please check your input and try again.');
@@ -829,7 +779,6 @@ async function createEvent() {
         console.error('Error creating event:', error);
         alert('An error occurred while creating the event. Please check your connection and try again.');
     } finally {
-        // Reset button state
         if (btn) {
             btn.disabled = false;
             if (btnText) btnText.textContent = 'Create Event';
@@ -838,7 +787,6 @@ async function createEvent() {
     }
 }
 
-// Helper functions
 function getCategoryColor(category) {
     const colors = {
         'webinar': 'primary',
@@ -862,7 +810,6 @@ function getProgressColor(spotsLeft, maxAttendees) {
 function getProgressWidth(spotsLeft, maxAttendees) {
     if (!maxAttendees || spotsLeft === null || spotsLeft === undefined) return 0;
     const percentage = ((maxAttendees - spotsLeft) / maxAttendees) * 100;
-    // Cap at 100%
     return Math.min(percentage, 100);
 }
 
@@ -878,7 +825,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Make functions globally available for onclick handlers
 window.showGridView = showGridView;
 window.showCalendarView = showCalendarView;
 window.showCreateEventModal = showCreateEventModal;

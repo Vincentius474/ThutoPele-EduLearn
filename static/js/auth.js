@@ -1,5 +1,3 @@
-// auth.js - Authentication related JavaScript
-
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all auth functionality
     initPasswordToggles();
@@ -12,12 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ==================== PASSWORD TOGGLES ====================
 function initPasswordToggles() {
-    // Toggle signin password visibility
     document.getElementById('toggleSigninPassword')?.addEventListener('click', function() {
         togglePassword('signinPassword', this);
     });
-    
-    // Toggle register password visibility
     document.getElementById('toggleRegisterPassword')?.addEventListener('click', function() {
         togglePassword('registerPassword', this);
     });
@@ -80,7 +75,6 @@ function initSignInForm() {
         const spinner = document.getElementById('signinSpinner');
         const btnText = document.getElementById('signinText');
         
-        // Show loading state
         setButtonLoading(btn, spinner, btnText, 'Signing in...');
         
         try {
@@ -96,7 +90,6 @@ function initSignInForm() {
             const data = await response.json();
             
             if (response.ok) {
-                // Set session via our endpoint
                 const sessionResponse = await fetch('/api/v1/auth/set-session', {
                     method: 'POST',
                     headers: {
@@ -139,14 +132,12 @@ function initRegisterForm() {
         const username = document.getElementById('registerUsername').value;
         const password = document.getElementById('registerPassword').value;
         const confirmPwd = document.getElementById('confirmPassword').value;
-        
-        // Validate passwords match
+
         if (password !== confirmPwd) {
             showError('Passwords do not match');
             return;
         }
-        
-        // Validate password length
+
         if (password.length < 8) {
             showError('Password must be at least 8 characters long');
             return;
@@ -155,8 +146,7 @@ function initRegisterForm() {
         const btn = document.getElementById('registerBtn');
         const spinner = document.getElementById('registerSpinner');
         const btnText = document.getElementById('registerText');
-        
-        // Show loading state
+
         setButtonLoading(btn, spinner, btnText, 'Creating account...');
         
         try {
@@ -177,14 +167,8 @@ function initRegisterForm() {
             
             if (response.ok) {
                 showSuccess('Account created successfully! You can now sign in.');
-                
-                // Switch to sign in tab
                 document.getElementById('signin-tab').click();
-                
-                // Clear form
                 document.getElementById('registerForm').reset();
-                
-                // Clear validation states
                 document.getElementById('confirmPassword').classList.remove('is-valid', 'is-invalid');
                 document.getElementById('passwordMatch').innerHTML = '';
             } else {
@@ -194,7 +178,6 @@ function initRegisterForm() {
             console.error('Registration error:', error);
             showError('An error occurred. Please try again.');
         } finally {
-            // Reset button state
             setButtonNormal(btn, spinner, btnText, 'Create Account');
         }
     });
@@ -224,12 +207,10 @@ function initForgotPassword() {
         const submitBtn = forgotForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         
-        // Show loading state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
         
         try {
-            // Note: You'll need to implement this endpoint
             const response = await fetch('/api/v1/auth/forgot-password', {
                 method: 'POST',
                 headers: {
@@ -239,7 +220,6 @@ function initForgotPassword() {
             });
             
             if (response.ok) {
-                // Hide modal
                 bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal')).hide();
                 showSuccess('Password reset link sent to your email!');
                 forgotForm.reset();
@@ -272,7 +252,6 @@ function setButtonNormal(btn, spinner, btnText, text) {
     btnText.textContent = text;
 }
 
-// Modal functions
 function showSuccess(message) {
     const modalEl = document.getElementById('successModal');
     if (!modalEl) return;
@@ -292,16 +271,14 @@ function showError(message) {
     document.getElementById('errorMessage').textContent = message;
     const modal = new bootstrap.Modal(modalEl);
     modal.show();
-    
-    // Auto hide after 3 seconds
     setTimeout(() => modal.hide(), 3000);
 }
 
 // Session Refresh Module
 const SessionManager = {
     refreshInterval: null,
-    refreshThreshold: 5 * 60 * 1000, // 5 minutes before expiry
-    checkInterval: 60 * 1000, // Check every minute
+    refreshThreshold: 5 * 60 * 1000,
+    checkInterval: 60 * 1000,
     
     init() {
         this.setupTokenRefresh();
@@ -309,10 +286,7 @@ const SessionManager = {
     },
     
     setupTokenRefresh() {
-        // Check token expiry periodically
         setInterval(() => this.checkAndRefreshToken(), this.checkInterval);
-        
-        // Also refresh on user activity
         ['click', 'mousemove', 'keypress'].forEach(event => {
             document.addEventListener(event, () => this.debouncedRefresh());
         });
@@ -327,13 +301,10 @@ const SessionManager = {
         if (!token) return;
         
         try {
-            // Decode token to check expiry
             const payload = JSON.parse(atob(token.split('.')[1]));
-            const expiryTime = payload.exp * 1000; // Convert to milliseconds
+            const expiryTime = payload.exp * 1000; 
             const now = Date.now();
             const timeUntilExpiry = expiryTime - now;
-            
-            // If token expires in less than threshold, refresh it
             if (timeUntilExpiry < this.refreshThreshold && timeUntilExpiry > 0) {
                 await this.refreshToken();
             }
@@ -362,7 +333,6 @@ const SessionManager = {
                 this.setToken(data.access_token, data.refresh_token);
                 console.log('Token refreshed successfully');
             } else {
-                // If refresh fails, redirect to login
                 window.location.href = '/login?session=expired';
             }
         } catch (error) {
@@ -373,7 +343,6 @@ const SessionManager = {
     getToken() {
         return document.cookie.replace(/(?:(?:^|.*;\s*)access_token\s*=\s*([^;]*).*$)|^.*$/, "$1");
     },
-    
     getRefreshToken() {
         return document.cookie.replace(/(?:(?:^|.*;\s*)refresh_token\s*=\s*([^;]*).*$)|^.*$/, "$1");
     },
@@ -389,9 +358,7 @@ const SessionManager = {
     },
     
     setupActivityTracking() {
-        // Track user activity to keep session alive
         let activityTimer;
-        
         const resetActivityTimer = () => {
             clearTimeout(activityTimer);
             activityTimer = setTimeout(() => {
@@ -409,5 +376,3 @@ const SessionManager = {
 
 // Initialize session manager
 SessionManager.init();
-
-// Add refresh endpoint to auth_simple.py

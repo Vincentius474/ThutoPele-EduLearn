@@ -1,5 +1,3 @@
-// admin_users.js - User Management Functionality
-
 // ==================== TABLE FILTERING ====================
 
 function filterTable() {

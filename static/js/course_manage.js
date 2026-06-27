@@ -8,7 +8,6 @@ let courseId = null;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Get course ID from data attribute
     const courseData = document.getElementById('course-data');
     if (courseData) {
         try {
@@ -20,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Initialize material type toggle
     const materialType = document.getElementById('materialType');
     if (materialType) {
         materialType.addEventListener('change', function() {
@@ -44,7 +42,7 @@ function showAddMaterialModal() {
 function showCreateQuizModal() {
     questionCount = 0;
     document.getElementById('questionsList').innerHTML = '';
-    addQuestion(); // Add first question
+    addQuestion();
     new bootstrap.Modal(document.getElementById('quizModal')).show();
 }
 
@@ -116,7 +114,7 @@ function removeQuestion(index) {
 
 function addOption(questionIndex) {
     const optionsDiv = document.getElementById(`q_${questionIndex}_options`);
-    const optionCount = optionsDiv.children.length - 1; // Subtract the add button
+    const optionCount = optionsDiv.children.length - 1; 
     
     const optionHtml = `
         <div class="input-group mb-2">
@@ -520,7 +518,6 @@ async function saveAssignmentEdit() {
 // ==================== EDIT ANNOUNCEMENT FUNCTIONS ====================
 
 async function editAnnouncement(announcementId) {
-    // Get announcement data from the DOM
     const announcementCard = document.querySelector(`#announcement-${announcementId}`);
     if (announcementCard) {
         const titleElement = announcementCard.querySelector('.announcement-title');
@@ -533,7 +530,7 @@ async function editAnnouncement(announcementId) {
         document.getElementById('editAnnouncementId').value = announcementId;
         document.getElementById('editAnnouncementTitle').value = title;
         document.getElementById('editAnnouncementContent').value = content;
-        document.getElementById('editMarkImportant').checked = false; // You can fetch this from API if needed
+        document.getElementById('editMarkImportant').checked = false;
         
         new bootstrap.Modal(document.getElementById('editAnnouncementModal')).show();
     } else {
@@ -570,18 +567,15 @@ async function saveAnnouncementEdit() {
 }
 
 // ==================== OTHER FUNCTIONS ====================
-// ==================== VIEW QUIZ RESULTS ====================
 
 async function viewQuizResults(quizId) {
     try {
         const response = await fetch(`/api/v1/courses/quizzes/${quizId}`);
         const quiz = await response.json();
         
-        // Get submissions for this quiz (if you have a submissions table for quizzes)
         const submissionsResponse = await fetch(`/api/v1/courses/quizzes/${quizId}/submissions`);
         const submissions = submissionsResponse.ok ? await submissionsResponse.json() : [];
-        
-        // Create modal content
+
         const modalHtml = `
             <div class="modal fade" id="quizResultsModal" tabindex="-1">
                 <div class="modal-dialog modal-lg">
@@ -680,16 +674,12 @@ async function viewQuizResults(quizId) {
             </div>
         `;
         
-        // Remove existing modal if present
         const existingModal = document.getElementById('quizResultsModal');
         if (existingModal) {
             existingModal.remove();
         }
-        
-        // Add modal to body
+
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
-        // Show modal
         new bootstrap.Modal(document.getElementById('quizResultsModal')).show();
         
     } catch (error) {
@@ -784,11 +774,8 @@ async function exportQuizResults(quizId) {
 
 async function gradeAssignment(assignmentId) {
     try {
-        // Get assignment details
         const assignmentResponse = await fetch(`/api/v1/courses/assignments/${assignmentId}/edit`);
         const assignment = await assignmentResponse.json();
-        
-        // Get submissions
         const submissionsResponse = await fetch(`/api/v1/courses/assignments/${assignmentId}/submissions`);
         const submissions = await submissionsResponse.json();
         
@@ -975,110 +962,9 @@ async function submitGrade() {
 
 // ==================== EDIT MATERIAL ====================
 
-// async function editMaterial(materialId) {
-//     try {
-//         const response = await fetch(`/api/v1/courses/materials/${materialId}`);
-//         const material = await response.json();
-        
-//         const modalHtml = `
-//             <div class="modal fade" id="editMaterialModal" tabindex="-1">
-//                 <div class="modal-dialog">
-//                     <div class="modal-content">
-//                         <div class="modal-header bg-primary text-white">
-//                             <h5 class="modal-title">Edit Material</h5>
-//                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-//                         </div>
-//                         <div class="modal-body">
-//                             <form id="editMaterialForm">
-//                                 <input type="hidden" id="editMaterialId" value="${material.id}">
-//                                 <div class="mb-3">
-//                                     <label class="form-label">Title</label>
-//                                     <input type="text" class="form-control" id="editMaterialTitle" value="${escapeHtml(material.title)}" required>
-//                                 </div>
-//                                 <div class="mb-3">
-//                                     <label class="form-label">Description</label>
-//                                     <textarea class="form-control" id="editMaterialDescription" rows="3">${escapeHtml(material.description || '')}</textarea>
-//                                 </div>
-//                                 <div class="mb-3">
-//                                     <label class="form-label">Type</label>
-//                                     <select class="form-select" id="editMaterialType">
-//                                         <option value="video" ${material.material_type === 'video' ? 'selected' : ''}>Video</option>
-//                                         <option value="document" ${material.material_type === 'document' ? 'selected' : ''}>Document</option>
-//                                         <option value="link" ${material.material_type === 'link' ? 'selected' : ''}>Link</option>
-//                                         <option value="file" ${material.material_type === 'file' ? 'selected' : ''}>File</option>
-//                                     </select>
-//                                 </div>
-//                                 <div class="mb-3" id="editUrlField">
-//                                     <label class="form-label">URL / Content</label>
-//                                     <input type="text" class="form-control" id="editMaterialUrl" value="${escapeHtml(material.content_url || '')}">
-//                                 </div>
-//                                 <div class="mb-3 form-check">
-//                                     <input type="checkbox" class="form-check-input" id="editMaterialPublished" ${material.is_published ? 'checked' : ''}>
-//                                     <label class="form-check-label">Published</label>
-//                                 </div>
-//                             </form>
-//                         </div>
-//                         <div class="modal-footer">
-//                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-//                             <button type="button" class="btn btn-primary" onclick="saveMaterialEdit()">Save Changes</button>
-//                         </div>
-//                     </div>
-//                 </div>
-//             </div>
-//         `;
-        
-//         const existingModal = document.getElementById('editMaterialModal');
-//         if (existingModal) existingModal.remove();
-        
-//         document.body.insertAdjacentHTML('beforeend', modalHtml);
-//         new bootstrap.Modal(document.getElementById('editMaterialModal')).show();
-        
-//     } catch (error) {
-//         console.error('Error loading material:', error);
-//         alert('Failed to load material for editing');
-//     }
-// }
-
-// async function saveMaterialEdit() {
-//     const materialId = document.getElementById('editMaterialId').value;
-//     const materialData = {
-//         title: document.getElementById('editMaterialTitle').value,
-//         description: document.getElementById('editMaterialDescription').value,
-//         material_type: document.getElementById('editMaterialType').value,
-//         content_url: document.getElementById('editMaterialUrl').value,
-//         is_published: document.getElementById('editMaterialPublished').checked
-//     };
-    
-//     try {
-//         const response = await fetch(`/api/v1/courses/materials/${materialId}`, {
-//             method: 'PUT',
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             },
-//             body: JSON.stringify(materialData)
-//         });
-        
-//         if (response.ok) {
-//             alert('Material updated successfully!');
-//             bootstrap.Modal.getInstance(document.getElementById('editMaterialModal')).hide();
-//             location.reload();
-//         } else {
-//             const error = await response.json();
-//             alert(error.detail || 'Failed to update material');
-//         }
-//     } catch (error) {
-//         console.error('Error updating material:', error);
-//         alert('An error occurred');
-//     }
-// }
-
-// ==================== EDIT MATERIAL ====================
-
 async function editMaterial(materialId) {
     try {
         console.log('Fetching material with ID:', materialId);
-        
-        // Fetch material details from the API
         const response = await fetch(`/api/v1/courses/materials/${materialId}`);
         
         if (!response.ok) {
@@ -1087,8 +973,7 @@ async function editMaterial(materialId) {
         
         const material = await response.json();
         console.log('Material data:', material);
-        
-        // Create the modal with pre-filled data
+
         const modalHtml = `
             <div class="modal fade" id="editMaterialModal" tabindex="-1">
                 <div class="modal-dialog">
@@ -1136,16 +1021,12 @@ async function editMaterial(materialId) {
             </div>
         `;
         
-        // Remove existing modal if present
         const existingModal = document.getElementById('editMaterialModal');
         if (existingModal) {
             existingModal.remove();
         }
         
-        // Add modal to body
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
-        // Show modal
         const modal = new bootstrap.Modal(document.getElementById('editMaterialModal'));
         modal.show();
         
@@ -1284,7 +1165,6 @@ async function sendStudentMessage() {
     }
 }
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');

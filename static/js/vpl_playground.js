@@ -1,9 +1,6 @@
-// vpl_playground.js - VPL Playground functionality
-
 let currentLanguage = 'python';
 let currentSnippets = [];
 
-// Hardcoded languages
 const SUPPORTED_LANGUAGES = [
     {"id": "python", "name": "Python", "version": "3.11", "icon": "fab fa-python"},
     {"id": "javascript", "name": "JavaScript", "version": "ES2022", "icon": "fab fa-js"},
@@ -11,7 +8,6 @@ const SUPPORTED_LANGUAGES = [
     {"id": "cpp", "name": "C++", "version": "17", "icon": "fas fa-code"}
 ];
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('VPL Playground initializing...');
     loadLanguages();
@@ -19,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     setupKeyboardShortcuts();
 });
 
-// Load supported languages
 function loadLanguages() {
     console.log('Loading languages...');
     
@@ -52,8 +47,7 @@ function loadLanguages() {
         
         container.appendChild(langBtn);
     });
-    
-    // Set active class on default language
+
     const defaultBtn = container.querySelector('[data-language="python"]');
     if (defaultBtn) {
         defaultBtn.classList.add('active', 'border-primary', 'bg-primary', 'bg-opacity-10');
@@ -62,30 +56,24 @@ function loadLanguages() {
     console.log('Languages loaded successfully');
 }
 
-// Change programming language
 function changeLanguage(languageId, languageName) {
     console.log('Changing language to:', languageId);
     currentLanguage = languageId;
-    
-    // Update active state
+
     document.querySelectorAll('.language-btn').forEach(btn => {
         btn.classList.remove('active', 'border-primary', 'bg-primary', 'bg-opacity-10');
         if (btn.getAttribute('data-language') === languageId) {
             btn.classList.add('active', 'border-primary', 'bg-primary', 'bg-opacity-10');
         }
     });
-    
-    // Update language display in save modal
+
     const snippetLanguage = document.getElementById('snippetLanguage');
     if (snippetLanguage) {
         snippetLanguage.value = languageName;
     }
-    
-    // Load default code for this language
     loadDefaultCode();
 }
 
-// Load default code template
 function loadDefaultCode() {
     const editor = document.getElementById('codeEditor');
     if (!editor) return;
@@ -100,10 +88,8 @@ function loadDefaultCode() {
     editor.value = templates[currentLanguage] || templates.python;
 }
 
-// Load example code
 function loadExample(language, example) {
     if (language !== currentLanguage) {
-        // Find and click the language button
         const langBtns = document.querySelectorAll('.language-btn');
         for (let btn of langBtns) {
             if (btn.innerText.toLowerCase().includes(language)) {
@@ -138,7 +124,6 @@ function loadExample(language, example) {
     }
 }
 
-// Setup keyboard shortcuts
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -151,7 +136,6 @@ function setupKeyboardShortcuts() {
     });
 }
 
-// Run code in playground
 async function runPlaygroundCode() {
     const editor = document.getElementById('codeEditor');
     const stdinInput = document.getElementById('stdinInput');
@@ -204,7 +188,6 @@ async function runPlaygroundCode() {
     }
 }
 
-// Display result
 function displayResult(result) {
     const outputArea = document.getElementById('outputArea');
     if (!outputArea) return;
@@ -214,11 +197,9 @@ function displayResult(result) {
     if (result.error) {
         html += '<div class="alert alert-danger mb-2"><strong>Error:</strong> ' + escapeHtml(result.error) + '</div>';
     }
-    
     if (result.output) {
         html += '<div class="mb-2"><strong>Output:</strong><pre class="bg-dark text-light p-3 rounded mt-2">' + escapeHtml(result.output) + '</pre></div>';
     }
-    
     if (result.execution_time) {
         html += '<div class="small text-muted mt-2"><i class="fas fa-clock"></i> Execution time: ' + result.execution_time + 'ms</div>';
     }
@@ -226,7 +207,6 @@ function displayResult(result) {
     outputArea.innerHTML = html;
 }
 
-// Show output message
 function showOutputMessage(message, type) {
     const outputArea = document.getElementById('outputArea');
     if (!outputArea) return;
@@ -241,7 +221,6 @@ function showOutputMessage(message, type) {
     }
 }
 
-// Clear output area
 function clearOutput() {
     const outputArea = document.getElementById('outputArea');
     if (outputArea) {
@@ -249,7 +228,6 @@ function clearOutput() {
     }
 }
 
-// Reset editor to default
 function resetEditor() {
     if (confirm('Reset to default code? Any unsaved changes will be lost.')) {
         loadDefaultCode();
@@ -257,7 +235,6 @@ function resetEditor() {
     }
 }
 
-// Save current code as snippet
 function saveCurrentCode() {
     const editor = document.getElementById('codeEditor');
     const code = editor ? editor.value : '';
@@ -266,29 +243,24 @@ function saveCurrentCode() {
         alert('No code to save');
         return;
     }
-    
     const titleInput = document.getElementById('snippetTitle');
     if (titleInput) {
         titleInput.value = 'Untitled';
     }
-    
     const snippetLanguage = document.getElementById('snippetLanguage');
     if (snippetLanguage) {
         const activeLang = document.querySelector('.language-btn.active strong');
         snippetLanguage.value = activeLang ? activeLang.innerText : 'Python';
     }
-    
     const saveModal = new bootstrap.Modal(document.getElementById('saveSnippetModal'));
     if (saveModal) {
         saveModal.show();
     }
 }
 
-// Save snippet to database
 async function saveSnippet() {
     const titleInput = document.getElementById('snippetTitle');
     const editor = document.getElementById('codeEditor');
-    
     const title = titleInput ? titleInput.value : '';
     const code = editor ? editor.value : '';
     
@@ -323,13 +295,11 @@ async function saveSnippet() {
     }
 }
 
-// Load user's snippets
 async function loadSnippets() {
     try {
         const response = await fetch('/api/v1/vpl/playground/snippets');
         const snippets = await response.json();
         currentSnippets = snippets;
-        
         const container = document.getElementById('snippetsList');
         if (!container) return;
         
@@ -366,7 +336,6 @@ async function loadSnippets() {
     }
 }
 
-// Load a saved snippet
 async function loadSnippet(snippetId) {
     try {
         const response = await fetch(`/api/v1/vpl/playground/snippets/${snippetId}`);
@@ -401,7 +370,6 @@ async function loadSnippet(snippetId) {
     }
 }
 
-// Delete a snippet
 async function deleteSnippet(snippetId) {
     if (!confirm('Delete this snippet?')) return;
     
@@ -422,7 +390,6 @@ async function deleteSnippet(snippetId) {
     }
 }
 
-// Show snippets modal
 function showSnippetsModal() {
     loadSnippets();
     const snippetsModal = document.getElementById('snippetsModal');
@@ -431,7 +398,6 @@ function showSnippetsModal() {
     }
 }
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     return text.replace(/[&<>]/g, function(m) {
@@ -442,7 +408,6 @@ function escapeHtml(text) {
     });
 }
 
-// Make all functions globally available
 window.runPlaygroundCode = runPlaygroundCode;
 window.clearOutput = clearOutput;
 window.resetEditor = resetEditor;

@@ -1,5 +1,3 @@
-// tutorials.js - Tutorials page functionality
-
 let currentFilters = {
     category: 'all',
     difficulty: null,
@@ -10,9 +8,7 @@ let currentFilters = {
 let currentPage = 0;
 let currentUser = null;
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Get current user data from data attribute
     const userData = document.getElementById('user-data');
     if (userData) {
         try {
@@ -21,32 +17,25 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error parsing user data:', e);
         }
     }
-    
-    // Get URL parameters
+
     const urlParams = new URLSearchParams(window.location.search);
     currentFilters.category = urlParams.get('category') || 'all';
     currentFilters.difficulty = urlParams.get('difficulty');
     currentFilters.topic = urlParams.get('topic');
     currentFilters.search = urlParams.get('search') || '';
-    
-    // Update active tab
+
     updateActiveTab(currentFilters.category);
-    
-    // Set search input value
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.value = currentFilters.search;
-        
-        // Add search on enter key
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Prevent form submission
+                e.preventDefault();
                 searchTutorials();
             }
         });
     }
-    
-    // Add search button click handler
+
     const searchButton = document.querySelector('.input-group .btn-primary');
     if (searchButton) {
         searchButton.addEventListener('click', function(e) {
@@ -60,12 +49,10 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTutorialStats();
 });
 
-// Filter tutorials by category
 function filterTutorials(category) {
     currentFilters.category = category;
     currentPage = 0;
-    
-    // Update URL params
+
     const url = new URL(window.location);
     if (category && category !== 'all') {
         url.searchParams.set('category', category);
@@ -73,14 +60,10 @@ function filterTutorials(category) {
         url.searchParams.delete('category');
     }
     window.history.pushState({}, '', url);
-    
-    // Update active tab
     updateActiveTab();
-    
     loadTutorials();
 }
 
-// Search tutorials
 function searchTutorials() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -106,7 +89,6 @@ function searchTutorials() {
     }
 }
 
-// Update active tab based on category
 function updateActiveTab(category) {
     document.querySelectorAll('[data-category]').forEach(el => {
         const elCategory = el.dataset.category;
@@ -118,41 +100,30 @@ function updateActiveTab(category) {
     });
 }
 
-// Load tutorials from API
 async function loadTutorials(page = 0) {
     currentPage = page;
-    
-    // Build URL with proper encoding
+
     let url = `/api/v1/tutorials?limit=12&offset=${page * 12}`;
-    
-    // Add category filter if not searching
     if (!currentFilters.search && currentFilters.category && currentFilters.category !== 'all') {
         url += `&category=${encodeURIComponent(currentFilters.category)}`;
     }
-    
-    // Add difficulty filter
     if (currentFilters.difficulty) {
         url += `&difficulty=${encodeURIComponent(currentFilters.difficulty)}`;
     }
-    
-    // Add topic filter
     if (currentFilters.topic) {
         url += `&topic=${encodeURIComponent(currentFilters.topic)}`;
     }
-    
-    // Add search query
     if (currentFilters.search) {
         url += `&search=${encodeURIComponent(currentFilters.search)}`;
     }
     
-    console.log('Fetching tutorials with URL:', url); // Debug log
+    console.log('Fetching tutorials with URL:', url);
     
     try {
         const response = await fetch(url);
         const data = await response.json();
-        console.log('Received tutorials:', data); // Debug log
+        console.log('Received tutorials:', data);
         
-        // Handle both array response and paginated response
         const tutorials = Array.isArray(data) ? data : (data.tutorials || []);
         const total = Array.isArray(data) ? tutorials.length : (data.total || tutorials.length);
         
@@ -164,7 +135,6 @@ async function loadTutorials(page = 0) {
     }
 }
 
-// Display tutorials in grid
 function displayTutorials(tutorials) {
     const grid = document.getElementById('tutorialsGrid');
     
@@ -221,7 +191,6 @@ function displayTutorials(tutorials) {
     grid.innerHTML = html;
 }
 
-// Load featured tutorial
 async function loadFeaturedTutorial() {
     try {
         const response = await fetch('/api/v1/tutorials/featured');
@@ -235,7 +204,6 @@ async function loadFeaturedTutorial() {
     }
 }
 
-// Display featured tutorial
 function displayFeaturedTutorial(tutorial) {
     const container = document.getElementById('featuredTutorial');
     if (!container) return;
@@ -265,7 +233,6 @@ function displayFeaturedTutorial(tutorial) {
     `;
 }
 
-// Load tutorial statistics
 async function loadTutorialStats() {
     try {
         const response = await fetch('/api/v1/tutorials/stats');
@@ -276,7 +243,6 @@ async function loadTutorialStats() {
     }
 }
 
-// Display tutorial statistics
 function displayTutorialStats(stats) {
     const container = document.getElementById('tutorialStats');
     if (!container) return;
@@ -318,25 +284,20 @@ function displayTutorialStats(stats) {
     `;
 }
 
-// Filter by difficulty
 function filterByDifficulty(difficulty) {
     currentFilters.difficulty = difficulty;
     currentFilters.category = 'all';
     currentPage = 0;
-    
-    // Update URL params
+
     const url = new URL(window.location);
     url.searchParams.set('difficulty', difficulty);
     url.searchParams.delete('category');
     window.history.pushState({}, '', url);
-    
-    // Update active tab
+
     updateActiveTab();
-    
     loadTutorials();
 }
 
-// Update pagination
 function updatePagination(total, currentPage) {
     const container = document.getElementById('pagination');
     if (!container) return;
@@ -384,17 +345,14 @@ function updatePagination(total, currentPage) {
     container.innerHTML = html;
 }
 
-// Show upload modal
 function showUploadModal() {
     const modal = document.getElementById('uploadModal');
     if (modal) {
-        // Reset form
         document.getElementById('uploadForm')?.reset();
         new bootstrap.Modal(modal).show();
     }
 }
 
-// Upload tutorial
 async function uploadTutorial() {
     const title = document.getElementById('tutorialTitle')?.value;
     const description = document.getElementById('tutorialDescription')?.value;
@@ -464,7 +422,6 @@ async function uploadTutorial() {
     }
 }
 
-// Helper function to escape HTML
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -472,7 +429,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Show success message
 function showSuccess(message) {
     const successModal = document.getElementById('successModal');
     const successMessage = document.getElementById('successMessage');
@@ -480,7 +436,6 @@ function showSuccess(message) {
     if (successModal) new bootstrap.Modal(successModal).show();
 }
 
-// Show error message
 function showError(message) {
     const errorModal = document.getElementById('errorModal');
     const errorMessage = document.getElementById('errorMessage');
@@ -488,7 +443,6 @@ function showError(message) {
     if (errorModal) new bootstrap.Modal(errorModal).show();
 }
 
-// Make functions globally available
 window.filterTutorials = filterTutorials;
 window.searchTutorials = searchTutorials;
 window.showUploadModal = showUploadModal;
