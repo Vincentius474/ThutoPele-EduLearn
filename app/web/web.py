@@ -16,6 +16,99 @@ logger = logging.getLogger(__name__)
 web_router = APIRouter()
 web_router.include_router(auth_router)
 
+
+async def get_instructor_dashboard_data(supabase, instructor_id: str):
+    """Build the instructor dashboard data used by the template."""
+    courses_result = supabase.table("courses")\
+        .select("*")\
+        .eq("instructor_id", instructor_id)\
+        .order("created_at", desc=True)\
+        .execute()
+    courses = courses_result.data or []
+
+    published_courses = []
+    draft_courses = []
+    total_students = 0
+    total_earnings = 0
+    rating_values = []
+
+    for course in courses:
+        enrollments_result = supabase.table("enrollments")\
+            .select("id", count="exact")\
+            .eq("course_id", course["id"])\
+            .execute()
+        student_count = enrollments_result.count if hasattr(enrollments_result, 'count') else 0
+        course["student_count"] = student_count
+        total_students += student_count
+
+        course_price = course.get("price") or 0
+        total_earnings += float(course_price) * student_count
+
+        review_result = supabase.table("reviews")\
+            .select("rating")\
+            .eq("course_id", course["id"])\
+            .execute()
+        ratings = [review.get("rating") for review in review_result.data or [] if review.get("rating") is not None]
+        course_avg_rating = round(sum(ratings) / len(ratings), 1) if ratings else 0
+        course["avg_rating"] = course_avg_rating
+        course["rating"] = course_avg_rating
+
+        if course.get("is_published"):
+            published_courses.append(course)
+        else:
+            draft_courses.append(course)
+
+        if ratings:
+            rating_values.extend(ratings)
+
+    avg_rating = round(sum(rating_values) / len(rating_values), 1) if rating_values else 0
+
+    course_ids = [course["id"] for course in courses]
+    recent_reviews = []
+    if course_ids:
+        reviews_result = supabase.table("reviews")\
+            .select("*, users(full_name), courses(title)")\
+            .in_("course_id", course_ids)\
+            .order("created_at", desc=True)\
+            .limit(5)\
+            .execute()
+
+        for review in reviews_result.data or []:
+            user_data = review.get("users") or {}
+            if isinstance(user_data, list):
+                user_data = user_data[0] if user_data else {}
+
+            course_data = review.get("courses") or {}
+            if isinstance(course_data, list):
+                course_data = course_data[0] if course_data else {}
+
+            created_at = review.get("created_at")
+            if created_at and hasattr(created_at, "__getitem__") and not isinstance(created_at, (int, float)):
+                created_at_text = str(created_at)[:10]
+            else:
+                created_at_text = "Recently"
+
+            recent_reviews.append({
+                "student_name": user_data.get("full_name", "Student"),
+                "student_avatar": user_data.get("avatar_url") or "",
+                "course_title": course_data.get("title", "Course"),
+                "rating": int(review.get("rating") or 0),
+                "comment": review.get("comment") or "No comment provided.",
+                "created_at": created_at_text
+            })
+
+    return {
+        "courses": courses,
+        "published_courses": published_courses,
+        "draft_courses": draft_courses,
+        "total_courses": len(courses),
+        "total_students": total_students,
+        "avg_rating": avg_rating,
+        "total_earnings": total_earnings,
+        "recent_reviews": recent_reviews,
+    }
+
+
 # ==================== HOME PAGE ====================
 
 @web_router.get("/", response_class=HTMLResponse)
@@ -68,15 +161,17 @@ async def dashboard(
         )
         
     elif current_user.get("is_instructor"):
+        dashboard_data = await get_instructor_dashboard_data(supabase, current_user["id"])
         return templates.TemplateResponse(
             "dashboard/instructor.html",
             {
                 "request": request,
                 "current_user": current_user,
-                "title": "Instructor Dashboard"
+                "title": "Instructor Dashboard",
+                **dashboard_data
             }
         )
-        
+
     else:
         try:
             enrollments = supabase.table("enrollments")\
@@ -244,6 +339,26 @@ async def dashboard(
             )
 
 # ==================== COURSES PAGES ====================
+
+@web_router.get("/instructor/dashboard", response_class=HTMLResponse)
+async def instructor_dashboard_page(
+    request: Request,
+    templates: Jinja2Templates = Depends(get_templates),
+    current_user: dict = Depends(get_current_instructor)
+):
+    """Instructor dashboard page."""
+    supabase = get_supabase_client()
+    dashboard_data = await get_instructor_dashboard_data(supabase, current_user["id"])
+    return templates.TemplateResponse(
+        "dashboard/instructor.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "title": "Instructor Dashboard",
+            **dashboard_data,
+        }
+    )
+
 
 @web_router.get("/courses/create", response_class=HTMLResponse)
 async def create_course_page(
