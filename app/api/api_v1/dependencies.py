@@ -48,7 +48,6 @@ async def get_current_user_from_cookie(
         logger.error(f"Error getting user from cookie: {e}")
         return None
 
-# Alias for backward compatibility
 get_current_user = get_current_user_from_cookie
 
 async def get_current_active_user(
@@ -64,8 +63,6 @@ async def get_current_active_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return current_user
-
-# In app/api/api_v1/dependencies.py
 
 async def get_current_admin_or_instructor(
     current_user: dict = Depends(get_current_active_user)
@@ -118,7 +115,6 @@ async def get_current_admin(
         )
     return current_user
 
-# Optional: Add token-based authentication for API clients
 async def get_current_user_from_token(
     authorization: str = Depends(lambda request: request.headers.get("Authorization", "")),
     supabase=Depends(get_supabase)

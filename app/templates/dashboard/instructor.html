@@ -71,7 +71,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h3 class="fw-bold mb-0">{{ total_courses }}</h3>
+                            <h3 class="fw-bold mb-0">{{ courses|length }}</h3>
                             <span class="text-muted small">Total Courses</span>
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h3 class="fw-bold mb-0">{{ total_students }}</h3>
+                            <h3 class="fw-bold mb-0">{{ total_students or 0 }}</h3>
                             <span class="text-muted small">Students</span>
                         </div>
                     </div>
@@ -105,7 +105,7 @@
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h3 class="fw-bold mb-0">{{ avg_rating }}</h3>
+                            <h3 class="fw-bold mb-0">{{ avg_rating or 0 }}</h3>
                             <span class="text-muted small">Avg Rating</span>
                         </div>
                     </div>
@@ -118,11 +118,11 @@
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
                             <div class="stat-icon bg-info bg-opacity-10 rounded-3 p-3">
-                                <i class="fas fa-dollar-sign text-info fa-2x"></i>
+                                <i class="far fa-money-bill-alt text-info fa-2x"></i>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
-                            <h3 class="fw-bold mb-0">${{ total_earnings }}</h3>
+                            <h3 class="fw-bold mb-0">R {{ total_earnings or 0 }}</h3>
                             <span class="text-muted small">Earnings</span>
                         </div>
                     </div>
@@ -237,7 +237,7 @@
     </div>
 
     <!-- Performance Chart -->
-    <div class="row">
+    <!-- <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-transparent border-0 pt-3">
@@ -248,7 +248,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
