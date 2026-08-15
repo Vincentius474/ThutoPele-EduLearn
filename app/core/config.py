@@ -1,6 +1,5 @@
 from typing import Optional, List
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
 import os
 from dotenv import load_dotenv
 
@@ -29,10 +28,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = os.getenv(
+    BACKEND_CORS_ORIGINS: str = os.getenv(
         "BACKEND_CORS_ORIGINS",
         "http://localhost:3000,http://localhost:8000"
-    ).split(",")
+    )
 
     # Maintenance mode
     MAINTENANCE_MODE: bool = os.getenv("MAINTENANCE_MODE", "false").lower() in {"1", "true", "yes"}
@@ -42,15 +41,12 @@ class Settings(BaseSettings):
     COURSE_BUCKET: str = "course-materials"
     PROFILE_BUCKET: str = "profile-pictures"
 
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, value):
-        if isinstance(value, str):
-            return [item.strip() for item in value.split(",") if item.strip()]
-        return value
-
     class Config:
         case_sensitive = True
 
 
 settings = Settings()
+
+
+def get_cors_origins() -> List[str]:
+    return [origin.strip() for origin in settings.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]

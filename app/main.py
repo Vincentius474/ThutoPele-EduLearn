@@ -6,7 +6,7 @@ from fastapi.exceptions import HTTPException
 from pathlib import Path
 from starlette.responses import HTMLResponse
 
-from app.core.config import settings
+from app.core.config import settings, get_cors_origins
 from app.api.api_v1.api import api_router
 from app.web.web import web_router
 from app.utils.category_icons import category_icons, category_names, get_category_icon, get_category_color
@@ -31,7 +31,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
