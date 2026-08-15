@@ -29,7 +29,7 @@
                     <div class="col-lg-6">
                         <div class="card-body p-4 p-lg-5">
                             <div class="mb-3">
-                                <span class="badge bg-primary">{{ featured_post.category }}</span>
+                                <span class="badge bg-primary">{{ featured_post. }}</span>
                                 <span class="text-muted ms-2">
                                     <i class="far fa-calendar me-1"></i>{{ featured_post.published_at[:10] if featured_post.published_at else '2024-01-15' }}
                                 </span>
@@ -90,31 +90,31 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <a href="/blog" class="btn btn-outline-primary {% if not selected_category %}active{% endif %}">
+                <a href="/blog" class="btn btn-outline-primary {% if not selected_ %}active{% endif %}">
                     All Posts
                 </a>
-                <a href="/blog?category=Programming" class="btn btn-outline-primary {% if selected_category == 'Programming' %}active{% endif %}">
+                <a href="/blog?=Programming" class="btn btn-outline-primary {% if selected_ == 'Programming' %}active{% endif %}">
                     <i class="fas fa-code me-2"></i>Programming
                 </a>
-                <a href="/blog?category=Robotics" class="btn btn-outline-primary {% if selected_category == 'Robotics' %}active{% endif %}">
+                <a href="/blog?=Robotics" class="btn btn-outline-primary {% if selected_ == 'Robotics' %}active{% endif %}">
                     <i class="fas fa-robot me-2"></i>Robotics
                 </a>
-                <a href="/blog?category=Artificial Intelligence" class="btn btn-outline-primary {% if selected_category == 'Artificial Intelligence' %}active{% endif %}">
+                <a href="/blog?=Artificial Intelligence" class="btn btn-outline-primary {% if selected_ == 'Artificial Intelligence' %}active{% endif %}">
                     <i class="fas fa-brain me-2"></i>AI
                 </a>
-                <a href="/blog?category=Machine Learning" class="btn btn-outline-primary {% if selected_category == 'Machine Learning' %}active{% endif %}">
+                <a href="/blog?=Machine Learning" class="btn btn-outline-primary {% if selected_ == 'Machine Learning' %}active{% endif %}">
                     <i class="fas fa-chart-line me-2"></i>ML
                 </a>
-                <a href="/blog?category=Networking" class="btn btn-outline-primary {% if selected_category == 'Networking' %}active{% endif %}">
+                <a href="/blog?=Networking" class="btn btn-outline-primary {% if selected_ == 'Networking' %}active{% endif %}">
                     <i class="fas fa-network-wired me-2"></i>Networking
                 </a>
-                <a href="/blog?category=Cyber Security" class="btn btn-outline-primary {% if selected_category == 'Cyber Security' %}active{% endif %}">
+                <a href="/blog?=Cyber Security" class="btn btn-outline-primary {% if selected_ == 'Cyber Security' %}active{% endif %}">
                     <i class="fas fa-shield-alt me-2"></i>Security
                 </a>
-                <a href="/blog?category=Tutorials" class="btn btn-outline-primary {% if selected_category == 'Tutorials' %}active{% endif %}">
+                <a href="/blog?=Tutorials" class="btn btn-outline-primary {% if selected_ == 'Tutorials' %}active{% endif %}">
                     <i class="fas fa-video me-2"></i>Tutorials
                 </a>
-                <a href="/blog?category=News" class="btn btn-outline-primary {% if selected_category == 'News' %}active{% endif %}">
+                <a href="/blog?=News" class="btn btn-outline-primary {% if selected_ == 'News' %}active{% endif %}">
                     <i class="fas fa-newspaper me-2"></i>News
                 </a>
             </div>
@@ -137,7 +137,7 @@
                 
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-primary">{{ post.category or 'Uncategorized' }}</span>
+                        <span class="badge bg-primary">{{ post. or 'Uncategorized' }}</span>
                         <small class="text-muted">
                             <i class="far fa-clock me-1"></i>{{ post.read_time or 5 }} min
                         </small>
@@ -198,19 +198,19 @@
     <nav aria-label="Blog pagination" class="mt-4">
         <ul class="pagination justify-content-center">
             <li class="page-item {% if page == 1 %}disabled{% endif %}">
-                <a class="page-link" href="?page={{ page-1 }}&category={{ selected_category or '' }}&search={{ search_query or '' }}">
+                <a class="page-link" href="?page={{ page-1 }}&={{ selected_ or '' }}&search={{ search_query or '' }}">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
             
             {% for p in range(1, total_pages + 1) %}
             <li class="page-item {% if p == page %}active{% endif %}">
-                <a class="page-link" href="?page={{ p }}&category={{ selected_category or '' }}&search={{ search_query or '' }}">{{ p }}</a>
+                <a class="page-link" href="?page={{ p }}&={{ selected_ or '' }}&search={{ search_query or '' }}">{{ p }}</a>
             </li>
             {% endfor %}
             
             <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-                <a class="page-link" href="?page={{ page+1 }}&category={{ selected_category or '' }}&search={{ search_query or '' }}">
+                <a class="page-link" href="?page={{ page+1 }}&={{ selected_ or '' }}&search={{ search_query or '' }}">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>

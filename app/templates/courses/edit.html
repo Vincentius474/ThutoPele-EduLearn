@@ -37,12 +37,9 @@
                                 <label class="form-label">Category *</label>
                                 <select class="form-select" id="category" required>
                                     <option value="">Select category</option>
-                                    <option value="Programming" {% if course.category == 'Programming' %}selected{% endif %}>💻 Programming</option>
-                                    <option value="Robotics" {% if course.category == 'Robotics' %}selected{% endif %}>🤖 Robotics</option>
-                                    <option value="Artificial Intelligence" {% if course.category == 'Artificial Intelligence' %}selected{% endif %}>🧠 Artificial Intelligence</option>
-                                    <option value="Machine Learning" {% if course.category == 'Machine Learning' %}selected{% endif %}>📊 Machine Learning</option>
-                                    <option value="Networking" {% if course.category == 'Networking' %}selected{% endif %}>  Networking</option>
-                                    <option value="Cyber Security" {% if course.category == 'Cyber Security' %}selected{% endif %}>🛡️ Cyber Security</option>
+                                    {% for category_name in category_names %}
+                                    <option value="{{ category_name }}" {% if course.category == category_name %}selected{% endif %}>{{ category_icons.get(category_name, '') }} {{ category_name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-6">

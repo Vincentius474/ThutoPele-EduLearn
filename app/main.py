@@ -8,6 +8,7 @@ from pathlib import Path
 from app.core.config import settings
 from app.api.api_v1.api import api_router
 from app.web.web import web_router
+from app.utils.category_icons import category_icons, category_names, get_category_icon, get_category_color
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -15,6 +16,10 @@ STATIC_DIR = BASE_DIR.parent / "static"
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 templates.env.cache_size = 0
+templates.env.globals["category_icons"] = category_icons
+templates.env.globals["category_names"] = category_names
+templates.env.globals["get_category_icon"] = get_category_icon
+templates.env.globals["get_category_color"] = get_category_color
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

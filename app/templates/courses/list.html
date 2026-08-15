@@ -31,12 +31,9 @@
                         <div class="col-md-2">
                             <select class="form-select" name="category" onchange="this.form.submit()">
                                 <option value="">All Categories</option>
-                                <option value="Programming" {% if category == 'Programming' %}selected{% endif %}>Programming</option>
-                                <option value="Robotics" {% if category == 'Robotics' %}selected{% endif %}>Robotics</option>
-                                <option value="Artificial Intelligence" {% if category == 'Artificial Intelligence' %}selected{% endif %}>Artificial Intelligence</option>
-                                <option value="Machine Learning" {% if category == 'Machine Learning' %}selected{% endif %}>Machine Learning</option>
-                                <option value="Networking" {% if category == 'Networking' %}selected{% endif %}>Networking</option>
-                                <option value="Cyber Security" {% if category == 'Cyber Security' %}selected{% endif %}>Cyber Security</option>
+                                {% for category_name in category_names %}
+                                <option value="{{ category_name }}" {% if category == category_name %}selected{% endif %}>{{ category_name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         

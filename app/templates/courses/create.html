@@ -36,13 +36,9 @@
                                 <label class="form-label">Category *</label>
                                 <select class="form-select" id="category" required>
                                     <option value="">Select category</option>
-                                    <option value="Programming">💻 Programming</option>
-                                    <option value="Robotics">🤖 Robotics</option>
-                                    <option value="Artificial Intelligence">🧠 Artificial Intelligence</option>
-                                    <option value="Machine Learning">📊 Machine Learning</option>
-                                    <option value="Networking">  Networking</option>
-                                    <option value="Cyber Security">🛡️ Cyber Security</option>
-                                    <option value="Cyber Security">⛓️ Blockchain</option>
+                                    {% for category_name in category_names %}
+                                    <option value="{{ category_name }}">{{ category_icons.get(category_name, '') }} {{ category_name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-6">

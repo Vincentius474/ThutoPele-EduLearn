@@ -55,32 +55,32 @@
         <div class="col-12">
             <ul class="nav nav-pills nav-justified flex-column flex-md-row gap-2" id="resourceTabs">
                 <li class="nav-item">
-                    <a class="nav-link active" data-category="all" onclick="filterResources('all')">
+                    <a class="nav-link active" data-="all" onclick="filterResources('all')">
                         <i class="fas fa-th-large me-2"></i>All Resources
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-category="ebook" onclick="filterResources('ebook')">
+                    <a class="nav-link" data-="ebook" onclick="filterResources('ebook')">
                         <i class="fas fa-book me-2"></i>Ebooks
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-category="cheatsheet" onclick="filterResources('cheatsheet')">
+                    <a class="nav-link" data-="cheatsheet" onclick="filterResources('cheatsheet')">
                         <i class="fas fa-file-alt me-2"></i>Cheatsheets
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-category="template" onclick="filterResources('template')">
+                    <a class="nav-link" data-="template" onclick="filterResources('template')">
                         <i class="fas fa-puzzle-piece me-2"></i>Templates
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-category="tool" onclick="filterResources('tool')">
+                    <a class="nav-link" data-="tool" onclick="filterResources('tool')">
                         <i class="fas fa-tools me-2"></i>Tools
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" data-category="other" onclick="filterResources('other')">
+                    <a class="nav-link" data-="other" onclick="filterResources('other')">
                         <i class="fas fa-folder me-2"></i>Other
                     </a>
                 </li>
@@ -153,9 +153,9 @@
                         <textarea class="form-control" id="resourceDescription" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Category *</label>
-                        <select class="form-select" id="resourceCategory" required>
-                            <option value="">Select category...</option>
+                        <label class="form-label"> *</label>
+                        <select class="form-select" id="resource" required>
+                            <option value="">Select ...</option>
                             <option value="ebook">Ebook</option>
                             <option value="cheatsheet">Cheatsheet</option>
                             <option value="template">Template</option>
