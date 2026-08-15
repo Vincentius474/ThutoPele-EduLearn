@@ -135,7 +135,9 @@
                 <p class="card-text text-muted">{{ course.description[:100] }}{% if course.description|length > 100 %}...{% endif %}</p>
                 <div class="mb-2">
                     <span class="badge bg-primary">{{ course.level }}</span>
-                    <span class="badge bg-secondary">{{ course. }}</span>
+                    {% if course.category %}
+                    <span class="badge bg-secondary">{{ course.category }}</span>
+                    {% endif %}
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="text-muted">
