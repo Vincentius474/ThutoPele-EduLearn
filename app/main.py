@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.exceptions import HTTPException
 from pathlib import Path
+from starlette.responses import HTMLResponse
 
 from app.core.config import settings
 from app.api.api_v1.api import api_router
@@ -24,12 +25,13 @@ templates.env.globals["get_category_color"] = get_category_color
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    debug=settings.DEBUG,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,9 +43,38 @@ app.state.templates = templates
 app.include_router(api_router, prefix="/api/v1")
 app.include_router(web_router)
 
+
+@app.middleware("http")
+async def maintenance_mode_middleware(request: Request, call_next):
+    if settings.MAINTENANCE_MODE and request.url.path not in {"/health", "/maintenance"}:
+        return HTMLResponse(
+            """
+            <html><body style='font-family: Arial, sans-serif; text-align:center; padding:40px;'>
+            <h1>Maintenance Mode</h1>
+            <p>We are performing scheduled maintenance. Please try again shortly.</p>
+            </body></html>
+            """,
+            status_code=503,
+        )
+    return await call_next(request)
+
+
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "environment": settings.ENVIRONMENT, "maintenance_mode": settings.MAINTENANCE_MODE}
+
+
+@app.get("/maintenance", response_class=HTMLResponse)
+async def maintenance_page():
+    return HTMLResponse(
+        f"""
+        <html><body style='font-family: Arial, sans-serif; text-align:center; padding:40px;'>
+        <h1>Maintenance Mode</h1>
+        <p>{settings.MAINTENANCE_MESSAGE}</p>
+        </body></html>
+        """
+    )
+
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
@@ -53,9 +84,13 @@ async def not_found_handler(request: Request, exc: HTTPException):
         status_code=404
     )
 
+
 @app.on_event("startup")
 async def startup_event():
     """Validate templates on startup"""
+    print(f"Environment: {settings.ENVIRONMENT}")
+    print(f"Debug mode: {settings.DEBUG}")
+    print(f"Maintenance mode: {settings.MAINTENANCE_MODE}")
     print(f"Templates directory: {TEMPLATES_DIR}")
     print(f"Static files directory: {STATIC_DIR}")
     print(f"Templates available in app.state")
