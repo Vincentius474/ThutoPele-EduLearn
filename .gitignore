@@ -1,3 +1,5 @@
 .env
 .ini
 seed_data.py
+.env\python.exe
+.venv/Scripts/python.exe
